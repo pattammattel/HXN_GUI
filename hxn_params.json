@@ -1,0 +1,23 @@
+
+
+{
+    zp_motor: {
+        "zpssx": zpssx,
+        "zpssy": zpssy,
+        "zpssz": zpssz,
+    },
+    
+	mll_motor: {
+        "dssx": dssx,
+        "dssy": dssy,
+        "dssz": dssz,
+    },
+	
+	detector: {
+		"dets1" = dets1,
+		"dets2" = dets2,
+		"dets3" = dets3
+	}
+	
+}
+
