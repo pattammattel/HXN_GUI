@@ -40,10 +40,15 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_close_plot.clicked.connect(self.close_plot)
         self.start.clicked.connect(self.start_flyscan)
         self.pb_plot.clicked.connect(self.plot_me)
-        self.pushButton_2.clicked.connect(self.abort_scan)
+        #self.pushButton_2.clicked.connect(self.abort_scan)
         self.pb_gen_elist.clicked.connect(self.generate_elist)
-        self.pb_start_xanes.connect(self.zp_xanes)
-        
+        self.pb_start_xanes.clicked.connect(self.zp_xanes)
+
+        self.pb_move_smarx.clicked.connect(self.move_smarx())
+        self.pb_move_smary.clicked.connect(self.move_smary())
+        self.pb_move_smarz.clicked.connect(self.move_smarz())
+        self.pb_move_dth.clicked.connect(self.move_dsth())
+
         '''
         self.pb_folder_log.clicked.connect(self.select_pdf_wd)
         self.pb_pdf_image.clicked.connect(self.select_pdf_image)
@@ -57,7 +62,7 @@ class Ui(QtWidgets.QMainWindow):
     
         motor1 = self.cb_motor1.currentText()
         motor2 = self.cb_motor2.currentText()
-        det = self.Dets_3.currentText()
+        det = self.pb_dets.currentText()
         
         mot1_s = self.x_start.value()
         mot1_e = self.x_end.value()
@@ -71,15 +76,58 @@ class Ui(QtWidgets.QMainWindow):
         cal_res_y = (abs(mot2_s)+abs(mot2_e))/mot2_steps
         
         motor_list = {'zpssx':zpssx,'zpssy':zpssy,'zpssz':zpssz}
-        det_list = {'dets1':dets1,'dets2':dets2,'dets3':dets3}
+        det_list = {'dets1': dets1, 'dets2': dets2, 'dets3': dets3,
+                    'dets4': dets4, 'dets5': dets5, 'dets6': dets6,
+                    'dets7': dets7, 'dets8': dets8,'dets_fs': dets_fs}
  
 
-        if self.radioButton_1d.isChecked():
-            #self.Select_Motor_3.setEnabled(False)
+        if self.rb_1d.isChecked(): #TODO disable the other motor when 1d is checked 
+            
             RE(fly1d(det_list[det], motor_list[motor1], mot1_s,mot1_e ,mot1_steps, dwell_t))
-        else:             
-            RE(fly2d(det_list[det], motor_list[motor1], mot1_s,mot1_e ,mot1_steps, motor_list[motor2], mot2_s,mot2_e, mot2_steps, dwell_t))
         
+        elif self.rb_2d.isChecked():
+           
+            RE(fly2d(det_list[det], motor_list[motor1], mot1_s,mot1_e ,mot1_steps, motor_list[motor2], mot2_s,mot2_e, mot2_steps, dwell_t))
+
+    def move_smarx(self):
+        move_by = self.db_move_smarx.value()
+        RE(bps.movr(smarx, move_by * 0.001))
+
+    def move_smary(self):
+        move_by = self.db_move_smary.value()
+        RE(bps.movr(smary, move_by * 0.001))
+
+    def move_smarz(self):
+        move_by = self.db_move_smarz.value()
+        RE(bps.movr(smarz, move_by * 0.001))
+
+    def move_dsth(self):
+        move_by = self.db_move_dth.value()
+        RE(bps.movr(zpsth, move_by))
+
+    def fill_common_scan_params(self):
+        common_scans = {
+
+                        self.scan1: [-15, 15, -15,15, 30,30, 0.03],
+
+                        self.scan2: [-1, 1, -1,1, 100,100, 0.03],
+
+                        self.scan3: [-3, 3, -3,3, 100,100, 0.05],
+
+                        self.scan4: [-10, 10, -10,10, 100,100, 0.03]
+
+                        }
+        param_to_fill = [self.x_start, self.x_end, self.y_start, self.y_end, self.x_step, self.y_step, self.dwell]
+
+        for val, mot in zip(common_scans[self.fill_rb_checked()], param_to_fill):
+            print(mot, val)
+
+        pass
+
+    def fill_rb_checked(self):
+        "return the name of the rb checked by the user"
+        pass
+
 
     def calc_res(self):
         mot1_s = self.x_start.value()
@@ -192,21 +240,7 @@ class Ui(QtWidgets.QMainWindow):
         return save_page_for_gui()
         
         
-    def move_smarx(self):
-        move_by = self.db_move_smarx.value()
-        RE(bps.movr('smarx',move_by*0.001))
-        
-    def move_smary(self):
-        move_by = self.db_move_smary.value()
-        RE(bps.movr('smary',move_by*0.001))
-        
-    def move_smarz(self):
-        move_by = self.db_move_smarz.value()
-        RE(bps.movr('smarz',move_by*0.001))
-        
-    def move_dsth(self):
-        move_by = self.db_move_dth.value()
-        RE(bps.movr('zpsth',move_by))
+
 
 
     def generate_elist(self):
