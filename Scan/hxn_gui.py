@@ -7,7 +7,6 @@ import sys, os, signal, subprocess
 import numpy as np
 
 from pdf_log import *
-#from hxn_devices import *
 from xanes2d import*
 from PyQt5 import QtWidgets, uic
 from PyQt5.QtWidgets import QMessageBox, QFileDialog
@@ -104,7 +103,23 @@ class Ui(QtWidgets.QMainWindow):
     def move_dsth(self):
         move_by = self.db_move_dth.value()
         RE(bps.movr(zpsth, move_by))
-
+        
+    def merlinIN(self):
+        RE(go_det('merlin')      
+        
+    def merlinOUT(self):
+        RE(bps.mov(diff_x,-400)
+                
+    def vortexIN(self):
+        RE(bps.mov(fdet1_x,-8)
+        
+    def vortexOUT(self):
+        RE(bps.mov(fdet1_x,-107)
+        
+    def cam11IN(self):
+        RE(go_det('cam11')
+        
+        
     def fill_common_scan_params(self):
         common_scans = {
 
@@ -142,7 +157,7 @@ class Ui(QtWidgets.QMainWindow):
         
         cal_res_x = (abs(mot1_s)+abs(mot1_e))/mot1_steps
         cal_res_y = (abs(mot2_s)+abs(mot2_e))/mot2_steps
-        self.res.setText(str(cal_res_x*1000))
+        self.res.setText(str(cal_res_x*1000),cal_res_y*1000))
 
         tot_t = str(mot1_steps*mot2_steps*dwell_t/60)
         self.tot_time.setText(tot_t)
