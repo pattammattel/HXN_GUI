@@ -29,6 +29,11 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
             self.statusbar.showMessage("No file has selected")
             pass
 
+        try:
+            self.labaxis_view.clear()
+        except:
+            pass
+
         # A plot area (ViewBox + axes) for displaying the image
         self.p1 = self.ref_view.addPlot(title="")
 
@@ -41,18 +46,23 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
         #self.img.scale(0.5, 0.5)
         self.img.hoverEvent = self.imageHoverEvent
         self.img.mousePressEvent = self.MouseClickEvent
-        self.createLabAxisImage()
 
-    def createLabAxisImage(self):
+    def createLabAxisImage(self,xScale,yScale,xInit, yInit):
         # A plot area (ViewBox + axes) for displaying the image
+
+        try:
+            self.labaxis_view.clear()
+        except:
+            pass
+
         self.p2 = self.labaxis_view.addPlot(title="")
 
         # Item for displaying image data
         self.img2 = pg.ImageItem()
         self.p2.addItem(self.img2)
         self.img2.setImage(self.ref_image)
-        self.img2.scale(0.5, 0.5)
-        self.img2.translate(100, 50)
+        self.img2.scale(xScale,yScale)
+        self.img2.translate(xInit, yInit)
 
     def imageHoverEvent(self,event):
         """Show the position, pixel, and value under the mouse cursor.
@@ -72,28 +82,31 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
     def MouseClickEvent(self,event):
         """Show the position, pixel, and value under the mouse cursor.
         """
+        if event.button() == QtCore.Qt.RightButton:
 
-        pos = event.pos()
-        i, j = pos.x(), pos.y()
-        i = int(np.clip(i, 0, self.ref_image.shape[0] - 1))
-        j = int(np.clip(j, 0, self.ref_image.shape[1] - 1))
-        self.coords.append((i, j))
-        val = self.ref_image[i, j]
-        ppos = self.img.mapToParent(pos)
-        x, y = np.around(ppos.x(),2)/10, np.around(ppos.y(),2)/10
-        #x, y = smarx.pos, smary.pos
-        self.coords.append((x, y))
-        if len(self.coords) == 2:
-            self.le_ref1_pxls.setText(f'{self.coords[0][0]}, {self.coords[0][1]}')
-            self.dsb_ref1_x.setValue(self.coords[1][0])
-            self.dsb_ref1_y.setValue(self.coords[1][1])
-        elif len(self.coords) == 4:
-            self.le_ref1_pxls.setText(f'{self.coords[0][0]}, {self.coords[0][1]}')
-            self.dsb_ref1_x.setValue(self.coords[1][0])
-            self.dsb_ref1_y.setValue(self.coords[1][1])
-            self.le_ref2_pxls.setText(f'{self.coords[2][0]}, {self.coords[2][1]}')
-            self.dsb_ref2_x.setValue(self.coords[-1][0])
-            self.dsb_ref2_y.setValue(self.coords[-1][1])
+            pos = event.pos()
+            i, j = pos.x(), pos.y()
+            i = int(np.clip(i, 0, self.ref_image.shape[0] - 1))
+            j = int(np.clip(j, 0, self.ref_image.shape[1] - 1))
+            self.coords.append((i, j))
+            val = self.ref_image[i, j]
+            ppos = self.img.mapToParent(pos)
+            x, y = np.around(ppos.x(),2)/10, np.around(ppos.y(),2)/10
+            #x, y = smarx.pos, smary.pos
+            self.coords.append((x, y))
+            if len(self.coords) == 2:
+                self.le_ref1_pxls.setText(f'{self.coords[0][0]}, {self.coords[0][1]}')
+                self.dsb_ref1_x.setValue(self.coords[1][0])
+                self.dsb_ref1_y.setValue(self.coords[1][1])
+            elif len(self.coords) == 4:
+                self.le_ref1_pxls.setText(f'{self.coords[0][0]}, {self.coords[0][1]}')
+                self.dsb_ref1_x.setValue(self.coords[1][0])
+                self.dsb_ref1_y.setValue(self.coords[1][1])
+                self.le_ref2_pxls.setText(f'{self.coords[2][0]}, {self.coords[2][1]}')
+                self.dsb_ref2_x.setValue(self.coords[-1][0])
+                self.dsb_ref2_y.setValue(self.coords[-1][1])
+        else:
+            pass
 
     def scalingCalculation(self):
         yshape, xshape = np.shape(self.ref_image)
@@ -114,7 +127,7 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
         yi = lm1_y - (pixel_val_y * int(lm1_py))  # xmotor pos at origin (0,0)
         yf = yi + (pixel_val_y * yshape)  # xmotor pos at origin (0,0)
 
-        print(pixel_val_x,pixel_val_y,xf,yf)
+        self.createLabAxisImage(pixel_val_x, pixel_val_y, xi, yi)
 
 
 if __name__ == "__main__":
