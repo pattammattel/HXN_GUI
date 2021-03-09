@@ -133,7 +133,9 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
         yf = self.yi + (self.pixel_val_y * yshape)  # xmotor pos at origin (0,0)
         self.createLabAxisImage()
 
-        self.label_scale_info.setText(f'{self.pixel_val_x:.2f}, {self.pixel_val_y:.2f}, {self.xi:.2f},{self.yi:.2f},{xf:.2f},{yf:.2f}')
+        self.label_scale_info.setText(f'Scaling: {self.pixel_val_x:.2f}, {self.pixel_val_y:.2f}, \n '
+                                      f' X Range {self.xi:.2f}:{xf:.2f}, \n'
+                                      f'Y Range {self.yi:.2f}:{yf:.2f}')
         self.img2.scale(abs(self.pixel_val_x), abs(self.pixel_val_y))
         self.img2.translate(self.xi, self.yi)
         #self.img2.setRect(QtCore.QRect(xi,yf,yi,xf))
@@ -151,9 +153,9 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
         i = int(np.clip(i, 0, self.ref_image.shape[0] - 1))
         j = int(np.clip(j, 0, self.ref_image.shape[1] - 1))
         val = self.ref_image[i, j]
-        ppos = self.img2.mapToParent(pos)
-        x, y = np.around(ppos.x(), 2), np.around(ppos.y(), 2)
-        self.p2.setTitle(f'pos: {x, y}  pixel: {i, j}  value: {val}')
+        x = self.xi + (self.pixel_val_x * i)
+        y = self.yi + (self.pixel_val_y * j)
+        self.p2.setTitle(f'pos: {x:.2f},{y:.2f}  pixel: {i, j}  value: {val:.2f}')
 
     def MouseClickEventToPos(self, event):
         """Show the position, pixel, and value under the mouse cursor.
@@ -163,8 +165,6 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
             i, j = pos.x(), pos.y()
             i = int(np.clip(i, 0, self.ref_image.shape[0] - 1))
             j = int(np.clip(j, 0, self.ref_image.shape[1] - 1))
-            #ppos = self.img2.mapToParent(pos)
-            #x, y = np.around(ppos.x(), 5), np.around(ppos.y(), 5)
             xWhere = self.xi + (self.pixel_val_x * i)
             yWhere = self.yi + (self.pixel_val_y * j)
 
