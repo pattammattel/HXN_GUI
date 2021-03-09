@@ -143,26 +143,26 @@ class Ui(QtWidgets.QMainWindow):
         "return the name of the rb checked by the user"
         pass
 
-
     def calc_res(self):
         mot1_s = self.x_start.value()
         mot1_e = self.x_end.value()
         mot1_steps = self.x_step.value()
 
         mot2_s = self.y_start.value()
-        mot2_e = self.y_end.value()       
+        mot2_e = self.y_end.value()
         mot2_steps = self.y_step.value()
-        
-        dwell_t = self.dwell.value()
-        
-        cal_res_x = (abs(mot1_s)+abs(mot1_e))/mot1_steps
-        cal_res_y = (abs(mot2_s)+abs(mot2_e))/mot2_steps
-        self.res.setText(str(cal_res_x*1000),cal_res_y*1000))
 
-        tot_t = str(mot1_steps*mot2_steps*dwell_t/60)
-        self.tot_time.setText(tot_t)
-        
-            
+        dwell_t = self.dwell.value()
+
+        cal_res_x = (abs(mot1_s) + abs(mot1_e)) / mot1_steps
+        cal_res_y = (abs(mot2_s) + abs(mot2_e)) / mot2_steps
+        tot_t = str(np.around(mot1_steps * mot2_steps * dwell_t / 60, 2))
+        self.label_scan_info_calc.setText(f'X: {(cal_res_x * 1000):.2f}, Y: {(cal_res_y * 1000).:2f} \n'
+                                          f'{tot_t} + overhead')
+
+        self.label_scanMacro.setText(f'fly2d(dets1, {mot1_s}, {mot1_e}, {mot1_steps}, '
+                                     f'{mot2_s},{mot2_e},{mot2_steps},{dwell_t})')
+
     def plot_me(self):
 
         sd = self.lineEdit_5.text()
