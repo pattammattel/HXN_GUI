@@ -19,6 +19,9 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
         # connections
         self.actionLoad_refImage.triggered.connect(self.loadRefImage)
         self.pb_apply_calculation.clicked.connect(self.scalingCalculation)
+        self.dsb_x_off.valueChanged.connect(self.offsetCorrectedPos)
+        self.dsb_y_off.valueChanged.connect(self.offsetCorrectedPos)
+
 
     def loadRefImage(self):
         self.file_name = QtWidgets.QFileDialog().getOpenFileName(self, "Select Ref Image", '',
@@ -165,12 +168,13 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
             i, j = pos.x(), pos.y()
             i = int(np.clip(i, 0, self.ref_image.shape[0] - 1))
             j = int(np.clip(j, 0, self.ref_image.shape[1] - 1))
-            xWhere = self.xi + (self.pixel_val_x * i)
-            yWhere = self.yi + (self.pixel_val_y * j)
+            self.xWhere = self.xi + (self.pixel_val_x * i)
+            self.yWhere = self.yi + (self.pixel_val_y * j)
+            self.offsetCorrectedPos()
 
-            self.dsb_calc_x.setValue(xWhere + (self.dsb_x_off.value() * 0.001))
-            self.dsb_calc_y.setValue(yWhere + (self.dsb_y_off.value() * 0.001))
-
+    def offsetCorrectedPos(self):
+        self.dsb_calc_x.setValue(self.xWhere + (self.dsb_x_off.value() * 0.001))
+        self.dsb_calc_y.setValue(self.yWhere + (self.dsb_y_off.value() * 0.001))
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)

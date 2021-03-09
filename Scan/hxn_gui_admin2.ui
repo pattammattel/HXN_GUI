@@ -701,7 +701,7 @@ border-color: rgb(255, 235, 119);
                    </sizepolicy>
                   </property>
                   <property name="text">
-                   <string>30x30, 30,30, 0.03</string>
+                   <string>30:30, 30:30, 0.03</string>
                   </property>
                  </widget>
                 </item>
@@ -714,7 +714,7 @@ border-color: rgb(255, 235, 119);
                    </sizepolicy>
                   </property>
                   <property name="text">
-                   <string>6x6, 100,100 0.05</string>
+                   <string>6:6, 100:100, 0.05</string>
                   </property>
                  </widget>
                 </item>
@@ -727,7 +727,7 @@ border-color: rgb(255, 235, 119);
                    </sizepolicy>
                   </property>
                   <property name="text">
-                   <string>20x20, 100,100, 0.03</string>
+                   <string>20:20, 100:100, 0.03</string>
                   </property>
                  </widget>
                 </item>
@@ -740,7 +740,7 @@ border-color: rgb(255, 235, 119);
                    </sizepolicy>
                   </property>
                   <property name="text">
-                   <string>2x2, 100,100, 0.03</string>
+                   <string>2:2, 100:100, 0.03</string>
                   </property>
                  </widget>
                 </item>
@@ -772,7 +772,7 @@ border-color: rgb(255, 235, 119);
 font: 12pt &quot;Segoe UI&quot;;</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_9">
-           <item row="0" column="2">
+           <item row="0" column="3">
             <layout class="QVBoxLayout" name="verticalLayout">
              <item>
               <widget class="QLabel" name="label_19">
@@ -875,6 +875,22 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;
              </property>
              <property name="text">
               <string>RUN</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="2">
+            <widget class="QPushButton" name="add_to_batch_file">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(255, 255, 127);</string>
+             </property>
+             <property name="text">
+              <string>Add to Batch File</string>
              </property>
             </widget>
            </item>
