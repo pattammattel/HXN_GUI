@@ -33,7 +33,7 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
             pass
 
         try:
-            self.labaxis_view.clear()
+            self.ref_view.clear()
         except:
             pass
 
@@ -42,6 +42,10 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
 
         # Item for displaying image data
         self.img = pg.ImageItem()
+        hist = pg.HistogramLUTItem()
+        hist.setImageItem(self.img)
+        self.ref_view.addItem(hist)
+
         self.p1.addItem(self.img)
         self.ref_image = rotate(self.ref_image, -90)
         self.img.setImage(self.ref_image)
@@ -104,6 +108,9 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
 
         # Item for displaying image data
         self.img2 = pg.ImageItem()
+        hist = pg.HistogramLUTItem()
+        hist.setImageItem(self.img2)
+        self.labaxis_view.addItem(hist)
         self.p2.addItem(self.img2)
         self.img2.setImage(self.ref_image)
 
@@ -117,20 +124,19 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
         lm1_x, lm1_y = self.dsb_ref1_x.value(), self.dsb_ref1_y.value()  # motor values from the microscope at pixel pos 1
         lm2_x, lm2_y = self.dsb_ref2_x.value(), self.dsb_ref2_y.value()  # motor values from the microscope at pixel pos 2
 
-        pixel_val_x = (lm2_x - lm1_x) / (int(lm2_px) - int(lm1_px))  # pixel value of X
-        pixel_val_y = (lm2_y - lm1_y) / (int(lm2_py) - int(lm1_py))  # pixel value of Y; ususally same as X
+        self.pixel_val_x = (lm2_x - lm1_x) / (int(lm2_px) - int(lm1_px))  # pixel value of X
+        self.pixel_val_y = (lm2_y - lm1_y) / (int(lm2_py) - int(lm1_py))  # pixel value of Y; ususally same as X
 
-        xi = lm1_x - (pixel_val_x * int(lm1_px))  # xmotor pos at origin (0,0)
-        xf = xi + (pixel_val_x * xshape)  # xmotor pos at the end (0,0)
-
-        yi = lm1_y + (pixel_val_y * int(lm1_py))  # xmotor pos at origin (0,0)
-        yf = yi - (pixel_val_y * yshape)  # xmotor pos at origin (0,0)
-
+        self.xi = lm1_x - (self.pixel_val_x * int(lm1_px))  # xmotor pos at origin (0,0)
+        xf = self.xi + (self.pixel_val_x * xshape)  # xmotor pos at the end (0,0)
+        self.yi = lm1_y - (self.pixel_val_y * int(lm1_py))  # xmotor pos at origin (0,0)
+        yf = self.yi + (self.pixel_val_y * yshape)  # xmotor pos at origin (0,0)
         self.createLabAxisImage()
 
-        self.label_scale_info.setText(f'{pixel_val_x:.2f}, {pixel_val_y:.2f}, {xi:.2f},{yi:.2f},{xf:.2f},{yf:.2f}')
-        self.img2.scale(pixel_val_x, pixel_val_y)
-        self.img2.translate(xi, yi)
+        self.label_scale_info.setText(f'{self.pixel_val_x:.2f}, {self.pixel_val_y:.2f}, {self.xi:.2f},{self.yi:.2f},{xf:.2f},{yf:.2f}')
+        self.img2.scale(abs(self.pixel_val_x), abs(self.pixel_val_y))
+        self.img2.translate(self.xi, self.yi)
+        #self.img2.setRect(QtCore.QRect(xi,yf,yi,xf))
         self.img2.hoverEvent = self.imageHoverEvent2
         self.img2.mousePressEvent = self.MouseClickEventToPos
 
@@ -157,10 +163,13 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
             i, j = pos.x(), pos.y()
             i = int(np.clip(i, 0, self.ref_image.shape[0] - 1))
             j = int(np.clip(j, 0, self.ref_image.shape[1] - 1))
-            ppos = self.img2.mapToParent(pos)
-            x, y = np.around(ppos.x(), 5), np.around(ppos.y(), 5)
-            self.dsb_calc_x.setValue(x + (self.dsb_x_off.value() * 0.001))
-            self.dsb_calc_y.setValue(y + (self.dsb_y_off.value() * 0.001))
+            #ppos = self.img2.mapToParent(pos)
+            #x, y = np.around(ppos.x(), 5), np.around(ppos.y(), 5)
+            xWhere = self.xi + (self.pixel_val_x * i)
+            yWhere = self.yi + (self.pixel_val_y * j)
+
+            self.dsb_calc_x.setValue(xWhere + (self.dsb_x_off.value() * 0.001))
+            self.dsb_calc_y.setValue(yWhere + (self.dsb_y_off.value() * 0.001))
 
 
 if __name__ == "__main__":
