@@ -502,7 +502,7 @@ font: 12pt &quot;MS Shell Dlg 2&quot;;</string>
      <string>File</string>
     </property>
     <addaction name="actionLoad_refImage"/>
-    <addaction name="actionSave_labImage"/>
+    <addaction name="actionAdd_a_Reference_Image"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
@@ -535,6 +535,14 @@ font: 12pt &quot;MS Shell Dlg 2&quot;;</string>
   <action name="actionLoad_refImage">
    <property name="text">
     <string>Load Ref Image</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
+  </action>
+  <action name="actionAdd_a_Reference_Image">
+   <property name="text">
+    <string>Overlay Reference Image</string>
    </property>
   </action>
  </widget>

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 #Author: Ajith Pattammattel
-#Data:06-23-2020
+#Original Date:06-23-2020
 
 import sys, os, signal, subprocess
 import numpy as np
@@ -12,12 +12,11 @@ from PyQt5 import QtWidgets, uic
 from PyQt5.QtWidgets import QMessageBox, QFileDialog
 
 
-
-
 class Ui(QtWidgets.QMainWindow):
     def __init__(self):
         super(Ui, self).__init__()
-        uic.loadUi('hxn_gui_admin2.ui', self)
+        uic.loadUi('/home/xf03id/user_macros/HXN_GUI/Scan/hxn_gui_admin2.ui', self)
+        self.initParams()
 
         # updating resolution/tot time
         self.dwell.valueChanged.connect(self.initParams)
@@ -29,8 +28,10 @@ class Ui(QtWidgets.QMainWindow):
         self.y_end.valueChanged.connect(self.initParams)
 
         # logic control for 1d or 2d scan selection
-        self.self.rb_1d.toggled.connect(self.disableMot2)
-        self.self.rb_2d.toggled.connect(self.enableMot2)
+        self.rb_1d.clicked.connect(self.disableMot2)
+        self.rb_2d.clicked.connect(self.enableMot2)
+        self.rb_1d.clicked.connect(self.initParams)
+        self.rb_2d.clicked.connect(self.initParams)
 
         # text files and editor controls
         self.pb_save_cmd.clicked.connect(self.save_file)
@@ -48,7 +49,7 @@ class Ui(QtWidgets.QMainWindow):
 
         #generate xanes parameters
         self.pb_gen_elist.clicked.connect(self.generate_elist)
-        self.pb_start_xanes.clicked.connect(self.zp_xanes)
+        #self.pb_start_xanes.clicked.connect(self.zp_xanes)
 
         #scans and motor motion
         self.start.clicked.connect(self.initFlyScan)
@@ -56,6 +57,16 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_move_smary.clicked.connect(self.move_smary)
         self.pb_move_smarz.clicked.connect(self.move_smarz)
         self.pb_move_dth.clicked.connect(self.move_dsth)
+        
+        #Detector/Camera Motions
+        self.pb_merlinOUT.clicked.connect(self.merlinOUT)
+        self.pb_merlinIN.clicked.connect(self.merlinIN)
+        self.pb_vortexOUT.clicked.connect(self.vortexOUT)
+        self.pb_vortexIN.clicked.connect(self.vortexIN)
+        self.pb_cam6IN.clicked.connect(self.cam6IN)
+        self.pb_cam6OUT.clicked.connect(self.cam6OUT)
+        self.pb_cam11IN.clicked.connect(self.cam11IN)
+        
 
         #Quick fill scan Params
         self.pb_3030.clicked.connect(self.fill_common_scan_params)
@@ -75,18 +86,18 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_createpdf.clicked.connect(self.insert_pdf)
         '''
         #close the application
-        self.pb_exit.clicked.connect(self.close_application)
+        #self.pb_exit.clicked.connect(self.close_application)
 
         self.show()
 
     def setUserLevel(self):
 
-        self.userEnabler(self.cb_det_user, self.gb_det_control)
-        self.userEnabler(self.cb_xanes_user, self.rb_xanes_scan)
-        self.userEnabler(self.cb_xanes_user, self.gb_xanes_align)
+        self.userButtonEnabler(self.cb_det_user, self.gb_det_control)
+        self.userButtonEnabler(self.cb_xanes_user, self.rb_xanes_scan)
+        self.userButtonEnabler(self.cb_xanes_user, self.gb_xanes_align)
 
 
-    def userEnabler(self,checkbox_name,control_btn_grp_name):
+    def userButtonEnabler(self,checkbox_name,control_btn_grp_name):
 
         if checkbox_name.isChecked():
             control_btn_grp_name.setEnabled(True)
@@ -112,21 +123,24 @@ class Ui(QtWidgets.QMainWindow):
 
         cal_res_x = (abs(self.mot1_s) + abs(self.mot1_e)) / self.mot1_steps
         cal_res_y = (abs(self.mot2_s) + abs(self.mot2_e)) / self.mot2_steps
-        tot_t = str(self.mot1_steps * self.mot2_steps * self.dwell_t / 60)
-        self.label_scan_info_calc.setText(f'X: {(cal_res_x * 1000):.2f}, Y: {(cal_res_y * 1000).:2f} \n'
-                                          f'{tot_t} + overhead')
+        tot_t = self.mot1_steps * self.mot2_steps * self.dwell_t / 60
+        self.label_scan_info_calc.setText(f'X: {(cal_res_x * 1000):.2f} nm, Y: {(cal_res_y * 1000):.2f} nm \n'
+                                          f'{tot_t:.2f} minutes + overhead')
 
         if self.rb_1d.isChecked():
 
-            self.label_scanMacro.setText(f'fly2d({det}, {self.mot1_s}, '
+            self.label_scanMacro.setText(f'fly1d({self.det}, {self.mot1_s}, '
                                          f'{self.mot1_e}, {self.mot1_steps}, {self.dwell_t})')
 
         else:
-            self.label_scanMacro.setText(f'fly2d({det}, {self.mot1_s}, {self.mot1_e}, {self.mot1_steps}, '
+            self.label_scanMacro.setText(f'fly2d({self.det}, {self.mot1_s}, {self.mot1_e}, {self.mot1_steps}, '
                                          f'{self.mot2_s},{self.mot2_e},{self.mot2_steps},{self.dwell_t})')
 
     def initFlyScan(self):
         self.getScanValues()
+
+        self.motor1 = self.cb_motor1.currentText()
+        self.motor2 = self.cb_motor2.currentText()
         
         self.motor_list = {'zpssx':zpssx,'zpssy':zpssy,'zpssz':zpssz}
         self.det_list = {'dets1': dets1, 'dets2': dets2, 'dets3': dets3,
@@ -143,21 +157,21 @@ class Ui(QtWidgets.QMainWindow):
 
 
     def disableMot2(self):
-        self.y_start.setEnable(False)
-        self.y_end.setEnable(False)
-        self.y_step.setEnable(False)
+        self.y_start.setEnabled(False)
+        self.y_end.setEnabled(False)
+        self.y_step.setEnabled(False)
 
     def enableMot2(self):
-        self.y_start.setEnable(False)
-        self.y_end.setEnable(False)
-        self.y_step.setEnable(False)
+        self.y_start.setEnabled(True)
+        self.y_end.setEnabled(True)
+        self.y_step.setEnabled(True)
 
     def fill_common_scan_params(self):
         button_name = self.sender()
         button_names = {'pb_2020':(20,20,100,100,0.03),
                         'pb_3030':(30,30,30,30,0.03),
                         'pb_66':(6,6,100,100,0.05),
-                       'pb22':(2,2,100,100,0.03)
+                       'pb_22':(2,2,100,100,0.03)
                         }
         if button_name.objectName() in button_names.keys():
 
@@ -190,16 +204,22 @@ class Ui(QtWidgets.QMainWindow):
         RE(go_det('merlin'))
         
     def merlinOUT(self):
-        RE(bps.mov(diff_x,-400))
+        RE(bps.mov(diff.x,-500))
                 
     def vortexIN(self):
-        RE(bps.mov(fdet1_x,-8))
+        RE(bps.mov(fdet1.x,-8))
         
     def vortexOUT(self):
-        RE(bps.mov(fdet1_x,-107))
+        RE(bps.mov(fdet1.x,-107))
         
     def cam11IN(self):
         RE(go_det('cam11'))
+
+    def cam6IN(self):
+        RE(bps.mov(cam6_x, 0))
+
+    def cam6OUT(self):
+        RE(bps.mov(cam6_x, -50))
 
     def generate_elist(self):
 

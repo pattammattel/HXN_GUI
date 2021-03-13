@@ -40,6 +40,7 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
         except:
             pass
 
+
         # A plot area (ViewBox + axes) for displaying the image
         self.p1 = self.ref_view.addPlot(title="")
 
@@ -52,6 +53,7 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
         self.p1.addItem(self.img)
         self.ref_image = rotate(self.ref_image, -90)
         self.img.setImage(self.ref_image)
+        self.img.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
         # self.img.translate(100, 50)
         # self.img.scale(0.5, 0.5)
         self.img.hoverEvent = self.imageHoverEvent
@@ -107,6 +109,7 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
         except:
             pass
 
+
         self.p2 = self.labaxis_view.addPlot(title="")
 
         # Item for displaying image data
@@ -115,7 +118,9 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
         hist.setImageItem(self.img2)
         self.labaxis_view.addItem(hist)
         self.p2.addItem(self.img2)
-        self.img2.setImage(self.ref_image)
+        self.img2.setImage(self.ref_image, opacity = 0.5)
+        self.img2.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
+        #self.img2.setImage(self.ref_image.T,opacity = 0.5)
 
 
     def scalingCalculation(self):

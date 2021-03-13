@@ -108,13 +108,13 @@ class Ui(QtWidgets.QMainWindow):
         RE(go_det('merlin')      
         
     def merlinOUT(self):
-        RE(bps.mov(diff_x,-400)
+        RE(bps.mov(diff.x,-400)
                 
     def vortexIN(self):
-        RE(bps.mov(fdet1_x,-8)
+        RE(bps.mov(fdet1.x,-8)
         
     def vortexOUT(self):
-        RE(bps.mov(fdet1_x,-107)
+        RE(bps.mov(fdet1.x,-107)
         
     def cam11IN(self):
         RE(go_det('cam11')
