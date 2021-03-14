@@ -15,6 +15,9 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
+   <property name="styleSheet">
+    <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+   </property>
    <layout class="QGridLayout" name="gridLayout_14">
     <item row="0" column="0" colspan="2">
      <widget class="QGroupBox" name="groupBox">
@@ -25,7 +28,7 @@
        </sizepolicy>
       </property>
       <property name="styleSheet">
-       <string notr="true">font: 10pt &quot;MS Shell Dlg 2&quot;;</string>
+       <string notr="true"/>
       </property>
       <property name="title">
        <string/>
@@ -36,7 +39,7 @@
          <item row="2" column="1">
           <widget class="QLineEdit" name="le_ref">
            <property name="sizePolicy">
-            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
@@ -49,7 +52,7 @@
          <item row="0" column="1">
           <widget class="QLineEdit" name="le_wd">
            <property name="sizePolicy">
-            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
@@ -64,7 +67,7 @@
            <item row="0" column="0">
             <widget class="QPushButton" name="pb_wd">
              <property name="sizePolicy">
-              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+              <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
@@ -77,7 +80,7 @@
            <item row="1" column="0">
             <widget class="QPushButton" name="pb_param">
              <property name="sizePolicy">
-              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+              <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
@@ -90,13 +93,13 @@
            <item row="2" column="0">
             <widget class="QPushButton" name="pb_ref">
              <property name="sizePolicy">
-              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+              <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
              </property>
              <property name="text">
-              <string>Select XANES Reference File (xanes only)</string>
+              <string>Select XANES Reference File</string>
              </property>
             </widget>
            </item>
@@ -105,13 +108,69 @@
          <item row="1" column="1">
           <widget class="QLineEdit" name="le_param">
            <property name="sizePolicy">
-            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
            <property name="placeholderText">
             <string>C:\Matrix\Blue Pill\TheChosenOne.json</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="1" column="0">
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>First Scan ID:</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="le_startid">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>00000</string>
+           </property>
+           <property name="placeholderText">
+            <string>00000</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>Last Scan ID:</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="le_lastid">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>00000</string>
+           </property>
+           <property name="placeholderText">
+            <string>00000</string>
            </property>
           </widget>
          </item>
@@ -284,64 +343,30 @@ font: 75 12pt &quot;MS Shell Dlg 2&quot;;
           <layout class="QGridLayout" name="gridLayout_11">
            <item row="0" column="0">
             <layout class="QGridLayout" name="gridLayout_6">
-             <item row="0" column="1">
-              <widget class="QLineEdit" name="le_startid_2">
-               <property name="text">
-                <string>00000</string>
-               </property>
-               <property name="placeholderText">
-                <string>00000</string>
-               </property>
-              </widget>
-             </item>
              <item row="0" column="0">
-              <widget class="QLabel" name="label_12">
-               <property name="text">
-                <string>First Scan ID:</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="2" colspan="3">
-              <widget class="QLabel" name="label_11">
-               <property name="text">
-                <string>Last Scan ID:</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="5">
-              <widget class="QLineEdit" name="le_lastid_2">
-               <property name="text">
-                <string>00000</string>
-               </property>
-               <property name="placeholderText">
-                <string>00000</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="0">
               <widget class="QLabel" name="label_10">
                <property name="text">
                 <string>Scalar Name:</string>
                </property>
               </widget>
              </item>
-             <item row="1" column="1">
-              <widget class="QLineEdit" name="le_sclr_2">
-               <property name="text">
-                <string>sclr1_ch4</string>
-               </property>
-               <property name="placeholderText">
-                <string>Fe_K</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="4" colspan="2">
+             <item row="0" column="2" colspan="2">
               <widget class="QPushButton" name="pb_xrf_start">
                <property name="styleSheet">
                 <string notr="true">background-color: rgb(85, 255, 127);</string>
                </property>
                <property name="text">
                 <string>Start Batch Processing</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QLineEdit" name="le_sclr_2">
+               <property name="text">
+                <string>sclr1_ch4</string>
+               </property>
+               <property name="placeholderText">
+                <string>Fe_K</string>
                </property>
               </widget>
              </item>
@@ -371,60 +396,13 @@ font: 75 12pt &quot;MS Shell Dlg 2&quot;;
        </attribute>
        <layout class="QGridLayout" name="gridLayout_5">
         <item row="0" column="0">
-         <widget class="QLabel" name="label">
-          <property name="text">
-           <string>First Scan ID:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QLineEdit" name="le_startid">
-          <property name="text">
-           <string>00000</string>
-          </property>
-          <property name="placeholderText">
-           <string>00000</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="2">
-         <widget class="QLabel" name="label_2">
-          <property name="text">
-           <string>Last Scan ID:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="3">
-         <widget class="QLineEdit" name="le_lastid">
-          <property name="text">
-           <string>00000</string>
-          </property>
-          <property name="placeholderText">
-           <string>00000</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="4">
-         <spacer name="horizontalSpacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>49</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item row="1" column="0">
          <widget class="QLabel" name="label_3">
           <property name="text">
            <string>XANES Element </string>
           </property>
          </widget>
         </item>
-        <item row="1" column="1">
+        <item row="0" column="1">
          <widget class="QLineEdit" name="xanes_elem">
           <property name="text">
            <string>Fe_K</string>
@@ -434,14 +412,14 @@ font: 75 12pt &quot;MS Shell Dlg 2&quot;;
           </property>
          </widget>
         </item>
-        <item row="1" column="2">
+        <item row="0" column="2">
          <widget class="QLabel" name="label_8">
           <property name="text">
            <string>Scalar Name</string>
           </property>
          </widget>
         </item>
-        <item row="1" column="3">
+        <item row="0" column="3">
          <widget class="QLineEdit" name="le_sclr">
           <property name="text">
            <string>sclr1_ch4</string>
@@ -451,14 +429,14 @@ font: 75 12pt &quot;MS Shell Dlg 2&quot;;
           </property>
          </widget>
         </item>
-        <item row="2" column="0">
+        <item row="1" column="0">
          <widget class="QLabel" name="label_4">
           <property name="text">
            <string>Alignemnt Element</string>
           </property>
          </widget>
         </item>
-        <item row="2" column="1">
+        <item row="1" column="1">
          <widget class="QLineEdit" name="alignment_elem">
           <property name="text">
            <string>P_K</string>
@@ -468,7 +446,7 @@ font: 75 12pt &quot;MS Shell Dlg 2&quot;;
           </property>
          </widget>
         </item>
-        <item row="2" column="2" colspan="2">
+        <item row="1" column="2" colspan="2">
          <layout class="QGridLayout" name="gridLayout_3">
           <item row="0" column="0">
            <widget class="QCheckBox" name="cb_align">
@@ -502,7 +480,7 @@ font: 75 12pt &quot;MS Shell Dlg 2&quot;;
           </item>
          </layout>
         </item>
-        <item row="3" column="2">
+        <item row="2" column="2">
          <spacer name="verticalSpacer">
           <property name="orientation">
            <enum>Qt::Vertical</enum>
@@ -515,7 +493,7 @@ font: 75 12pt &quot;MS Shell Dlg 2&quot;;
           </property>
          </spacer>
         </item>
-        <item row="4" column="0" colspan="4">
+        <item row="3" column="0" colspan="4">
          <layout class="QGridLayout" name="gridLayout">
           <item row="0" column="0">
            <widget class="QLabel" name="label_5">
@@ -671,7 +649,7 @@ font: 75 10pt &quot;MS Shell Dlg 2&quot;;</string>
           </item>
          </layout>
         </item>
-        <item row="4" column="4">
+        <item row="3" column="4">
          <spacer name="horizontalSpacer_2">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>

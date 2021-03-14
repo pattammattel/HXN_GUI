@@ -90,8 +90,8 @@ class xrf_3ID(QtWidgets.QMainWindow):
     def create_pyxrf_batch_macro(self):
     
         cwd = self.le_wd.text()
-        last_sid = int(self.le_lastid_2.text())
-        first_sid = int(self.le_startid_2.text())
+        last_sid = int(self.le_lastid.text())
+        first_sid = int(self.le_startid.text())
         norm = self.le_sclr_2.text()
         all_sid = np.arange(first_sid, last_sid+1)
         logger.info(f'scans to process {all_sid}')
