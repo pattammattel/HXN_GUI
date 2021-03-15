@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1310</width>
-    <height>1183</height>
+    <width>1185</width>
+    <height>1218</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -52,7 +52,7 @@
     <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
    </property>
    <layout class="QGridLayout" name="gridLayout_11">
-    <item row="1" column="2">
+    <item row="0" column="2">
      <widget class="QWidget" name="widget" native="true">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -82,7 +82,7 @@ font: 12pt &quot;Segoe UI&quot;;</string>
          <item>
           <widget class="QPushButton" name="start">
            <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
@@ -169,7 +169,54 @@ font: 16pt &quot;Segoe UI&quot;;</string>
       </layout>
      </widget>
     </item>
-    <item row="2" column="1" colspan="2">
+    <item row="0" column="3">
+     <spacer name="horizontalSpacer_2">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>40</width>
+        <height>20</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
+    <item row="0" column="0">
+     <spacer name="horizontalSpacer_3">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>40</width>
+        <height>20</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
+    <item row="0" column="1">
+     <widget class="QLabel" name="label_14">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">font: 40pt &quot;MS Shell Dlg 2&quot;;
+background-color: rgb(255, 170, 0);
+border-style: outset;
+border-width: 2px;
+border-radius: 10px</string>
+      </property>
+      <property name="text">
+       <string>HXN
+3-ID</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="1" colspan="2">
      <widget class="QTabWidget" name="HXN_GUI_tabs">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -227,20 +274,71 @@ font: 16pt &quot;Segoe UI&quot;;</string>
            <enum>QFrame::Raised</enum>
           </property>
           <layout class="QGridLayout" name="gridLayout_2">
-           <item row="0" column="1">
-            <widget class="QLineEdit" name="lineEdit_6">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>Element</string>
-             </property>
-            </widget>
+           <item row="0" column="0" colspan="2">
+            <layout class="QHBoxLayout" name="horizontalLayout_5">
+             <item>
+              <widget class="QLineEdit" name="lineEdit_5">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>-1</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="lineEdit_6">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Cr</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pb_plot">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">background-color: rgb(170, 255, 255);</string>
+               </property>
+               <property name="text">
+                <string>Plot</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
-           <item row="1" column="0">
+           <item row="1" column="0" colspan="2">
+            <layout class="QHBoxLayout" name="horizontalLayout_4">
+             <item>
+              <widget class="QPushButton" name="pb_erf_fit">
+               <property name="text">
+                <string>ERF Fit</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="cb_erf_linear_flag">
+               <property name="text">
+                <string>Linear Flag</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="2" column="0">
             <widget class="QPushButton" name="pb_close_plot">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
@@ -256,36 +354,7 @@ font: 16pt &quot;Segoe UI&quot;;</string>
              </property>
             </widget>
            </item>
-           <item row="0" column="2">
-            <widget class="QPushButton" name="pb_plot">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="styleSheet">
-              <string notr="true">background-color: rgb(170, 255, 255);</string>
-             </property>
-             <property name="text">
-              <string>Plot</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="0">
-            <widget class="QLineEdit" name="lineEdit_5">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>Scan ID</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
+           <item row="2" column="1">
             <widget class="QPushButton" name="pb_close_all_plot">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
@@ -300,32 +369,6 @@ font: 16pt &quot;Segoe UI&quot;;</string>
               <string>Close All Plots</string>
              </property>
             </widget>
-           </item>
-           <item row="1" column="2">
-            <widget class="QPushButton" name="pb_plot_last">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>Plot Last Scan</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1">
-            <spacer name="verticalSpacer_6">
-             <property name="orientation">
-              <enum>Qt::Vertical</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>20</width>
-               <height>40</height>
-              </size>
-             </property>
-            </spacer>
            </item>
           </layout>
          </widget>
@@ -1133,7 +1176,7 @@ font: 16pt &quot;Segoe UI&quot;;</string>
            <enum>QTabWidget::North</enum>
           </property>
           <property name="currentIndex">
-           <number>1</number>
+           <number>2</number>
           </property>
           <widget class="QWidget" name="tab_3">
            <attribute name="title">
@@ -1682,27 +1725,6 @@ font: 12pt &quot;MS Shell Dlg 2&quot;;</string>
                </size>
               </property>
              </spacer>
-            </item>
-           </layout>
-          </widget>
-          <widget class="QWidget" name="tab_4">
-           <attribute name="title">
-            <string>Advanced Plots</string>
-           </attribute>
-           <layout class="QGridLayout" name="gridLayout_24">
-            <item row="0" column="0">
-             <widget class="QPushButton" name="pb_erf_fit">
-              <property name="text">
-               <string>ERF Fit</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QCheckBox" name="cb_erf_linear_flag">
-              <property name="text">
-               <string>Linear Flag</string>
-              </property>
-             </widget>
             </item>
            </layout>
           </widget>
@@ -2321,6 +2343,499 @@ font: 12pt &quot;MS Shell Dlg 2&quot;;</string>
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="tab_6">
+       <attribute name="title">
+        <string>Image Correlation Tool</string>
+       </attribute>
+       <layout class="QGridLayout" name="gridLayout_25">
+        <item row="0" column="0">
+         <layout class="QHBoxLayout" name="horizontalLayout_3">
+          <item>
+           <widget class="QLabel" name="label_19">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">color: rgb(255, 0, 0);
+font: 12pt &quot;MS Shell Dlg 2&quot;;</string>
+            </property>
+            <property name="text">
+             <string>Reference Image</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pb_RefImageLoad">
+            <property name="text">
+             <string>Load</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item row="0" column="1" rowspan="3">
+         <layout class="QVBoxLayout" name="verticalLayout_22">
+          <item>
+           <widget class="QGroupBox" name="groupBox_8">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="title">
+             <string>Find Landmarks</string>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_26">
+             <item row="0" column="0">
+              <widget class="QGroupBox" name="groupBox_11">
+               <property name="title">
+                <string>Ref. Pos. 1</string>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_27">
+                <item row="0" column="0">
+                 <layout class="QGridLayout" name="gridLayout_28">
+                  <item row="0" column="0">
+                   <layout class="QVBoxLayout" name="verticalLayout_12">
+                    <item>
+                     <widget class="QLabel" name="label_22">
+                      <property name="text">
+                       <string>Pixels</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLineEdit" name="le_ref1_pxls"/>
+                    </item>
+                   </layout>
+                  </item>
+                  <item row="1" column="0" colspan="2">
+                   <layout class="QGridLayout" name="gridLayout_29">
+                    <item row="0" column="0">
+                     <layout class="QVBoxLayout" name="verticalLayout_13">
+                      <item>
+                       <widget class="QLabel" name="label_30">
+                        <property name="text">
+                         <string>XMotor Pos</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QDoubleSpinBox" name="dsb_ref1_x">
+                        <property name="suffix">
+                         <string> mm</string>
+                        </property>
+                        <property name="decimals">
+                         <number>5</number>
+                        </property>
+                        <property name="minimum">
+                         <double>-10000.000000000000000</double>
+                        </property>
+                        <property name="maximum">
+                         <double>10000.000000000000000</double>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
+                    </item>
+                    <item row="0" column="1">
+                     <layout class="QVBoxLayout" name="verticalLayout_14">
+                      <item>
+                       <widget class="QLabel" name="label_31">
+                        <property name="text">
+                         <string>YMotor Pos</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QDoubleSpinBox" name="dsb_ref1_y">
+                        <property name="suffix">
+                         <string> mm</string>
+                        </property>
+                        <property name="decimals">
+                         <number>5</number>
+                        </property>
+                        <property name="minimum">
+                         <double>-10000.000000000000000</double>
+                        </property>
+                        <property name="maximum">
+                         <double>10000.000000000000000</double>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
+                    </item>
+                   </layout>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QPushButton" name="pb_grabXY_1">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(85, 255, 255);
+font: 12pt &quot;MS Shell Dlg 2&quot;;</string>
+                    </property>
+                    <property name="text">
+                     <string>Insert Current Pos</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QGroupBox" name="groupBox_12">
+               <property name="title">
+                <string>Ref. Pos. 2</string>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_30">
+                <item row="0" column="0">
+                 <layout class="QGridLayout" name="gridLayout_31">
+                  <item row="0" column="0">
+                   <layout class="QVBoxLayout" name="verticalLayout_15">
+                    <item>
+                     <widget class="QLabel" name="label_33">
+                      <property name="text">
+                       <string>Pixels</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLineEdit" name="le_ref2_pxls"/>
+                    </item>
+                   </layout>
+                  </item>
+                  <item row="1" column="0" colspan="2">
+                   <layout class="QGridLayout" name="gridLayout_32">
+                    <item row="0" column="0">
+                     <layout class="QVBoxLayout" name="verticalLayout_16">
+                      <item>
+                       <widget class="QLabel" name="label_34">
+                        <property name="text">
+                         <string>XMotor Pos</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QDoubleSpinBox" name="dsb_ref2_x">
+                        <property name="suffix">
+                         <string> mm</string>
+                        </property>
+                        <property name="decimals">
+                         <number>5</number>
+                        </property>
+                        <property name="minimum">
+                         <double>-10000.000000000000000</double>
+                        </property>
+                        <property name="maximum">
+                         <double>10000.000000000000000</double>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
+                    </item>
+                    <item row="0" column="1">
+                     <layout class="QVBoxLayout" name="verticalLayout_17">
+                      <item>
+                       <widget class="QLabel" name="label_35">
+                        <property name="text">
+                         <string>YMotor Pos</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QDoubleSpinBox" name="dsb_ref2_y">
+                        <property name="suffix">
+                         <string> mm</string>
+                        </property>
+                        <property name="decimals">
+                         <number>5</number>
+                        </property>
+                        <property name="minimum">
+                         <double>-10000.000000000000000</double>
+                        </property>
+                        <property name="maximum">
+                         <double>10000.000000000000000</double>
+                        </property>
+                        <property name="value">
+                         <double>0.000000000000000</double>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
+                    </item>
+                   </layout>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QPushButton" name="pb_grabXY_2">
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(85, 255, 255);
+font: 12pt &quot;MS Shell Dlg 2&quot;;</string>
+                    </property>
+                    <property name="text">
+                     <string>Insert Current Pos</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QPushButton" name="pb_apply_calculation">
+               <property name="styleSheet">
+                <string notr="true">background-color: rgb(85, 255, 255);
+font: 12pt &quot;MS Shell Dlg 2&quot;;</string>
+               </property>
+               <property name="text">
+                <string>Apply</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_scale_info">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Scaling Info</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="groupBox_13">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="title">
+             <string>Calculated Motor Positions</string>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_33">
+             <item row="0" column="0">
+              <widget class="QGroupBox" name="groupBox_14">
+               <property name="title">
+                <string/>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_34">
+                <item row="0" column="0">
+                 <layout class="QVBoxLayout" name="verticalLayout_18">
+                  <item>
+                   <widget class="QLabel" name="label_36">
+                    <property name="text">
+                     <string>XMotor Pos</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QDoubleSpinBox" name="dsb_calc_x">
+                    <property name="suffix">
+                     <string> mm</string>
+                    </property>
+                    <property name="decimals">
+                     <number>5</number>
+                    </property>
+                    <property name="minimum">
+                     <double>-10000.000000000000000</double>
+                    </property>
+                    <property name="maximum">
+                     <double>10000.000000000000000</double>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+                <item row="0" column="1">
+                 <layout class="QVBoxLayout" name="verticalLayout_19">
+                  <item>
+                   <widget class="QLabel" name="label_37">
+                    <property name="text">
+                     <string>YMotor Pos</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QDoubleSpinBox" name="dsb_calc_y">
+                    <property name="suffix">
+                     <string> mm</string>
+                    </property>
+                    <property name="decimals">
+                     <number>5</number>
+                    </property>
+                    <property name="minimum">
+                     <double>-10000.000000000000000</double>
+                    </property>
+                    <property name="maximum">
+                     <double>10000.000000000000000</double>
+                    </property>
+                    <property name="value">
+                     <double>0.000000000000000</double>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QGroupBox" name="groupBox_15">
+               <property name="title">
+                <string>Offset</string>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_35">
+                <item row="0" column="0">
+                 <widget class="QGroupBox" name="groupBox_16">
+                  <property name="title">
+                   <string/>
+                  </property>
+                  <layout class="QGridLayout" name="gridLayout_36">
+                   <item row="0" column="0">
+                    <layout class="QVBoxLayout" name="verticalLayout_20">
+                     <item>
+                      <widget class="QLabel" name="label_38">
+                       <property name="text">
+                        <string>X Offset</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QDoubleSpinBox" name="dsb_x_off">
+                       <property name="suffix">
+                        <string> um</string>
+                       </property>
+                       <property name="decimals">
+                        <number>2</number>
+                       </property>
+                       <property name="minimum">
+                        <double>-100.000000000000000</double>
+                       </property>
+                       <property name="maximum">
+                        <double>100.000000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                   <item row="0" column="1">
+                    <layout class="QVBoxLayout" name="verticalLayout_21">
+                     <item>
+                      <widget class="QLabel" name="label_39">
+                       <property name="text">
+                        <string>Y Offset</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QDoubleSpinBox" name="dsb_y_off">
+                       <property name="suffix">
+                        <string> um</string>
+                       </property>
+                       <property name="decimals">
+                        <number>2</number>
+                       </property>
+                       <property name="minimum">
+                        <double>-100.000000000000000</double>
+                       </property>
+                       <property name="value">
+                        <double>0.000000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                  </layout>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QPushButton" name="pb_gotoTargetPos">
+               <property name="styleSheet">
+                <string notr="true">background-color: rgb(85, 255, 255);
+font: 12pt &quot;MS Shell Dlg 2&quot;;</string>
+               </property>
+               <property name="text">
+                <string>GO</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item row="1" column="0">
+         <widget class="GraphicsLayoutWidget" name="ref_view">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <layout class="QVBoxLayout" name="verticalLayout_11">
+          <item>
+           <widget class="QLabel" name="label_20">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">font: 12pt &quot;MS Shell Dlg 2&quot;;
+color: rgb(255, 0, 0);</string>
+            </property>
+            <property name="text">
+             <string>Calc. Image in Lab Axis</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="GraphicsLayoutWidget" name="labaxis_view">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
       <widget class="QWidget" name="alignement">
        <attribute name="title">
         <string>Custom Macros</string>
@@ -2504,63 +3019,6 @@ font: 12pt &quot;MS Shell Dlg 2&quot;;</string>
       </widget>
      </widget>
     </item>
-    <item row="1" column="1">
-     <widget class="QLabel" name="label_14">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="styleSheet">
-       <string notr="true">font: 40pt &quot;MS Shell Dlg 2&quot;;
-background-color: rgb(255, 170, 0);
-border-style: outset;
-border-width: 2px;
-border-radius: 10px</string>
-      </property>
-      <property name="text">
-       <string>HXN
-3-ID</string>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="3">
-     <spacer name="horizontalSpacer_2">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>40</width>
-        <height>20</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
-    <item row="1" column="0">
-     <spacer name="horizontalSpacer_3">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>40</width>
-        <height>20</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
-    <item row="0" column="1">
-     <widget class="QWidget" name="widget_2" native="true">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-     </widget>
-    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -2568,7 +3026,7 @@ border-radius: 10px</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1310</width>
+     <width>1185</width>
      <height>37</height>
     </rect>
    </property>
@@ -2579,12 +3037,6 @@ border-radius: 10px</string>
     <addaction name="actionScreenshot_tool"/>
     <addaction name="actionWeb_Browser"/>
     <addaction name="actionImagej"/>
-   </widget>
-   <widget class="QMenu" name="menuHelp">
-    <property name="title">
-     <string>Plug-Ins</string>
-    </property>
-    <addaction name="actionImage_Correlation_tool"/>
    </widget>
    <widget class="QMenu" name="menuFile">
     <property name="title">
@@ -2601,7 +3053,6 @@ border-radius: 10px</string>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuOptions"/>
-   <addaction name="menuHelp"/>
    <addaction name="menuHelp_2"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -2641,6 +3092,13 @@ border-radius: 10px</string>
    </property>
   </action>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>GraphicsLayoutWidget</class>
+   <extends>QGraphicsView</extends>
+   <header>pyqtgraph</header>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="hxn_image.qrc"/>
  </resources>
