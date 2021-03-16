@@ -8,6 +8,7 @@ import signal
 import subprocess
 import sys
 import collections
+import webbrowser
 import pyqtgraph as pg
 from scipy.ndimage import rotate
 
@@ -52,7 +53,6 @@ class Ui(QtWidgets.QMainWindow):
 
         #plotting controls
         self.pb_close_all_plot.clicked.connect(self.close_all_plots)
-        self.pb_close_plot.clicked.connect(self.close_plot)
         self.pb_plot.clicked.connect(self.plot_me)
         self.pb_erf_fit.clicked.connect(self.plot_erf_fit)
 
@@ -67,7 +67,7 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_move_smarz.clicked.connect(self.move_smarz)
         self.pb_move_dth.clicked.connect(self.move_dsth)
         self.pb_move_zpz.clicked.connect(self.move_zpz1)
-        
+
         #Detector/Camera Motions
         self.pb_merlinOUT.clicked.connect(self.merlinOUT)
         self.pb_merlinIN.clicked.connect(self.merlinIN)
@@ -83,15 +83,15 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_66.clicked.connect(self.fill_common_scan_params)
         self.pb_22.clicked.connect(self.fill_common_scan_params)
 
-        #admin control
-        self.pb_apply_user_settings.clicked.connect(self.setUserLevel)
-
-        #elog 
+        #elog
         self.pb_folder_log.clicked.connect(self.select_pdf_wd)
         self.pb_pdf_image.clicked.connect(self.select_pdf_image)
         self.pb_date_ok.clicked.connect(self.generate_pdf)
         self.pb_save_pdf.clicked.connect(self.force_save_pdf)
         self.pb_createpdf.clicked.connect(self.insert_pdf)
+
+        #admin control
+        self.pb_apply_user_settings.clicked.connect(self.setUserLevel)
 
         #close the application
         self.actionClose_Application.triggered.connect(self.close_application)
@@ -129,34 +129,37 @@ class Ui(QtWidgets.QMainWindow):
 
         cal_res_x = (abs(self.mot1_s) + abs(self.mot1_e)) / self.mot1_steps
         cal_res_y = (abs(self.mot2_s) + abs(self.mot2_e)) / self.mot2_steps
-        tot_t = self.mot1_steps * self.mot2_steps * self.dwell_t / 60
-        self.label_scan_info_calc.setText(f'X: {(cal_res_x * 1000):.2f} nm, Y: {(cal_res_y * 1000):.2f} nm \n'
-                                          f'{tot_t:.2f} minutes + overhead')
+        tot_t_2d = self.mot1_steps * self.mot2_steps * self.dwell_t / 60
+        tot_t_1d = self.mot1_steps * self.dwell_t / 60
+
 
         if self.rb_1d.isChecked():
-
+            self.label_scan_info_calc.setText(f'X: {(cal_res_x * 1000):.2f} nm, Y: {(cal_res_y * 1000):.2f} nm \n'
+                                              f'{tot_t_1d:.2f} minutes + overhead')
             self.label_scanMacro.setText(f'fly1d({self.det}, {self.mot1_s}, '
                                          f'{self.mot1_e}, {self.mot1_steps}, {self.dwell_t:.3f})')
 
         else:
+            self.label_scan_info_calc.setText(f'X: {(cal_res_x * 1000):.2f} nm, Y: {(cal_res_y * 1000):.2f} nm \n'
+                                              f'{tot_t_2d:.2f} minutes + overhead')
             self.label_scanMacro.setText(f'fly2d({self.det}, {self.mot1_s}, {self.mot1_e}, {self.mot1_steps}, '
-                                         f'{self.mot2_s},{self.mot2_e},{self.mot2_steps},{self.dwell_t})')
+                                         f'{self.mot2_s},{self.mot2_e},{self.mot2_steps},{self.dwell_t:.3f})')
 
     def initFlyScan(self):
         self.getScanValues()
 
         self.motor1 = self.cb_motor1.currentText()
         self.motor2 = self.cb_motor2.currentText()
-        
+
         self.motor_list = {'zpssx':zpssx,'zpssy':zpssy,'zpssz':zpssz}
         self.det_list = {'dets1': dets1, 'dets2': dets2, 'dets3': dets3,
                     'dets4': dets4, 'dets_fs': dets_fs}
- 
+
 
         if self.rb_1d.isChecked():
             RE(fly1d(self.det_list[self.det], self.motor_list[self.motor1],
                      self.mot1_s,self.mot1_e ,self.mot1_steps, self.dwell_t))
-        
+
         else:
             RE(fly2d(self.det_list[self.det], self.motor_list[self.motor1], self.mot1_s,self.mot1_e ,self.mot1_steps,
                      self.motor_list[self.motor2], self.mot2_s,self.mot2_e, self.mot2_steps, self.dwell_t))
@@ -207,21 +210,47 @@ class Ui(QtWidgets.QMainWindow):
 
     def move_zpz1(self):
         RE(movr_zpz1(self.db_move_zpz.value()*0.001))
-        
+
     def merlinIN(self):
-        RE(go_det('merlin'))
-        
+        webbrowser.open('http://10.66.17.43/view/index.shtml')
+        choice = QMessageBox.question(self, 'Detector Motion Warning',
+                                     "Make sure this motion is safe. \n Move?", QMessageBox.Yes |
+                                     QMessageBox.No, QMessageBox.No)
+
+        if choice == QMessageBox.Yes:
+            RE(go_det('merlin'))
+        else:
+            pass
+
+
     def merlinOUT(self):
-        RE(bps.mov(diff.x,-600))
-                
+        webbrowser.open('http://10.66.17.43/view/index.shtml')
+        choice = QMessageBox.question(self, 'Detector Motion Warning',
+                                     "Make sure this motion is safe. \n Move?", QMessageBox.Yes |
+                                     QMessageBox.No, QMessageBox.No)
+
+        if choice == QMessageBox.Yes:
+            RE(bps.mov(diff.x,-600))
+        else:
+            pass
+
     def vortexIN(self):
         RE(bps.mov(fdet1.x,-8))
-        
+
     def vortexOUT(self):
         RE(bps.mov(fdet1.x,-107))
-        
+
     def cam11IN(self):
-        RE(go_det('cam11'))
+        webbrowser.open('http://10.66.17.43/view/index.shtml')
+        choice = QMessageBox.question(self, 'Detector Motion Warning',
+                                     "Make sure this motion is safe. \n Move?", QMessageBox.Yes |
+                                     QMessageBox.No, QMessageBox.No)
+
+        if choice == QMessageBox.Yes:
+            RE(go_det('cam11'))
+        else:
+            pass
+
 
     def cam6IN(self):
         RE(bps.mov(cam6_x, 0))
@@ -259,7 +288,6 @@ class Ui(QtWidgets.QMainWindow):
                            self.mot2_s, self.mot2_e, self.mot2_steps, self.dwell_t))
 
     def plot_me(self):
-
         sd = self.lineEdit_5.text()
         elem = self.lineEdit_6.text()
         plot_data(int(sd), elem, 'sclr1_ch4')
@@ -268,12 +296,20 @@ class Ui(QtWidgets.QMainWindow):
         sd = self.lineEdit_5.text()
         elem = self.lineEdit_6.text()
         erf_fit(int(sd),elem, linear_flag = self.cb_erf_linear_flag.isChecked())
-            
+
+    def plot_line_center(self):
+        sd = self.lineEdit_5.text()
+        elem = self.lineEdit_6.text()
+        return_line_center(int(sd),elem, threshold = self.dsb_line_center_thre.value())
+
+    def close_all_plots(self):
+        plt.close('all')
+
     def save_file(self):
       S__File = QFileDialog.getSaveFileName(None,'SaveFile','/', "Python Files (*.py)")
-    
+
       Text = self.pte_run_cmd.toPlainText()
-      if S__File[0]: 
+      if S__File[0]:
           with open(S__File[0], 'w') as file:
               file.write(Text)
 
@@ -282,7 +318,7 @@ class Ui(QtWidgets.QMainWindow):
 
     def open_gedit(self):
         subprocess.Popen(['gedit'])
-        
+
     def open_vi(self):
         subprocess.Popen(['vi'])
 
@@ -298,21 +334,26 @@ class Ui(QtWidgets.QMainWindow):
         filename = self.le_ex_macro.text()
 
         subprocess.Popen([editor, filename])
-        
-    def close_all_plots(self):
-        return plt.close('all')
-        
-    def close_plot(self):
-        return plt.close()
-        
+
     def abort_scan(self):
         signal.signal(signal.SIGINT, signal.SIG_DFL)
         RE.abort()
 
+
+    #PDF Log
+
+    # elog
+    self.pb_folder_log.clicked.connect(self.select_pdf_wd)
+    self.pb_pdf_image.clicked.connect(self.select_pdf_image)
+    self.pb_date_ok.clicked.connect(self.generate_pdf)
+    self.pb_save_pdf.clicked.connect(self.force_save_pdf)
+    self.pb_createpdf.clicked.connect(self.insert_pdf)
+
     def select_pdf_wd(self):
         folder_path = QFileDialog().getExistingDirectory(self, "Select Folder")
         self.le_folder_log.setText(str(folder_path))
-        
+
+
     def select_pdf_image(self):
         file_name = QFileDialog().getOpenFileName(self, "Select an Image")
         self.le_elog_image.setText(str(file_name[0]))
@@ -324,12 +365,13 @@ class Ui(QtWidgets.QMainWindow):
         tmp_sample = self.le_elog_sample.text()
         tmp_experimenter = self.le_elog_experimenters.text()
         tmp_pic = self.le_elog_image.text()
-        
+
         return setup_pdf_for_gui(tmp_file, tmp_date, tmp_sample, tmp_experimenter, tmp_pic)
-        
+
+
     def insert_pdf(self):
         return insertTitle_for_gui()
-        
+
     def force_save_pdf(self):
         return save_page_for_gui()
 
@@ -432,7 +474,6 @@ class Ui(QtWidgets.QMainWindow):
             self.labaxis_view.clear()
         except:
             pass
-
 
         self.p2 = self.labaxis_view.addPlot(title="")
 
@@ -538,7 +579,7 @@ class Ui(QtWidgets.QMainWindow):
 
 
 if __name__ == "__main__":
-    
+
     app = QtWidgets.QApplication(sys.argv)
     window = Ui()
     window.show()
