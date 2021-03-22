@@ -96,6 +96,9 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_show_scan_pos.clicked.connect(self.viewScanPosSID)
         self.pb_print_scan_meta.clicked.connect(self.viewScanMetaData)
         self.sampleROI_List.itemDoubleClicked.connect(self.showROIPosition)
+        self.pb_recover_scan_pos.clicked.connect(self.gotoPosSID)
+        self.pb_show_scan_pos.clicked.connect(self.viewScanPosSID)
+        self.pb_print_scan_meta.connect(self.viewScanMetaData)
 
         # Quick fill scan Params
         self.pb_3030.clicked.connect(self.fill_common_scan_params)

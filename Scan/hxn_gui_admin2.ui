@@ -124,7 +124,7 @@ QPushButton:pressed{
        <enum>QTabWidget::North</enum>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>4</number>
       </property>
       <property name="documentMode">
        <bool>true</bool>
@@ -1157,7 +1157,7 @@ font: 15pt &quot;Modern No. 20&quot;;
            <enum>QTabWidget::North</enum>
           </property>
           <property name="currentIndex">
-           <number>3</number>
+           <number>1</number>
           </property>
           <property name="documentMode">
            <bool>true</bool>
@@ -1245,14 +1245,14 @@ font: 15pt &quot;Modern No. 20&quot;;
                    <item row="0" column="0">
                     <layout class="QHBoxLayout" name="horizontalLayout_52">
                      <item>
-                      <widget class="QPushButton" name="pushButton_4">
+                      <widget class="QPushButton" name="pb_roiList_export">
                        <property name="text">
                         <string>Export List</string>
                        </property>
                       </widget>
                      </item>
                      <item>
-                      <widget class="QPushButton" name="pushButton_5">
+                      <widget class="QPushButton" name="pb_roiList_import">
                        <property name="text">
                         <string>Import List</string>
                        </property>
@@ -1261,7 +1261,7 @@ font: 15pt &quot;Modern No. 20&quot;;
                     </layout>
                    </item>
                    <item row="1" column="0">
-                    <widget class="QPushButton" name="pushButton_19">
+                    <widget class="QPushButton" name="pb_roiList_clear">
                      <property name="text">
                       <string>Clear All</string>
                      </property>
