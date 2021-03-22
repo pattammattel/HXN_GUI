@@ -29,7 +29,7 @@ class Ui(QtWidgets.QMainWindow):
         self.webbrowserSetUpHxnWS1()
 
         self.energies = []
-        self.roiList = []
+        self.roiList = {}
 
         # updating resolution/tot time
         self.dwell.valueChanged.connect(self.initParams)
@@ -68,11 +68,18 @@ class Ui(QtWidgets.QMainWindow):
 
         #scans and motor motion
         self.start.clicked.connect(self.initFlyScan)
-        self.pb_move_smarx.clicked.connect(self.move_smarx)
-        self.pb_move_smary.clicked.connect(self.move_smary)
-        self.pb_move_smarz.clicked.connect(self.move_smarz)
-        self.pb_move_dth.clicked.connect(self.move_dsth)
-        self.pb_move_zpz.clicked.connect(self.move_zpz1)
+
+        self.pb_move_smarx_pos.clicked.connect(self.move_smarx)
+        self.pb_move_smary_pos.clicked.connect(self.move_smary)
+        self.pb_move_smarz_pos.clicked.connect(self.move_smarz)
+        self.pb_move_dth_pos.clicked.connect(self.move_dsth)
+        self.pb_move_zpz_pos.clicked.connect(self.move_zpz1)
+
+        self.pb_move_smarx_neg.clicked.connect(self.move_smarx(neg_ = True))
+        self.pb_move_smary_neg.clicked.connect(self.move_smary(neg_ = True))
+        self.pb_move_smarz_neg.clicked.connect(self.move_smarz(neg_ = True))
+        self.pb_move_dth_neg.clicked.connect(self.move_dsth(neg_ = True))
+        self.pb_move_zpz_neg.clicked.connect(self.move_zpz1(neg_ = True))
 
         #Detector/Camera Motions
         self.pb_merlinOUT.clicked.connect(self.merlinOUT)
@@ -215,25 +222,35 @@ class Ui(QtWidgets.QMainWindow):
             self.y_step.setValue(valsToFill[3])
             self.dwell.setValue(valsToFill[4])
 
-    def moveAMotor(self,val_box,mot_name, unit_conv_factor:float = 1):
-        move_by = val_box.value()
+    def moveAMotor(self,val_box,mot_name, unit_conv_factor:float = 1, neg = False):
+
+        if neg:
+            move_by = val_box.value()*-1
+        else:
+            move_by = val_box.value()
+
         RE(bps.movr(mot_name, move_by * unit_conv_factor))
         self.ple_info.appendPlainText(f'{mot_name.name} moved by {move_by} um ')
 
-    def move_smarx(self):
-        self.moveAMotor(self.db_move_smarx, smarx, 0.001)
+    def move_smarx(self, neg_ = False):
+        self.moveAMotor(self.db_move_smarx, smarx, 0.001, neg = neg_)
 
-    def move_smary(self):
-        self.moveAMotor(self.db_move_smary, smary, 0.001)
+    def move_smary(self,neg_ = False):
+        self.moveAMotor(self.db_move_smary, smary, 0.001,neg = neg_)
 
-    def move_smarz(self):
-        self.moveAMotor(self.db_move_smarz, smarz, 0.001)
+    def move_smarz(self,neg_ = False):
+        self.moveAMotor(self.db_move_smarz, smarz, 0.001,neg = neg_)
 
-    def move_dsth(self):
-        self.moveAMotor(self.db_move_dth, zpsth)
+    def move_dsth(self,neg_ = False):
+        self.moveAMotor(self.db_move_dth, zpsth,neg = neg_)
 
-    def move_zpz1(self):
-        RE(movr_zpz1(self.db_move_zpz.value()*0.001))
+    def move_zpz1(self,neg_ = False):
+        if neg_:
+
+            RE(movr_zpz1(self.db_move_zpz.value()*0.001*-1))
+
+        else:
+            RE(movr_zpz1(self.db_move_zpz.value() * 0.001))
 
     def ZP_OSA_OUT(self):
         RE(bps.movr(zposay, 2700))
@@ -410,7 +427,7 @@ class Ui(QtWidgets.QMainWindow):
         save_page_for_gui()
 
     def InsertFigToPDF(self):
-        insertFig(note = self.le_pdf_fig_note.text(),
+        insertFig_for_gui(note = self.le_pdf_fig_note.text(),
                           title= self.le_pdf_fig_title.text())
         self.statusbar.showMessage("Figure added to the pdf")
 
@@ -429,7 +446,8 @@ class Ui(QtWidgets.QMainWindow):
                zp.zpz1:zpz1_pos, zpsth:th,
                zps.zpsx:zp_sx, zps.zpsz:zp_sz
                }
-        self.roiList.append(roi) #should change to a .json file to export
+        roi_name = 'ROI'+ str(len(self.roiList)+1)
+        self.roiList[roi_name] = roi #a .json file to export
         self.addROIListToWidget()
 
     def addROIListToWidget(self):
@@ -440,7 +458,6 @@ class Ui(QtWidgets.QMainWindow):
         #change to append item so the item can be renamed by the user
         #item = listwidget.item(index)
         #item.setFlags(item.flags() | QtCore.Qt.ItemIsEditable)
-
 
     def gotoROIPosition(self):
         roi_num = self.sampleROI_List.currentRow()
