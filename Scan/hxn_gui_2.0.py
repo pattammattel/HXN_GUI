@@ -12,7 +12,7 @@ import webbrowser
 import pyqtgraph as pg
 from scipy.ndimage import rotate
 
-from PyQt5 import QtWidgets, uic, QtCore, QtGui
+from PyQt5 import QtWidgets, uic, QtCore, QtGui, QtTest
 from PyQt5.QtWidgets import QMessageBox, QFileDialog
 
 from pdf_log import *
@@ -26,6 +26,10 @@ class Ui(QtWidgets.QMainWindow):
         uic.loadUi('/home/xf03id/user_macros/HXN_GUI/Scan/hxn_gui_admin2.ui', self)
         self.initParams()
         self.ImageCorrelationPage()
+        self.webbrowserSetUpHxnWS1()
+
+        self.energies = []
+        self.roiList = []
 
         # updating resolution/tot time
         self.dwell.valueChanged.connect(self.initParams)
@@ -55,9 +59,11 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_close_all_plot.clicked.connect(self.close_all_plots)
         self.pb_plot.clicked.connect(self.plot_me)
         self.pb_erf_fit.clicked.connect(self.plot_erf_fit)
+        self.pb_plot_line_center.clicked.connect(self.plot_line_center)
 
-        #generate xanes parameters
+        #xanes parameters
         self.pb_gen_elist.clicked.connect(self.generate_elist)
+        self.pb_set_epoints.clicked.connect(self.generate_epoints)
         #self.pb_start_xanes.clicked.connect(self.zp_xanes)
 
         #scans and motor motion
@@ -77,6 +83,14 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_cam6OUT.clicked.connect(self.cam6OUT)
         self.pb_cam11IN.clicked.connect(self.cam11IN)
 
+        #sample position
+        self.pb_save_pos.clicked.connect(self.generatePositionDict)
+        self.pb_move_pos.clicked.connect(self.gotoROIPosition)
+        self.pb_recover_scan_pos.clicked.connect(self.gotoPosSID)
+        self.pb_show_scan_pos.clicked.connect(self.viewScanPosSID)
+        self.pb_print_scan_meta.clicked.connect(self.viewScanMetaData)
+        self.sampleROI_List.itemDoubleClicked.connect(self.showROIPosition)
+
         #Quick fill scan Params
         self.pb_3030.clicked.connect(self.fill_common_scan_params)
         self.pb_2020.clicked.connect(self.fill_common_scan_params)
@@ -84,11 +98,11 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_22.clicked.connect(self.fill_common_scan_params)
 
         #elog
-        self.pb_folder_log.clicked.connect(self.select_pdf_wd)
+        self.pb_pdf_wd.clicked.connect(self.select_pdf_wd)
         self.pb_pdf_image.clicked.connect(self.select_pdf_image)
-        self.pb_date_ok.clicked.connect(self.generate_pdf)
         self.pb_save_pdf.clicked.connect(self.force_save_pdf)
-        self.pb_createpdf.clicked.connect(self.insert_pdf)
+        self.pb_createpdf.clicked.connect(self.generate_pdf)
+        self.pb_fig_to_pdf.clicked.connect(self.InsertFigToPDF)
 
         #admin control
         self.pb_apply_user_settings.clicked.connect(self.setUserLevel)
@@ -97,6 +111,15 @@ class Ui(QtWidgets.QMainWindow):
         self.actionClose_Application.triggered.connect(self.close_application)
 
         self.show()
+
+    def webbrowserSetUpHxnWS1(self):
+        try:
+            chrome_path = '/usr/bin/google-chrome-stable'
+            webbrowser.register('chrome', None, webbrowser.BackgroundBrowser(chrome_path))
+            self.client = webbrowser.get('chrome')
+
+        except:
+            pass
 
     def setUserLevel(self):
 
@@ -195,6 +218,7 @@ class Ui(QtWidgets.QMainWindow):
     def moveAMotor(self,val_box,mot_name, unit_conv_factor:float = 1):
         move_by = val_box.value()
         RE(bps.movr(mot_name, move_by * unit_conv_factor))
+        self.ple_info.appendPlainText(f'{mot_name.name} moved by {move_by} um ')
 
     def move_smarx(self):
         self.moveAMotor(self.db_move_smarx, smarx, 0.001)
@@ -211,8 +235,16 @@ class Ui(QtWidgets.QMainWindow):
     def move_zpz1(self):
         RE(movr_zpz1(self.db_move_zpz.value()*0.001))
 
+    def ZP_OSA_OUT(self):
+        RE(bps.movr(zposay, 2700))
+        self.ple_info.appendPlainText('OSA Y moved OUT')
+
+    def ZP_OSA_IN(self):
+        RE(bps.movr(zposay, 2700))
+        self.ple_info.appendPlainText('OSA Y moved IN')
+
     def merlinIN(self):
-        webbrowser.open('http://10.66.17.43/view/index.shtml')
+        self.client.open('http://10.66.17.43')
         choice = QMessageBox.question(self, 'Detector Motion Warning',
                                      "Make sure this motion is safe. \n Move?", QMessageBox.Yes |
                                      QMessageBox.No, QMessageBox.No)
@@ -222,9 +254,8 @@ class Ui(QtWidgets.QMainWindow):
         else:
             pass
 
-
     def merlinOUT(self):
-        webbrowser.open('http://10.66.17.43/view/index.shtml')
+        self.client.open('http://10.66.17.43')
         choice = QMessageBox.question(self, 'Detector Motion Warning',
                                      "Make sure this motion is safe. \n Move?", QMessageBox.Yes |
                                      QMessageBox.No, QMessageBox.No)
@@ -236,29 +267,34 @@ class Ui(QtWidgets.QMainWindow):
 
     def vortexIN(self):
         RE(bps.mov(fdet1.x,-8))
+        self.ple_info.appendPlainText('Vortex is IN')
 
     def vortexOUT(self):
         RE(bps.mov(fdet1.x,-107))
+        self.ple_info.appendPlainText('Vortex is OUT')
 
     def cam11IN(self):
-        webbrowser.open('http://10.66.17.43/view/index.shtml')
+        self.client.open('http://10.66.17.43')
+        QtTest.QTest.qWait(5000)
         choice = QMessageBox.question(self, 'Detector Motion Warning',
                                      "Make sure this motion is safe. \n Move?", QMessageBox.Yes |
                                      QMessageBox.No, QMessageBox.No)
 
         if choice == QMessageBox.Yes:
             RE(go_det('cam11'))
+            self.ple_info.appendPlainText('CAM11 is IN')
         else:
             pass
 
-
     def cam6IN(self):
-        RE(bps.mov(cam6_x, 0))
+        caput('XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.VAL',0)
+        self.ple_info.appendPlainText('CAM6 Motion Done!')
 
     def cam6OUT(self):
-        RE(bps.mov(cam6_x, -50))
+        caput('XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.VAL',-50)
+        self.ple_info.appendPlainText('CAM6 Motion Done!')
 
-    def generate_elist(self):
+    def generate_epoints(self):
 
         pre = np.linspace(self.dsb_pre_s.value(), self.dsb_pre_e.value(), self.sb_pre_p.value())
         XANES1 = np.linspace(self.dsb_ed1_s.value(), self.dsb_ed1_e.value(), self.sb_ed1_p.value())
@@ -266,20 +302,29 @@ class Ui(QtWidgets.QMainWindow):
         post = np.linspace(self.dsb_post_s.value(), self.dsb_post_e.value(), self.sb_post_p.value())
 
         self.energies = np.concatenate([pre, XANES1, XANES2, post])
+        self.ple_info.setPlainText(str(self.energies))
 
-        # print(energies)
-        dE = (self.dsb_monoe_h.value() - self.dsb_monoe_l.value())
+    def generate_elist(self):
 
-        ugap_slope = (self.dsb_ugap_h.value() - self.dsb_ugap_l.value()) / dE
-        ugap_list = self.dsb_ugap_h.value() + (self.energies - self.dsb_monoe_h.value()) * ugap_slope
+        if not len(self.energies) == 0:
 
-        crl_slope = (self.dsb_crl_h.value() - self.dsb_crl_l.value()) / dE
-        crl_list = self.dsb_crl_h.value() + (self.energies - self.dsb_monoe_h.value()) * crl_slope
+            # print(energies)
+            dE = (self.dsb_monoe_h.value() - self.dsb_monoe_l.value())
 
-        zpz_slope = (self.dsb_zpz_h.value() - self.dsb_zpz_l.value()) / dE
-        zpz_list = self.dsb_zpz_h.value() + (self.energies - self.dsb_monoe_h.value()) * zpz_slope
+            ugap_slope = (self.dsb_ugap_h.value() - self.dsb_ugap_l.value()) / dE
+            ugap_list = self.dsb_ugap_h.value() + (self.energies - self.dsb_monoe_h.value()) * ugap_slope
 
-        self.e_list = np.column_stack((self.energies, ugap_list, zpz_list, crl_list))
+            crl_slope = (self.dsb_crl_h.value() - self.dsb_crl_l.value()) / dE
+            crl_list = self.dsb_crl_h.value() + (self.energies - self.dsb_monoe_h.value()) * crl_slope
+
+            zpz_slope = (self.dsb_zpz_h.value() - self.dsb_zpz_l.value()) / dE
+            zpz_list = self.dsb_zpz_h.value() + (self.energies - self.dsb_monoe_h.value()) * zpz_slope
+
+            self.e_list = np.column_stack((self.energies, ugap_list, zpz_list, crl_list))
+            self.ple_info.setPlainText(str(self.e_list))
+
+        else:
+            self.statusbar.showMessage('No energy list found; set or load an e list first')
 
     def zp_xanes(self):
         self.getScanValues()
@@ -288,18 +333,18 @@ class Ui(QtWidgets.QMainWindow):
                            self.mot2_s, self.mot2_e, self.mot2_steps, self.dwell_t))
 
     def plot_me(self):
-        sd = self.lineEdit_5.text()
-        elem = self.lineEdit_6.text()
+        sd = self.pb_plot_sd.text()
+        elem = self.pb_plot_elem.text()
         plot_data(int(sd), elem, 'sclr1_ch4')
 
     def plot_erf_fit(self):
-        sd = self.lineEdit_5.text()
-        elem = self.lineEdit_6.text()
+        sd = self.pb_plot_sd.text()
+        elem = self.pb_plot_elem.text()
         erf_fit(int(sd),elem, linear_flag = self.cb_erf_linear_flag.isChecked())
 
     def plot_line_center(self):
-        sd = self.lineEdit_5.text()
-        elem = self.lineEdit_6.text()
+        sd = self.pb_plot_sd.text()
+        elem = self.pb_plot_elem.text()
         return_line_center(int(sd),elem, threshold = self.dsb_line_center_thre.value())
 
     def close_all_plots(self):
@@ -339,20 +384,11 @@ class Ui(QtWidgets.QMainWindow):
         signal.signal(signal.SIGINT, signal.SIG_DFL)
         RE.abort()
 
-
     #PDF Log
-
-    # elog
-    self.pb_folder_log.clicked.connect(self.select_pdf_wd)
-    self.pb_pdf_image.clicked.connect(self.select_pdf_image)
-    self.pb_date_ok.clicked.connect(self.generate_pdf)
-    self.pb_save_pdf.clicked.connect(self.force_save_pdf)
-    self.pb_createpdf.clicked.connect(self.insert_pdf)
 
     def select_pdf_wd(self):
         folder_path = QFileDialog().getExistingDirectory(self, "Select Folder")
         self.le_folder_log.setText(str(folder_path))
-
 
     def select_pdf_image(self):
         file_name = QFileDialog().getOpenFileName(self, "Select an Image")
@@ -366,14 +402,76 @@ class Ui(QtWidgets.QMainWindow):
         tmp_experimenter = self.le_elog_experimenters.text()
         tmp_pic = self.le_elog_image.text()
 
-        return setup_pdf_for_gui(tmp_file, tmp_date, tmp_sample, tmp_experimenter, tmp_pic)
-
-
-    def insert_pdf(self):
-        return insertTitle_for_gui()
+        setup_pdf_for_gui(tmp_file, tmp_date, tmp_sample, tmp_experimenter, tmp_pic)
+        insertTitle_for_gui()
+        self.statusbar.showMessage(f'pdf generated as {tmp_file}')
 
     def force_save_pdf(self):
-        return save_page_for_gui()
+        save_page_for_gui()
+
+    def InsertFigToPDF(self):
+        insertFig(note = self.le_pdf_fig_note.text(),
+                          title= self.le_pdf_fig_title.text())
+        self.statusbar.showMessage("Figure added to the pdf")
+
+    #Sample Stage Navigation
+
+    def generatePositionDict(self):
+
+        fx, fy, fz = zpssx.position, zpssy.position, zpssz.position
+        cx, cy, cz = smarx.position, smary.position, smarz.position
+        zpz1_pos = zp.zpz1.position
+        zp_sx, zp_sz = zps.zpsx.position, zps.zpsz.position
+        th = zpsth.position
+        roi = {
+               zpssx:fx, zpssy:fy, zpssz:fz,
+               smarx:cx, smary:cy, smarz:cz,
+               zp.zpz1:zpz1_pos, zpsth:th,
+               zps.zpsx:zp_sx, zps.zpsz:zp_sz
+               }
+        self.roiList.append(roi) #should change to a .json file to export
+        self.addROIListToWidget()
+
+    def addROIListToWidget(self):
+        self.sampleROI_List.clear()
+        for item_num, item_ in enumerate(self.roiList):
+            self.sampleROI_List.addItem("ROI"+ str(item_num))
+
+        #change to append item so the item can be renamed by the user
+        #item = listwidget.item(index)
+        #item.setFlags(item.flags() | QtCore.Qt.ItemIsEditable)
+
+
+    def gotoROIPosition(self):
+        roi_num = self.sampleROI_List.currentRow()
+        param_file = self.roiList[roi_num]
+        for key, value in param_file.items():
+            if not key == zp.zpz1:
+               RE(bps.mov(key, value))
+            elif key == zp.zpz1:
+                RE(mov_zpz1(value))
+            self.ple_info.appendPlainText(f'Sample moved to {key.name}:{value:.4f} ')
+
+    def showROIPosition(self,item):
+        item_num = self.sampleROI_List.row(item)
+        param_file = self.roiList[item_num]
+        self.ple_info.appendPlainText(('*'*20))
+        for key, value in param_file.items():
+            self.ple_info.appendPlainText(f'{key.name}:{value:.4f}')
+
+    def gotoPosSID(self):
+        sd = self.le_sid_position.text()
+        recover_zp_scan_pos(int(sid),1,1)
+        self.ple_info.appendPlainText(f'Positions recovered from {sid}')
+
+    def viewScanPosSID(self):
+        sd = self.le_sid_position.text()
+        self.ple_info.appendPlainText(str(recover_zp_scan_pos(int(sd),0,0)))
+
+    def viewScanMetaData(self):
+        sd = self.le_sid_position.text()
+        h = db[int(sd)]
+        self.ple_info.appendPlainText(str(h.start))
 
     def ImageCorrelationPage(self):
 

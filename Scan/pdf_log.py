@@ -20,8 +20,8 @@ import numpy as np
 from PyPDF2 import PdfFileMerger, PdfFileReader
 
 global PDF_FILE
-#PDF_FILE = '/GPFS/XF03ID1/home/xf03id/startup/eLog_info_for_gui.obj'
-PDF_FILE = r'C:\Users\pattammattel\Desktop\Python_Codes\Qt_Learning\Ajith_Gui_06222020\eLog_info_for_gui.obj'
+PDF_FILE = '/GPFS/XF03ID1/home/xf03id/startup/eLog_info_for_gui.obj'
+#PDF_FILE = r'C:\Users\pattammattel\Desktop\Python_Codes\Qt_Learning\Ajith_Gui_06222020\eLog_info_for_gui.obj'
 
 global DPI
 DPI=300
