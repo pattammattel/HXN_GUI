@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-#Author: Ajith Pattammattel
-#Original Date:06-23-2020
+# Author: Ajith Pattammattel
+# Original Date:06-23-2020
 
 import os
 import signal
@@ -17,7 +17,6 @@ from PyQt5.QtWidgets import QMessageBox, QFileDialog
 
 from pdf_log import *
 from xanes2d import *
-
 
 
 class Ui(QtWidgets.QMainWindow):
@@ -55,18 +54,18 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_browse_a_macro.clicked.connect(self.get_a_file)
         self.pb_ex_macro_open.clicked.connect(self.open_a_macro)
 
-        #plotting controls
+        # plotting controls
         self.pb_close_all_plot.clicked.connect(self.close_all_plots)
         self.pb_plot.clicked.connect(self.plot_me)
         self.pb_erf_fit.clicked.connect(self.plot_erf_fit)
         self.pb_plot_line_center.clicked.connect(self.plot_line_center)
 
-        #xanes parameters
+        # xanes parameters
         self.pb_gen_elist.clicked.connect(self.generate_elist)
         self.pb_set_epoints.clicked.connect(self.generate_epoints)
-        #self.pb_start_xanes.clicked.connect(self.zp_xanes)
+        # self.pb_start_xanes.clicked.connect(self.zp_xanes)
 
-        #scans and motor motion
+        # scans and motor motion
         self.start.clicked.connect(self.initFlyScan)
 
         self.pb_move_smarx_pos.clicked.connect(self.move_smarx)
@@ -75,13 +74,13 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_move_dth_pos.clicked.connect(self.move_dsth)
         self.pb_move_zpz_pos.clicked.connect(self.move_zpz1)
 
-        self.pb_move_smarx_neg.clicked.connect(self.move_smarx(neg_ = True))
-        self.pb_move_smary_neg.clicked.connect(self.move_smary(neg_ = True))
-        self.pb_move_smarz_neg.clicked.connect(self.move_smarz(neg_ = True))
-        self.pb_move_dth_neg.clicked.connect(self.move_dsth(neg_ = True))
-        self.pb_move_zpz_neg.clicked.connect(self.move_zpz1(neg_ = True))
+        self.pb_move_smarx_neg.clicked.connect(self.move_smarx(neg_=True))
+        self.pb_move_smary_neg.clicked.connect(self.move_smary(neg_=True))
+        self.pb_move_smarz_neg.clicked.connect(self.move_smarz(neg_=True))
+        self.pb_move_dth_neg.clicked.connect(self.move_dsth(neg_=True))
+        self.pb_move_zpz_neg.clicked.connect(self.move_zpz1(neg_=True))
 
-        #Detector/Camera Motions
+        # Detector/Camera Motions
         self.pb_merlinOUT.clicked.connect(self.merlinOUT)
         self.pb_merlinIN.clicked.connect(self.merlinIN)
         self.pb_vortexOUT.clicked.connect(self.vortexOUT)
@@ -90,7 +89,7 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_cam6OUT.clicked.connect(self.cam6OUT)
         self.pb_cam11IN.clicked.connect(self.cam11IN)
 
-        #sample position
+        # sample position
         self.pb_save_pos.clicked.connect(self.generatePositionDict)
         self.pb_move_pos.clicked.connect(self.gotoROIPosition)
         self.pb_recover_scan_pos.clicked.connect(self.gotoPosSID)
@@ -98,23 +97,23 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_print_scan_meta.clicked.connect(self.viewScanMetaData)
         self.sampleROI_List.itemDoubleClicked.connect(self.showROIPosition)
 
-        #Quick fill scan Params
+        # Quick fill scan Params
         self.pb_3030.clicked.connect(self.fill_common_scan_params)
         self.pb_2020.clicked.connect(self.fill_common_scan_params)
         self.pb_66.clicked.connect(self.fill_common_scan_params)
         self.pb_22.clicked.connect(self.fill_common_scan_params)
 
-        #elog
+        # elog
         self.pb_pdf_wd.clicked.connect(self.select_pdf_wd)
         self.pb_pdf_image.clicked.connect(self.select_pdf_image)
         self.pb_save_pdf.clicked.connect(self.force_save_pdf)
         self.pb_createpdf.clicked.connect(self.generate_pdf)
         self.pb_fig_to_pdf.clicked.connect(self.InsertFigToPDF)
 
-        #admin control
+        # admin control
         self.pb_apply_user_settings.clicked.connect(self.setUserLevel)
 
-        #close the application
+        # close the application
         self.actionClose_Application.triggered.connect(self.close_application)
 
         self.show()
@@ -134,7 +133,7 @@ class Ui(QtWidgets.QMainWindow):
         self.userButtonEnabler(self.cb_xanes_user, self.rb_xanes_scan)
         self.userButtonEnabler(self.cb_xanes_user, self.gb_xanes_align)
 
-    def userButtonEnabler(self,checkbox_name,control_btn_grp_name):
+    def userButtonEnabler(self, checkbox_name, control_btn_grp_name):
 
         if checkbox_name.isChecked():
             control_btn_grp_name.setEnabled(True)
@@ -162,7 +161,6 @@ class Ui(QtWidgets.QMainWindow):
         tot_t_2d = self.mot1_steps * self.mot2_steps * self.dwell_t / 60
         tot_t_1d = self.mot1_steps * self.dwell_t / 60
 
-
         if self.rb_1d.isChecked():
             self.label_scan_info_calc.setText(f'X: {(cal_res_x * 1000):.2f} nm, Y: {(cal_res_y * 1000):.2f} nm \n'
                                               f'{tot_t_1d:.2f} minutes + overhead')
@@ -181,18 +179,17 @@ class Ui(QtWidgets.QMainWindow):
         self.motor1 = self.cb_motor1.currentText()
         self.motor2 = self.cb_motor2.currentText()
 
-        self.motor_list = {'zpssx':zpssx,'zpssy':zpssy,'zpssz':zpssz}
+        self.motor_list = {'zpssx': zpssx, 'zpssy': zpssy, 'zpssz': zpssz}
         self.det_list = {'dets1': dets1, 'dets2': dets2, 'dets3': dets3,
-                    'dets4': dets4, 'dets_fs': dets_fs}
-
+                         'dets4': dets4, 'dets_fs': dets_fs}
 
         if self.rb_1d.isChecked():
             RE(fly1d(self.det_list[self.det], self.motor_list[self.motor1],
-                     self.mot1_s,self.mot1_e ,self.mot1_steps, self.dwell_t))
+                     self.mot1_s, self.mot1_e, self.mot1_steps, self.dwell_t))
 
         else:
-            RE(fly2d(self.det_list[self.det], self.motor_list[self.motor1], self.mot1_s,self.mot1_e ,self.mot1_steps,
-                     self.motor_list[self.motor2], self.mot2_s,self.mot2_e, self.mot2_steps, self.dwell_t))
+            RE(fly2d(self.det_list[self.det], self.motor_list[self.motor1], self.mot1_s, self.mot1_e, self.mot1_steps,
+                     self.motor_list[self.motor2], self.mot2_s, self.mot2_e, self.mot2_steps, self.dwell_t))
 
     def disableMot2(self):
         self.y_start.setEnabled(False)
@@ -206,48 +203,47 @@ class Ui(QtWidgets.QMainWindow):
 
     def fill_common_scan_params(self):
         button_name = self.sender()
-        button_names = {'pb_2020':(20,20,100,100,0.03),
-                        'pb_3030':(30,30,30,30,0.03),
-                        'pb_66':(6,6,100,100,0.05),
-                       'pb_22':(2,2,100,100,0.03)
+        button_names = {'pb_2020': (20, 20, 100, 100, 0.03),
+                        'pb_3030': (30, 30, 30, 30, 0.03),
+                        'pb_66': (6, 6, 100, 100, 0.05),
+                        'pb_22': (2, 2, 100, 100, 0.03)
                         }
         if button_name.objectName() in button_names.keys():
-
             valsToFill = button_names[button_name.objectName()]
-            self.x_start.setValue(valsToFill[0]/-2)
-            self.x_end.setValue(valsToFill[0]/2)
-            self.y_start.setValue(valsToFill[1]/-2)
-            self.y_end.setValue(valsToFill[1]/2)
+            self.x_start.setValue(valsToFill[0] / -2)
+            self.x_end.setValue(valsToFill[0] / 2)
+            self.y_start.setValue(valsToFill[1] / -2)
+            self.y_end.setValue(valsToFill[1] / 2)
             self.x_step.setValue(valsToFill[2])
             self.y_step.setValue(valsToFill[3])
             self.dwell.setValue(valsToFill[4])
 
-    def moveAMotor(self,val_box,mot_name, unit_conv_factor:float = 1, neg = False):
+    def moveAMotor(self, val_box, mot_name, unit_conv_factor: float = 1, neg=False):
 
         if neg:
-            move_by = val_box.value()*-1
+            move_by = val_box.value() * -1
         else:
             move_by = val_box.value()
 
         RE(bps.movr(mot_name, move_by * unit_conv_factor))
         self.ple_info.appendPlainText(f'{mot_name.name} moved by {move_by} um ')
 
-    def move_smarx(self, neg_ = False):
-        self.moveAMotor(self.db_move_smarx, smarx, 0.001, neg = neg_)
+    def move_smarx(self, neg_=False):
+        self.moveAMotor(self.db_move_smarx, smarx, 0.001, neg=neg_)
 
-    def move_smary(self,neg_ = False):
-        self.moveAMotor(self.db_move_smary, smary, 0.001,neg = neg_)
+    def move_smary(self, neg_=False):
+        self.moveAMotor(self.db_move_smary, smary, 0.001, neg=neg_)
 
-    def move_smarz(self,neg_ = False):
-        self.moveAMotor(self.db_move_smarz, smarz, 0.001,neg = neg_)
+    def move_smarz(self, neg_=False):
+        self.moveAMotor(self.db_move_smarz, smarz, 0.001, neg=neg_)
 
-    def move_dsth(self,neg_ = False):
-        self.moveAMotor(self.db_move_dth, zpsth,neg = neg_)
+    def move_dsth(self, neg_=False):
+        self.moveAMotor(self.db_move_dth, zpsth, neg=neg_)
 
-    def move_zpz1(self,neg_ = False):
+    def move_zpz1(self, neg_=False):
         if neg_:
 
-            RE(movr_zpz1(self.db_move_zpz.value()*0.001*-1))
+            RE(movr_zpz1(self.db_move_zpz.value() * 0.001 * -1))
 
         else:
             RE(movr_zpz1(self.db_move_zpz.value() * 0.001))
@@ -263,8 +259,8 @@ class Ui(QtWidgets.QMainWindow):
     def merlinIN(self):
         self.client.open('http://10.66.17.43')
         choice = QMessageBox.question(self, 'Detector Motion Warning',
-                                     "Make sure this motion is safe. \n Move?", QMessageBox.Yes |
-                                     QMessageBox.No, QMessageBox.No)
+                                      "Make sure this motion is safe. \n Move?", QMessageBox.Yes |
+                                      QMessageBox.No, QMessageBox.No)
 
         if choice == QMessageBox.Yes:
             RE(go_det('merlin'))
@@ -274,28 +270,28 @@ class Ui(QtWidgets.QMainWindow):
     def merlinOUT(self):
         self.client.open('http://10.66.17.43')
         choice = QMessageBox.question(self, 'Detector Motion Warning',
-                                     "Make sure this motion is safe. \n Move?", QMessageBox.Yes |
-                                     QMessageBox.No, QMessageBox.No)
+                                      "Make sure this motion is safe. \n Move?", QMessageBox.Yes |
+                                      QMessageBox.No, QMessageBox.No)
 
         if choice == QMessageBox.Yes:
-            RE(bps.mov(diff.x,-600))
+            RE(bps.mov(diff.x, -600))
         else:
             pass
 
     def vortexIN(self):
-        RE(bps.mov(fdet1.x,-8))
+        RE(bps.mov(fdet1.x, -8))
         self.ple_info.appendPlainText('Vortex is IN')
 
     def vortexOUT(self):
-        RE(bps.mov(fdet1.x,-107))
+        RE(bps.mov(fdet1.x, -107))
         self.ple_info.appendPlainText('Vortex is OUT')
 
     def cam11IN(self):
         self.client.open('http://10.66.17.43')
         QtTest.QTest.qWait(5000)
         choice = QMessageBox.question(self, 'Detector Motion Warning',
-                                     "Make sure this motion is safe. \n Move?", QMessageBox.Yes |
-                                     QMessageBox.No, QMessageBox.No)
+                                      "Make sure this motion is safe. \n Move?", QMessageBox.Yes |
+                                      QMessageBox.No, QMessageBox.No)
 
         if choice == QMessageBox.Yes:
             RE(go_det('cam11'))
@@ -304,11 +300,11 @@ class Ui(QtWidgets.QMainWindow):
             pass
 
     def cam6IN(self):
-        caput('XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.VAL',0)
+        caput('XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.VAL', 0)
         self.ple_info.appendPlainText('CAM6 Motion Done!')
 
     def cam6OUT(self):
-        caput('XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.VAL',-50)
+        caput('XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.VAL', -50)
         self.ple_info.appendPlainText('CAM6 Motion Done!')
 
     def generate_epoints(self):
@@ -357,23 +353,23 @@ class Ui(QtWidgets.QMainWindow):
     def plot_erf_fit(self):
         sd = self.pb_plot_sd.text()
         elem = self.pb_plot_elem.text()
-        erf_fit(int(sd),elem, linear_flag = self.cb_erf_linear_flag.isChecked())
+        erf_fit(int(sd), elem, linear_flag=self.cb_erf_linear_flag.isChecked())
 
     def plot_line_center(self):
         sd = self.pb_plot_sd.text()
         elem = self.pb_plot_elem.text()
-        return_line_center(int(sd),elem, threshold = self.dsb_line_center_thre.value())
+        return_line_center(int(sd), elem, threshold=self.dsb_line_center_thre.value())
 
     def close_all_plots(self):
         plt.close('all')
 
     def save_file(self):
-      S__File = QFileDialog.getSaveFileName(None,'SaveFile','/', "Python Files (*.py)")
+        S__File = QFileDialog.getSaveFileName(None, 'SaveFile', '/', "Python Files (*.py)")
 
-      Text = self.pte_run_cmd.toPlainText()
-      if S__File[0]:
-          with open(S__File[0], 'w') as file:
-              file.write(Text)
+        Text = self.pte_run_cmd.toPlainText()
+        if S__File[0]:
+            with open(S__File[0], 'w') as file:
+                file.write(Text)
 
     def clear_cmd(self):
         self.pte_run_cmd.clear()
@@ -401,7 +397,7 @@ class Ui(QtWidgets.QMainWindow):
         signal.signal(signal.SIGINT, signal.SIG_DFL)
         RE.abort()
 
-    #PDF Log
+    # PDF Log
 
     def select_pdf_wd(self):
         folder_path = QFileDialog().getExistingDirectory(self, "Select Folder")
@@ -414,7 +410,7 @@ class Ui(QtWidgets.QMainWindow):
     def generate_pdf(self):
         dt = self.dateEdit_elog.date()
         tmp_date = dt.toString(self.dateEdit_elog.displayFormat())
-        tmp_file = os.path.join(self.le_folder_log.text(),self.le_elog_name.text())
+        tmp_file = os.path.join(self.le_folder_log.text(), self.le_elog_name.text())
         tmp_sample = self.le_elog_sample.text()
         tmp_experimenter = self.le_elog_experimenters.text()
         tmp_pic = self.le_elog_image.text()
@@ -427,11 +423,11 @@ class Ui(QtWidgets.QMainWindow):
         save_page_for_gui()
 
     def InsertFigToPDF(self):
-        insertFig_for_gui(note = self.le_pdf_fig_note.text(),
-                          title= self.le_pdf_fig_title.text())
+        insertFig_for_gui(note=self.le_pdf_fig_note.text(),
+                          title=self.le_pdf_fig_title.text())
         self.statusbar.showMessage("Figure added to the pdf")
 
-    #Sample Stage Navigation
+    # Sample Stage Navigation
 
     def generatePositionDict(self):
 
@@ -441,49 +437,49 @@ class Ui(QtWidgets.QMainWindow):
         zp_sx, zp_sz = zps.zpsx.position, zps.zpsz.position
         th = zpsth.position
         roi = {
-               zpssx:fx, zpssy:fy, zpssz:fz,
-               smarx:cx, smary:cy, smarz:cz,
-               zp.zpz1:zpz1_pos, zpsth:th,
-               zps.zpsx:zp_sx, zps.zpsz:zp_sz
-               }
-        roi_name = 'ROI'+ str(len(self.roiList)+1)
-        self.roiList[roi_name] = roi #a .json file to export
+            zpssx: fx, zpssy: fy, zpssz: fz,
+            smarx: cx, smary: cy, smarz: cz,
+            zp.zpz1: zpz1_pos, zpsth: th,
+            zps.zpsx: zp_sx, zps.zpsz: zp_sz
+        }
+        roi_name = 'ROI' + str(len(self.roiList) + 1)
+        self.roiList[roi_name] = roi  # a .json file to export
         self.addROIListToWidget()
 
     def addROIListToWidget(self):
         self.sampleROI_List.clear()
         for item_num, item_ in enumerate(self.roiList):
-            self.sampleROI_List.addItem("ROI"+ str(item_num))
+            self.sampleROI_List.addItem("ROI" + str(item_num))
 
-        #change to append item so the item can be renamed by the user
-        #item = listwidget.item(index)
-        #item.setFlags(item.flags() | QtCore.Qt.ItemIsEditable)
+        # change to append item so the item can be renamed by the user
+        # item = listwidget.item(index)
+        # item.setFlags(item.flags() | QtCore.Qt.ItemIsEditable)
 
     def gotoROIPosition(self):
         roi_num = self.sampleROI_List.currentRow()
         param_file = self.roiList[roi_num]
         for key, value in param_file.items():
             if not key == zp.zpz1:
-               RE(bps.mov(key, value))
+                RE(bps.mov(key, value))
             elif key == zp.zpz1:
                 RE(mov_zpz1(value))
             self.ple_info.appendPlainText(f'Sample moved to {key.name}:{value:.4f} ')
 
-    def showROIPosition(self,item):
+    def showROIPosition(self, item):
         item_num = self.sampleROI_List.row(item)
         param_file = self.roiList[item_num]
-        self.ple_info.appendPlainText(('*'*20))
+        self.ple_info.appendPlainText(('*' * 20))
         for key, value in param_file.items():
             self.ple_info.appendPlainText(f'{key.name}:{value:.4f}')
 
     def gotoPosSID(self):
         sd = self.le_sid_position.text()
-        recover_zp_scan_pos(int(sid),1,1)
+        recover_zp_scan_pos(int(sid), 1, 1)
         self.ple_info.appendPlainText(f'Positions recovered from {sid}')
 
     def viewScanPosSID(self):
         sd = self.le_sid_position.text()
-        self.ple_info.appendPlainText(str(recover_zp_scan_pos(int(sd),0,0)))
+        self.ple_info.appendPlainText(str(recover_zp_scan_pos(int(sd), 0, 0)))
 
     def viewScanMetaData(self):
         sd = self.le_sid_position.text()
@@ -494,14 +490,14 @@ class Ui(QtWidgets.QMainWindow):
 
         self.coords = collections.deque(maxlen=4)
 
-        #connections
+        # connections
         self.pb_RefImageLoad.clicked.connect(self.loadRefImage)
         self.pb_apply_calculation.clicked.connect(self.scalingCalculation)
         self.dsb_x_off.valueChanged.connect(self.offsetCorrectedPos)
         self.dsb_y_off.valueChanged.connect(self.offsetCorrectedPos)
         self.pb_grabXY_1.clicked.connect(self.insertCurrentPos1)
         self.pb_grabXY_2.clicked.connect(self.insertCurrentPos2)
-        #self.pb_grabXY_2.clicked.connect(self.insertCurrentPos(self.dsb_ref2_x,self.dsb_ref2_y))
+        # self.pb_grabXY_2.clicked.connect(self.insertCurrentPos(self.dsb_ref2_x,self.dsb_ref2_y))
         self.pb_gotoTargetPos.clicked.connect(self.gotoTargetPos)
 
     def loadRefImage(self):
@@ -520,7 +516,6 @@ class Ui(QtWidgets.QMainWindow):
             self.ref_view.clear()
         except:
             pass
-
 
         # A plot area (ViewBox + axes) for displaying the image
         self.p1 = self.ref_view.addPlot(title="")
@@ -567,7 +562,7 @@ class Ui(QtWidgets.QMainWindow):
             self.coords.append((i, j))
             val = self.ref_image[i, j]
             ppos = self.img.mapToParent(pos)
-            #x, y = np.around(ppos.x(), 2) , np.around(ppos.y(), 2)
+            # x, y = np.around(ppos.x(), 2) , np.around(ppos.y(), 2)
             x, y = smarx.position, smary.position
             self.coords.append((x, y))
             if len(self.coords) == 2:
@@ -600,7 +595,7 @@ class Ui(QtWidgets.QMainWindow):
         self.p2.addItem(self.img2)
         self.img2.setImage(self.ref_image)
         self.img2.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
-        #self.img2.setImage(self.ref_image.T,opacity = 0.5)
+        # self.img2.setImage(self.ref_image.T,opacity = 0.5)
 
     def scalingCalculation(self):
         yshape, xshape = np.shape(self.ref_image)
@@ -625,7 +620,7 @@ class Ui(QtWidgets.QMainWindow):
                                       f'Y Range {self.yi:.2f}:{yf:.2f}')
         self.img2.scale(abs(self.pixel_val_x), abs(self.pixel_val_y))
         self.img2.translate(self.xi, self.yi)
-        #self.img2.setRect(QtCore.QRect(xi,yf,yi,xf))
+        # self.img2.setRect(QtCore.QRect(xi,yf,yi,xf))
         self.img2.hoverEvent = self.imageHoverEvent2
         self.img2.mousePressEvent = self.MouseClickEventToPos
 
@@ -683,10 +678,11 @@ class Ui(QtWidgets.QMainWindow):
     def close_application(self):
 
         choice = QMessageBox.question(self, 'Message',
-                                     "Are you sure to quit?", QMessageBox.Yes |
-                                     QMessageBox.No, QMessageBox.No)
+                                      "Are you sure to quit?", QMessageBox.Yes |
+                                      QMessageBox.No, QMessageBox.No)
 
         if choice == QMessageBox.Yes:
+            plt.close('all')
             print('quit application')
             sys.exit()
         else:
@@ -694,10 +690,7 @@ class Ui(QtWidgets.QMainWindow):
 
 
 if __name__ == "__main__":
-
     app = QtWidgets.QApplication(sys.argv)
     window = Ui()
     window.show()
     sys.exit(app.exec_())
-
-
