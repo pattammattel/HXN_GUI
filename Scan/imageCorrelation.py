@@ -1,5 +1,6 @@
 import sys
 import os
+import json
 import collections
 import tifffile as tf
 import matplotlib.pyplot as plt
@@ -12,7 +13,7 @@ from pyqtgraph.Qt import QtCore, QtGui, QtWidgets, uic
 class ImageCorrelationWindow(QtWidgets.QMainWindow):
     def __init__(self, ref_image=None):
         super(ImageCorrelationWindow, self).__init__()
-        uic.loadUi('/home/xf03id/user_macros/HXN_GUI/Scan/imageCorrelation.ui', self)
+        uic.loadUi('imageCorrelation.ui', self)
         self.ref_image = ref_image
         self.coords = collections.deque(maxlen=4)
 
@@ -21,9 +22,10 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
         self.pb_apply_calculation.clicked.connect(self.scalingCalculation)
         self.dsb_x_off.valueChanged.connect(self.offsetCorrectedPos)
         self.dsb_y_off.valueChanged.connect(self.offsetCorrectedPos)
-        self.pb_grabXY_1.clicked.connect(self.insertCurrentPos1)
-        self.pb_grabXY_2.clicked.connect(self.insertCurrentPos2)
-        #self.pb_grabXY_2.clicked.connect(self.insertCurrentPos(self.dsb_ref2_x,self.dsb_ref2_y))
+        #self.pb_grabXY_1.clicked.connect(self.insertCurrentPos1)
+        #self.pb_grabXY_2.clicked.connect(self.insertCurrentPos2)
+        self.pb_grabXY_2.clicked.connect(self.exportScalingParamFile)
+        self.pb_grabXY_1.clicked.connect(self.importScalingParamFile)
         self.pb_gotoTargetPos.clicked.connect(self.gotoTargetPos)
 
     def loadRefImage(self):
@@ -97,10 +99,10 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
                 self.dsb_ref1_x.setValue(self.coords[1][0])
                 self.dsb_ref1_y.setValue(self.coords[1][1])
             elif len(self.coords) == 4:
-                self.le_ref1_pxls.setText(f'{self.coords[0][0]}, {self.coords[0][1]}')
+                self.le_ref1_pxls.setText(f'{self.coords[0][0]},{self.coords[0][1]}')
                 self.dsb_ref1_x.setValue(self.coords[1][0])
                 self.dsb_ref1_y.setValue(self.coords[1][1])
-                self.le_ref2_pxls.setText(f'{self.coords[2][0]}, {self.coords[2][1]}')
+                self.le_ref2_pxls.setText(f'{self.coords[2][0]},{self.coords[2][1]}')
                 self.dsb_ref2_x.setValue(self.coords[-1][0])
                 self.dsb_ref2_y.setValue(self.coords[-1][1])
 
@@ -125,31 +127,58 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
         self.img2.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
         #self.img2.setImage(self.ref_image.T,opacity = 0.5)
 
+    def getScalingParams(self):
+
+        self.lm1_px, self.lm1_py = self.le_ref1_pxls.text().split(',')  # r chooses this pixel
+        self.lm2_px, self.lm2_py = self.le_ref2_pxls.text().split(',')  # chooses this pixel
+
+        self.lm1_x, self.lm1_y = self.dsb_ref1_x.value(), self.dsb_ref1_y.value()  # motor values from the microscope at pixel pos 1
+        self.lm2_x, self.lm2_y = self.dsb_ref2_x.value(), self.dsb_ref2_y.value()  # motor values from the microscope at pixel pos 2
+
+    def exportScalingParamFile(self):
+        self.getScalingParams()
+        self.scalingParam = {}
+        ref_pos1 = {'px1': int(self.lm1_px), 'py1':int(self.lm1_py), 'cx1':self.lm1_x, 'cy1':self.lm1_y}
+        ref_pos2 = {'px2': int(self.lm2_px), 'py2': int(self.lm2_py), 'cx2': self.lm2_x, 'cy2': self.lm2_y}
+        self.scalingParam['lm1_vals'] = ref_pos1
+        self.scalingParam['lm2_vals'] = ref_pos2
+
+        with open('scalingParam.json', 'w') as fp:
+            json.dump(self.scalingParam,fp, indent=4)
+
+    def importScalingParamFile(self):
+        with open('scalingParam.json', 'r') as fp:
+            self.scalingParam = json.load(fp)
+
+        px1, py1 = self.scalingParam['lm1_vals']['px1'], self.scalingParam['lm1_vals']['py1']
+        px2, py2 = self.scalingParam['lm2_vals']['px2'], self.scalingParam['lm2_vals']['py2']
+
+        self.le_ref1_pxls.setText(f'{px1},{py1}')
+        self.dsb_ref1_x.setValue(self.scalingParam['lm1_vals']['cx1'])
+        self.dsb_ref1_y.setValue(self.scalingParam['lm1_vals']['cy1'])
+        self.le_ref2_pxls.setText(f'{px2},{py2}')
+        self.dsb_ref2_x.setValue(self.scalingParam['lm2_vals']['cx2'])
+        self.dsb_ref2_y.setValue(self.scalingParam['lm2_vals']['cy2'])
+
 
     def scalingCalculation(self):
-        yshape, xshape = np.shape(self.ref_image)
+        self.generateScalingParam()
+        self.yshape, self.xshape = np.shape(self.ref_image)
+        self.pixel_val_x = (self.lm2_x - self.lm1_x) / (int(self.lm2_px) - int(self.lm1_px))  # pixel value of X
+        self.pixel_val_y = (self.lm2_y - self.lm1_y) / (int(self.lm2_py) - int(self.lm1_py))  # pixel value of Y; ususally same as X
 
-        lm1_px, lm1_py = self.le_ref1_pxls.text().split(',')  # r chooses this pixel
-        lm2_px, lm2_py = self.le_ref2_pxls.text().split(',')  # chooses this pixel
-
-        lm1_x, lm1_y = self.dsb_ref1_x.value(), self.dsb_ref1_y.value()  # motor values from the microscope at pixel pos 1
-        lm2_x, lm2_y = self.dsb_ref2_x.value(), self.dsb_ref2_y.value()  # motor values from the microscope at pixel pos 2
-
-        self.pixel_val_x = (lm2_x - lm1_x) / (int(lm2_px) - int(lm1_px))  # pixel value of X
-        self.pixel_val_y = (lm2_y - lm1_y) / (int(lm2_py) - int(lm1_py))  # pixel value of Y; ususally same as X
-
-        self.xi = lm1_x - (self.pixel_val_x * int(lm1_px))  # xmotor pos at origin (0,0)
-        xf = self.xi + (self.pixel_val_x * xshape)  # xmotor pos at the end (0,0)
-        self.yi = lm1_y - (self.pixel_val_y * int(lm1_py))  # xmotor pos at origin (0,0)
-        yf = self.yi + (self.pixel_val_y * yshape)  # xmotor pos at origin (0,0)
+        self.xi = self.lm1_x - (self.pixel_val_x * int(self.lm1_px))  # xmotor pos at origin (0,0)
+        xf = self.xi + (self.pixel_val_x * self.xshape)  # xmotor pos at the end (0,0)
+        self.yi = self.lm1_y - (self.pixel_val_y * int(self.lm1_py))  # xmotor pos at origin (0,0)
+        yf = self.yi + (self.pixel_val_y * self.yshape)  # xmotor pos at origin (0,0)
         self.createLabAxisImage()
 
-        self.label_scale_info.setText(f'Scaling: {self.pixel_val_x:.2f}, {self.pixel_val_y:.2f}, \n '
+        self.label_scale_info.setText(f'Scaling: {self.pixel_val_x:.4f}, {self.pixel_val_y:.4f}, \n '
                                       f' X Range {self.xi:.2f}:{xf:.2f}, \n'
                                       f'Y Range {self.yi:.2f}:{yf:.2f}')
         self.img2.scale(abs(self.pixel_val_x), abs(self.pixel_val_y))
         self.img2.translate(self.xi, self.yi)
-        #self.img2.setRect(QtCore.QRect(xi,yf,yi,xf))
+        # self.img2.setRect(QtCore.QRect(xi,yf,yi,xf))
         self.img2.hoverEvent = self.imageHoverEvent2
         self.img2.mousePressEvent = self.MouseClickEventToPos
 

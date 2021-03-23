@@ -500,12 +500,14 @@ class Ui(QtWidgets.QMainWindow):
 
     def viewScanPosSID(self):
         sd = self.le_sid_position.text()
-        self.ple_info.appendPlainText(str(recover_zp_scan_pos(int(sd), 0, 0)))
+        self.ple_info.appendPlainText(str(RE(recover_zp_scan_pos(int(sd), 0, 0))))
 
     def viewScanMetaData(self):
         sd = self.le_sid_position.text()
         h = db[int(sd)]
         self.ple_info.appendPlainText(str(h.start))
+
+    #Image correlation tool
 
     def ImageCorrelationPage(self):
 
@@ -598,6 +600,7 @@ class Ui(QtWidgets.QMainWindow):
                 self.dsb_ref2_x.setValue(self.coords[-1][0])
                 self.dsb_ref2_y.setValue(self.coords[-1][1])
 
+
     def createLabAxisImage(self):
         # A plot area (ViewBox + axes) for displaying the image
 
@@ -618,22 +621,32 @@ class Ui(QtWidgets.QMainWindow):
         self.img2.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
         # self.img2.setImage(self.ref_image.T,opacity = 0.5)
 
+    def getScalingParams(self):
+
+        self.lm1_px, self.lm1_py = self.le_ref1_pxls.text().split(',')  # r chooses this pixel
+        self.lm2_px, self.lm2_py = self.le_ref2_pxls.text().split(',')  # chooses this pixel
+
+        self.lm1_x, self.lm1_y = self.dsb_ref1_x.value(), self.dsb_ref1_y.value()  # motor values from the microscope at pixel pos 1
+        self.lm2_x, self.lm2_y = self.dsb_ref2_x.value(), self.dsb_ref2_y.value()  # motor values from the microscope at pixel pos 2
+
+    def exportScalingParamFile(self):
+        self.getScalingParams()
+        self.scalingParam = {}
+        ref_pos1 = {'px1': self.lm1_px, 'py1':self.lm1_py, 'cx1':self.lm1_x, 'cy1':self.lm1_y}
+        ref_pos2 = {'px2': self.lm2_px, 'py2': self.lm2_py, 'cx2': self.lm2_x, 'cy2': self.lm2_y}
+        self.scalingParam['lm1_vals'] = ref_pos1
+        self.scalingParam['lm2_vals'] = ref_pos2
+
     def scalingCalculation(self):
-        yshape, xshape = np.shape(self.ref_image)
+        self.getScalingParams()
+        self.yshape, self.xshape = np.shape(self.ref_image)
+        self.pixel_val_x = (self.lm2_x - self.lm1_x) / (int(self.lm2_px) - int(self.lm1_px))  # pixel value of X
+        self.pixel_val_y = (self.lm2_y - self.lm1_y) / (int(self.lm2_py) - int(self.lm1_py))  # pixel value of Y; ususally same as X
 
-        lm1_px, lm1_py = self.le_ref1_pxls.text().split(',')  # r chooses this pixel
-        lm2_px, lm2_py = self.le_ref2_pxls.text().split(',')  # chooses this pixel
-
-        lm1_x, lm1_y = self.dsb_ref1_x.value(), self.dsb_ref1_y.value()  # motor values from the microscope at pixel pos 1
-        lm2_x, lm2_y = self.dsb_ref2_x.value(), self.dsb_ref2_y.value()  # motor values from the microscope at pixel pos 2
-
-        self.pixel_val_x = (lm2_x - lm1_x) / (int(lm2_px) - int(lm1_px))  # pixel value of X
-        self.pixel_val_y = (lm2_y - lm1_y) / (int(lm2_py) - int(lm1_py))  # pixel value of Y; ususally same as X
-
-        self.xi = lm1_x - (self.pixel_val_x * int(lm1_px))  # xmotor pos at origin (0,0)
-        xf = self.xi + (self.pixel_val_x * xshape)  # xmotor pos at the end (0,0)
-        self.yi = lm1_y - (self.pixel_val_y * int(lm1_py))  # xmotor pos at origin (0,0)
-        yf = self.yi + (self.pixel_val_y * yshape)  # xmotor pos at origin (0,0)
+        self.xi = self.lm1_x - (self.pixel_val_x * int(self.lm1_px))  # xmotor pos at origin (0,0)
+        xf = self.xi + (self.pixel_val_x * self.xshape)  # xmotor pos at the end (0,0)
+        self.yi = self.lm1_y - (self.pixel_val_y * int(self.lm1_py))  # xmotor pos at origin (0,0)
+        yf = self.yi + (self.pixel_val_y * self.yshape)  # xmotor pos at origin (0,0)
         self.createLabAxisImage()
 
         self.label_scale_info.setText(f'Scaling: {self.pixel_val_x:.4f}, {self.pixel_val_y:.4f}, \n '
@@ -644,6 +657,9 @@ class Ui(QtWidgets.QMainWindow):
         # self.img2.setRect(QtCore.QRect(xi,yf,yi,xf))
         self.img2.hoverEvent = self.imageHoverEvent2
         self.img2.mousePressEvent = self.MouseClickEventToPos
+
+    def exportCalibration(self):
+        pass
 
     def imageHoverEvent2(self, event):
         """Show the position, pixel, and value under the mouse cursor.
@@ -695,6 +711,8 @@ class Ui(QtWidgets.QMainWindow):
         targetY = self.dsb_calc_y.value()
         RE(bps.mov(smarx, targetX))
         RE(bps.mov(smary, targetY))
+
+    #exit gui
 
     def close_application(self):
 
