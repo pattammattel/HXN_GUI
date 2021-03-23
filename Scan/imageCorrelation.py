@@ -132,8 +132,10 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
         self.lm1_px, self.lm1_py = self.le_ref1_pxls.text().split(',')  # r chooses this pixel
         self.lm2_px, self.lm2_py = self.le_ref2_pxls.text().split(',')  # chooses this pixel
 
-        self.lm1_x, self.lm1_y = self.dsb_ref1_x.value(), self.dsb_ref1_y.value()  # motor values from the microscope at pixel pos 1
-        self.lm2_x, self.lm2_y = self.dsb_ref2_x.value(), self.dsb_ref2_y.value()  # motor values from the microscope at pixel pos 2
+        # motor values from the microscope at pixel pos 1
+        self.lm1_x, self.lm1_y = self.dsb_ref1_x.value(), self.dsb_ref1_y.value()
+        # motor values from the microscope at pixel pos 2
+        self.lm2_x, self.lm2_y = self.dsb_ref2_x.value(), self.dsb_ref2_y.value()
 
     def exportScalingParamFile(self):
         self.getScalingParams()
@@ -145,15 +147,21 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
 
         file_name = QtWidgets.QFileDialog().getSaveFileName(self, "Save Parameter File", 'scaling_parameters.json',
                                                                  'json file(*json)')
+        if file_name:
 
-        with open(f'{file_name[0]}.json', 'w') as fp:
-            json.dump(self.scalingParam,fp, indent=4)
+            with open(f'{file_name[0]}', 'w') as fp:
+                json.dump(self.scalingParam,fp, indent=4)
+        else:
+            pass
 
     def importScalingParamFile(self):
         file_name = QtWidgets.QFileDialog().getOpenFileName(self, "Open Parameter File", '',
                                                                  'json file(*json)')
-        with open(file_name[0], 'r') as fp:
-            self.scalingParam = json.load(fp)
+        if file_name:
+            with open(file_name[0], 'r') as fp:
+                self.scalingParam = json.load(fp)
+        else:
+            pass
 
         px1, py1 = self.scalingParam['lm1_vals']['px1'], self.scalingParam['lm1_vals']['py1']
         px2, py2 = self.scalingParam['lm2_vals']['px2'], self.scalingParam['lm2_vals']['py2']
