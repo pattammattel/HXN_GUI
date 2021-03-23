@@ -22,10 +22,10 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
         self.pb_apply_calculation.clicked.connect(self.scalingCalculation)
         self.dsb_x_off.valueChanged.connect(self.offsetCorrectedPos)
         self.dsb_y_off.valueChanged.connect(self.offsetCorrectedPos)
-        #self.pb_grabXY_1.clicked.connect(self.insertCurrentPos1)
-        #self.pb_grabXY_2.clicked.connect(self.insertCurrentPos2)
-        self.pb_grabXY_2.clicked.connect(self.exportScalingParamFile)
-        self.pb_grabXY_1.clicked.connect(self.importScalingParamFile)
+        self.pb_grabXY_1.clicked.connect(self.insertCurrentPos1)
+        self.pb_grabXY_2.clicked.connect(self.insertCurrentPos2)
+        self.pb_import_param.clicked.connect(self.importScalingParamFile)
+        self.pb_export_param.clicked.connect(self.exportScalingParamFile)
         self.pb_gotoTargetPos.clicked.connect(self.gotoTargetPos)
 
     def loadRefImage(self):
@@ -143,11 +143,16 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
         self.scalingParam['lm1_vals'] = ref_pos1
         self.scalingParam['lm2_vals'] = ref_pos2
 
-        with open('scalingParam.json', 'w') as fp:
+        file_name = QtWidgets.QFileDialog().getSaveFileName(self, "Save Parameter File", 'scaling_parameters.json',
+                                                                 'json file(*json)')
+
+        with open(f'{file_name[0]}.json', 'w') as fp:
             json.dump(self.scalingParam,fp, indent=4)
 
     def importScalingParamFile(self):
-        with open('scalingParam.json', 'r') as fp:
+        file_name = QtWidgets.QFileDialog().getOpenFileName(self, "Open Parameter File", '',
+                                                                 'json file(*json)')
+        with open(file_name[0], 'r') as fp:
             self.scalingParam = json.load(fp)
 
         px1, py1 = self.scalingParam['lm1_vals']['px1'], self.scalingParam['lm1_vals']['py1']

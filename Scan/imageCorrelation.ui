@@ -317,6 +317,20 @@ font: 12pt &quot;MS Shell Dlg 2&quot;;</string>
          </property>
         </widget>
        </item>
+       <item row="3" column="0">
+        <widget class="QPushButton" name="pb_export_param">
+         <property name="text">
+          <string>Export Scaling Parameters</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QPushButton" name="pb_import_param">
+         <property name="text">
+          <string>Import Scaling Parameters</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
     </item>
