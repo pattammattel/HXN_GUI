@@ -26,7 +26,7 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>HXN GUI</string>
   </property>
   <property name="windowIcon">
    <iconset resource="hxn_image.qrc">
@@ -124,7 +124,7 @@ QPushButton:pressed{
        <enum>QTabWidget::North</enum>
       </property>
       <property name="currentIndex">
-       <number>4</number>
+       <number>1</number>
       </property>
       <property name="documentMode">
        <bool>true</bool>
@@ -140,7 +140,7 @@ QPushButton:pressed{
       </property>
       <widget class="QWidget" name="scan">
        <attribute name="title">
-        <string>Scan/Plot</string>
+        <string>Fly Scans</string>
        </attribute>
        <layout class="QGridLayout" name="gridLayout_21">
         <item row="0" column="0">
@@ -779,6 +779,22 @@ QPushButton:pressed{
            <item row="4" column="0" colspan="2">
             <widget class="QWidget" name="widget" native="true">
              <layout class="QGridLayout" name="gridLayout_2">
+              <item row="1" column="3" colspan="2">
+               <widget class="QLineEdit" name="le_pdf_fig_note">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Note</string>
+                </property>
+                <property name="placeholderText">
+                 <string>Note</string>
+                </property>
+               </widget>
+              </item>
               <item row="0" column="0">
                <layout class="QHBoxLayout" name="horizontalLayout_32">
                 <item>
@@ -879,20 +895,7 @@ QPushButton:pressed{
                 </item>
                </layout>
               </item>
-              <item row="0" column="2">
-               <widget class="QPushButton" name="pb_fig_to_pdf">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Insert Fig To PDF</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="3">
+              <item row="0" column="4">
                <widget class="QLineEdit" name="le_pdf_fig_title">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -905,6 +908,19 @@ QPushButton:pressed{
                 </property>
                 <property name="placeholderText">
                  <string>Title</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="3">
+               <widget class="QPushButton" name="pb_fig_to_pdf">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Insert Fig To PDF</string>
                 </property>
                </widget>
               </item>
@@ -1004,15 +1020,21 @@ QPushButton:pressed{
                 </item>
                </layout>
               </item>
-              <item row="1" column="2" colspan="2">
-               <widget class="QLineEdit" name="le_pdf_fig_note">
-                <property name="text">
-                 <string>Note</string>
+              <item row="0" column="2">
+               <spacer name="horizontalSpacer_9">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
                 </property>
-                <property name="placeholderText">
-                 <string>Note</string>
+                <property name="sizeType">
+                 <enum>QSizePolicy::Preferred</enum>
                 </property>
-               </widget>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
               </item>
              </layout>
             </widget>
@@ -1157,7 +1179,7 @@ font: 15pt &quot;Modern No. 20&quot;;
            <enum>QTabWidget::North</enum>
           </property>
           <property name="currentIndex">
-           <number>1</number>
+           <number>0</number>
           </property>
           <property name="documentMode">
            <bool>true</bool>
@@ -4477,7 +4499,7 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
         <item row="0" column="0">
          <widget class="QToolBox" name="toolBox_2">
           <property name="currentIndex">
-           <number>3</number>
+           <number>1</number>
           </property>
           <widget class="QWidget" name="page_3">
            <property name="geometry">
@@ -4777,7 +4799,7 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
              <x>0</x>
              <y>0</y>
              <width>1056</width>
-             <height>317</height>
+             <height>276</height>
             </rect>
            </property>
            <attribute name="label">
@@ -4807,6 +4829,12 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
                        </item>
                        <item>
                         <widget class="QSpinBox" name="spinBox_10">
+                         <property name="sizePolicy">
+                          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                           <horstretch>0</horstretch>
+                           <verstretch>0</verstretch>
+                          </sizepolicy>
+                         </property>
                          <property name="suffix">
                           <string> um</string>
                          </property>
@@ -4837,6 +4865,12 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
                        </item>
                        <item>
                         <widget class="QSpinBox" name="spinBox_12">
+                         <property name="sizePolicy">
+                          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                           <horstretch>0</horstretch>
+                           <verstretch>0</verstretch>
+                          </sizepolicy>
+                         </property>
                          <property name="suffix">
                           <string> um</string>
                          </property>
@@ -4867,6 +4901,12 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
                        </item>
                        <item>
                         <widget class="QSpinBox" name="spinBox_15">
+                         <property name="sizePolicy">
+                          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                           <horstretch>0</horstretch>
+                           <verstretch>0</verstretch>
+                          </sizepolicy>
+                         </property>
                          <property name="suffix">
                           <string/>
                          </property>
@@ -4940,6 +4980,12 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
                      </item>
                      <item>
                       <widget class="QSpinBox" name="spinBox_9">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
                        <property name="suffix">
                         <string> um</string>
                        </property>
@@ -4973,6 +5019,12 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
                      </item>
                      <item>
                       <widget class="QSpinBox" name="spinBox_11">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
                        <property name="suffix">
                         <string> um</string>
                        </property>
@@ -5006,6 +5058,12 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
                      </item>
                      <item>
                       <widget class="QSpinBox" name="spinBox_14">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
                        <property name="suffix">
                         <string/>
                        </property>
@@ -5049,7 +5107,7 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
               </property>
               <property name="sizeHint" stdset="0">
                <size>
-                <width>637</width>
+                <width>600</width>
                 <height>20</height>
                </size>
               </property>
@@ -5063,7 +5121,7 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
               <property name="sizeHint" stdset="0">
                <size>
                 <width>20</width>
-                <height>96</height>
+                <height>20</height>
                </size>
               </property>
              </spacer>
@@ -6463,7 +6521,7 @@ Click Auto Refill He Button</string>
      <x>0</x>
      <y>0</y>
      <width>1100</width>
-     <height>27</height>
+     <height>34</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuOptions">

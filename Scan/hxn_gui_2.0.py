@@ -10,6 +10,7 @@ import sys
 import collections
 import webbrowser
 import pyqtgraph as pg
+import json
 from scipy.ndimage import rotate
 
 from PyQt5 import QtWidgets, uic, QtCore, QtGui, QtTest
@@ -63,7 +64,7 @@ class Ui(QtWidgets.QMainWindow):
         # xanes parameters
         self.pb_gen_elist.clicked.connect(self.generate_elist)
         self.pb_set_epoints.clicked.connect(self.generate_epoints)
-        # self.pb_start_xanes.clicked.connect(self.zp_xanes)
+        # self.pb_start_xanes.clicked.connect(self.zpXANES)
 
         # scans and motor motion
         self.start.clicked.connect(self.initFlyScan)
@@ -310,6 +311,25 @@ class Ui(QtWidgets.QMainWindow):
         caput('XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.VAL', -50)
         self.ple_info.appendPlainText('CAM6 Motion Done!')
 
+    def plot_me(self):
+        sd = self.pb_plot_sd.text()
+        elem = self.pb_plot_elem.text()
+        plot_data(int(sd), elem, 'sclr1_ch4')
+
+    def plot_erf_fit(self):
+        sd = self.pb_plot_sd.text()
+        elem = self.pb_plot_elem.text()
+        erf_fit(int(sd), elem, linear_flag=self.cb_erf_linear_flag.isChecked())
+
+    def plot_line_center(self):
+        sd = self.pb_plot_sd.text()
+        elem = self.pb_plot_elem.text()
+        return_line_center(int(sd), elem, threshold=self.dsb_line_center_thre.value())
+
+    def close_all_plots(self):
+        plt.close('all')
+
+    #xanes
     def generate_epoints(self):
 
         pre = np.linspace(self.dsb_pre_s.value(), self.dsb_pre_e.value(), self.sb_pre_p.value())
@@ -342,29 +362,27 @@ class Ui(QtWidgets.QMainWindow):
         else:
             self.statusbar.showMessage('No energy list found; set or load an e list first')
 
-    def zp_xanes(self):
+    def zpXANES(self):
         self.getScanValues()
         RE(zp_list_xanes2d(self.e_list, self.det_list[self.det], self.motor_list[self.motor1],
                            self.mot1_s, self.mot1_e, self.mot1_steps, self.motor_list[self.motor2],
                            self.mot2_s, self.mot2_e, self.mot2_steps, self.dwell_t))
 
-    def plot_me(self):
-        sd = self.pb_plot_sd.text()
-        elem = self.pb_plot_elem.text()
-        plot_data(int(sd), elem, 'sclr1_ch4')
+    #tomo
+    def zpTomo(self):
+        pass
 
-    def plot_erf_fit(self):
-        sd = self.pb_plot_sd.text()
-        elem = self.pb_plot_elem.text()
-        erf_fit(int(sd), elem, linear_flag=self.cb_erf_linear_flag.isChecked())
+    #special scans
+    def zpMosaic(self):
+        pass
 
-    def plot_line_center(self):
-        sd = self.pb_plot_sd.text()
-        elem = self.pb_plot_elem.text()
-        return_line_center(int(sd), elem, threshold=self.dsb_line_center_thre.value())
+    def zpFocusScan(self):
+        pass
 
-    def close_all_plots(self):
-        plt.close('all')
+    def zpRotAlignment(self):
+        pass
+
+    #custom macros
 
     def save_file(self):
         S__File = QFileDialog.getSaveFileName(None, 'SaveFile', '/', "Python Files (*.py)")
