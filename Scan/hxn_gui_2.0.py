@@ -62,7 +62,7 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_plot_line_center.clicked.connect(self.plot_line_center)
 
         # xanes parameters
-        self.pb_gen_elist.clicked.connect(self.generate_elist)
+        self.pb_gen_elist.clicked.connect(self.generateEList)
         self.pb_set_epoints.clicked.connect(self.generate_epoints)
         # self.pb_start_xanes.clicked.connect(self.zpXANES)
 
@@ -340,7 +340,73 @@ class Ui(QtWidgets.QMainWindow):
         self.energies = np.concatenate([pre, XANES1, XANES2, post])
         self.ple_info.setPlainText(str(self.energies))
 
-    def generate_elist(self):
+    def importEPoints(self):
+        file_name = QFileDialog().getOpenFileName(self, "Save Parameter File", ' ',
+                                                                 'txt file(*txt)')
+
+        if file_name:
+            self.energies = np.loadtxt(file_name[0])
+        else:
+            pass
+
+
+    def exportEPoints(self):
+        self.generate_epoints()
+        file_name = QFileDialog().getSaveFileName(self, "Save Parameter File",
+                                                            'xanes_e_points.txt',
+                                                            'txt file(*txt)')
+        if file_name:
+            np.savetxt(file_name[0],np.array(self.energies))
+        else:
+            pass
+
+
+    def importXanesParams(self):
+
+        file_name = QFileDialog().getOpenFileName(self, "Save Parameter File", ' ',
+                                                                 'json file(*json)')
+        if file_name:
+            with open(file_name[0], 'r') as fp:
+                self.XanesParam = json.load(fp)
+        else:
+            pass
+        e_low, e_high = self.XanesParam['mono_e']['low'], self.XanesParam['mono_e']['high']
+        ugap_low, ugap_high = self.XanesParam['ugap']['low'], self.XanesParam['ugap']['high']
+        crl_low, crl_high = self.XanesParam['crl']['low'], self.XanesParam['crl']['high']
+        zpz1_low, zpz1_high = self.XanesParam['zpz1']['low'], self.XanesParam['zpz1']['high']
+
+        self.dsb_monoe_l.setValue(e_low), self.dsb_monoe_h.setValue(e_high)
+        self.dsb_ugap_l.setValue(ugap_low), self.dsb_ugap_h.setValue(ugap_high)
+        self.dsb_crl_l.setValue(crl_low), self.dsb_crl_h.setValue(crl_high)
+        self.dsb_zpz_l.setValue(zpz1_low), self.dsb_zpz_h.setValue(zpz1_high)
+
+
+    def exportXanesParams(self):
+        self.XanesParam = {}
+        e_pos = {'low': self.dsb_monoe_l.value(), 'high':self.dsb_monoe_h.value()}
+        ugap_pos= {'low': self.dsb_ugap_l.value(), 'high': self.dsb_ugap_h.value()}
+        crl_pos = {'low': self.dsb_crl_l.value(), 'high': self.dsb_crl_h.value()}
+        zpz1_pos = {'low': self.dsb_zpz_l.value(), 'high': self.dsb_zpz_h.value()}
+
+        self.XanesParam['mono_e'] = e_pos
+        self.XanesParam['ugap'] = ugap_pos
+        self.XanesParam['crl'] = crl_pos
+        self.XanesParam['zpz1'] = zpz1_pos
+
+        file_name = QFileDialog().getSaveFileName(self, "Save Parameter File",
+                                                            'hxn_xanes_parameters.json',
+                                                            'json file(*json)')
+        if file_name:
+
+            with open(f'{file_name[0]}', 'w') as fp:
+                json.dump(self.XanesParam,fp, indent=4)
+        else:
+            pass
+
+    def insertCommonXanesParams(self):
+        pass
+
+    def generateEList(self):
 
         if not len(self.energies) == 0:
 
@@ -600,7 +666,6 @@ class Ui(QtWidgets.QMainWindow):
                 self.le_ref2_pxls.setText(f'{self.coords[2][0]}, {self.coords[2][1]}')
                 self.dsb_ref2_x.setValue(self.coords[-1][0])
                 self.dsb_ref2_y.setValue(self.coords[-1][1])
-
 
     def createLabAxisImage(self):
         # A plot area (ViewBox + axes) for displaying the image
