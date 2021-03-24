@@ -94,6 +94,6 @@ def fillXanesParamBoxes(XanesParam: dict):
     zpz1_low, zpz1_high = XanesParam['zpz1']['low'], XanesParam['zpz1']['high']
     crl_combo = XanesParam['crl_combo']['crl_combo_num']
 
-    print(e_low, e_high)
+    print(type(crl_combo))
 
 fillXanesParamBoxes(XanesParam['Fe K'])

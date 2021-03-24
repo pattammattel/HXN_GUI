@@ -349,7 +349,6 @@ class Ui(QtWidgets.QMainWindow):
         else:
             pass
 
-
     def exportEPoints(self):
         self.generate_epoints()
         file_name = QFileDialog().getSaveFileName(self, "Save Parameter File",
@@ -360,33 +359,31 @@ class Ui(QtWidgets.QMainWindow):
         else:
             pass
 
-
     def importXanesParams(self):
 
         file_name = QFileDialog().getOpenFileName(self, "Save Parameter File", ' ',
                                                                  'json file(*json)')
         if file_name:
             with open(file_name[0], 'r') as fp:
-                self.XanesParam = json.load(fp)
+                self.xanesParam = json.load(fp)
         else:
             pass
 
-        self.fillXanesParamBoxes(self.XanesParam)
-
+        self.fillXanesParamBoxes(self.xanesParam)
 
     def exportXanesParams(self):
-        self.XanesParam = {}
+        self.xanesParam = {}
         e_pos = {'low': self.dsb_monoe_l.value(), 'high':self.dsb_monoe_h.value()}
         ugap_pos= {'low': self.dsb_ugap_l.value(), 'high': self.dsb_ugap_h.value()}
         crl_pos = {'low': self.dsb_crl_l.value(), 'high': self.dsb_crl_h.value()}
         zpz1_pos = {'low': self.dsb_zpz_l.value(), 'high': self.dsb_zpz_h.value()}
         crl_combo = {'crl_combo_num': self.le_crl_combo_xanes.text()}
 
-        self.XanesParam['mono_e'] = e_pos
-        self.XanesParam['ugap'] = ugap_pos
-        self.XanesParam['crl'] = crl_pos
-        self.XanesParam['zpz1'] = zpz1_pos
-        self.XanesParam['crl_combo'] = crl_combo
+        self.xanesParam['mono_e'] = e_pos
+        self.xanesParam['ugap'] = ugap_pos
+        self.xanesParam['crl'] = crl_pos
+        self.xanesParam['zpz1'] = zpz1_pos
+        self.xanesParam['crl_combo'] = crl_combo
 
         file_name = QFileDialog().getSaveFileName(self, "Save Parameter File",
                                                             'hxn_xanes_parameters.json',
@@ -394,17 +391,17 @@ class Ui(QtWidgets.QMainWindow):
         if file_name:
 
             with open(f'{file_name[0]}', 'w') as fp:
-                json.dump(self.XanesParam,fp, indent=4)
+                json.dump(self.xanesParam,fp, indent=4)
         else:
             pass
 
-    def fillXanesParamBoxes(self,XanesParam:dict ):
+    def fillXanesParamBoxes(self,xanesParam:dict ):
 
-        e_low, e_high = XanesParam['mono_e']['low'], XanesParam['mono_e']['high']
-        ugap_low, ugap_high = XanesParam['ugap']['low'], XanesParam['ugap']['high']
-        crl_low, crl_high = XanesParam['crl']['low'], XanesParam['crl']['high']
-        zpz1_low, zpz1_high = XanesParam['zpz1']['low'], XanesParam['zpz1']['high']
-        crl_combo = XanesParam['crl_combo']['crl_combo_num']
+        e_low, e_high = xanesParam['mono_e']['low'], xanesParam['mono_e']['high']
+        ugap_low, ugap_high = xanesParam['ugap']['low'], xanesParam['ugap']['high']
+        crl_low, crl_high = xanesParam['crl']['low'], xanesParam['crl']['high']
+        zpz1_low, zpz1_high = xanesParam['zpz1']['low'], xanesParam['zpz1']['high']
+        crl_combo = xanesParam['crl_combo']['crl_combo_num']
 
         self.dsb_monoe_l.setValue(e_low), self.dsb_monoe_h.setValue(e_high)
         self.dsb_ugap_l.setValue(ugap_low), self.dsb_ugap_h.setValue(ugap_high)
@@ -415,7 +412,6 @@ class Ui(QtWidgets.QMainWindow):
     def loadCommonXanesParams(self):
         with open(os.path.join('.','xanes_common_elem_params.json'), 'r') as fp:
             self.commonXanesParam = json.load(fp)
-
 
     def insertCommonXanesParams(self):
         mot_list = [self.dsb_monoe_l, self.dsb_monoe_h, self.dsb_ugap_l, self.dsb_ugap_h,
@@ -429,7 +425,6 @@ class Ui(QtWidgets.QMainWindow):
 
         else:
             pass
-
 
     def generateEList(self):
 
