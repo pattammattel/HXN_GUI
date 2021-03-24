@@ -370,15 +370,8 @@ class Ui(QtWidgets.QMainWindow):
                 self.XanesParam = json.load(fp)
         else:
             pass
-        e_low, e_high = self.XanesParam['mono_e']['low'], self.XanesParam['mono_e']['high']
-        ugap_low, ugap_high = self.XanesParam['ugap']['low'], self.XanesParam['ugap']['high']
-        crl_low, crl_high = self.XanesParam['crl']['low'], self.XanesParam['crl']['high']
-        zpz1_low, zpz1_high = self.XanesParam['zpz1']['low'], self.XanesParam['zpz1']['high']
 
-        self.dsb_monoe_l.setValue(e_low), self.dsb_monoe_h.setValue(e_high)
-        self.dsb_ugap_l.setValue(ugap_low), self.dsb_ugap_h.setValue(ugap_high)
-        self.dsb_crl_l.setValue(crl_low), self.dsb_crl_h.setValue(crl_high)
-        self.dsb_zpz_l.setValue(zpz1_low), self.dsb_zpz_h.setValue(zpz1_high)
+        self.fillXanesParamBoxes(self.XanesParam)
 
 
     def exportXanesParams(self):
@@ -387,11 +380,13 @@ class Ui(QtWidgets.QMainWindow):
         ugap_pos= {'low': self.dsb_ugap_l.value(), 'high': self.dsb_ugap_h.value()}
         crl_pos = {'low': self.dsb_crl_l.value(), 'high': self.dsb_crl_h.value()}
         zpz1_pos = {'low': self.dsb_zpz_l.value(), 'high': self.dsb_zpz_h.value()}
+        crl_combo = {'crl_combo_num': self.le_crl_combo_xanes.text()}
 
         self.XanesParam['mono_e'] = e_pos
         self.XanesParam['ugap'] = ugap_pos
         self.XanesParam['crl'] = crl_pos
         self.XanesParam['zpz1'] = zpz1_pos
+        self.XanesParam['crl_combo'] = crl_combo
 
         file_name = QFileDialog().getSaveFileName(self, "Save Parameter File",
                                                             'hxn_xanes_parameters.json',
@@ -403,8 +398,38 @@ class Ui(QtWidgets.QMainWindow):
         else:
             pass
 
+    def fillXanesParamBoxes(self,XanesParam:dict ):
+
+        e_low, e_high = XanesParam['mono_e']['low'], XanesParam['mono_e']['high']
+        ugap_low, ugap_high = XanesParam['ugap']['low'], XanesParam['ugap']['high']
+        crl_low, crl_high = XanesParam['crl']['low'], XanesParam['crl']['high']
+        zpz1_low, zpz1_high = XanesParam['zpz1']['low'], XanesParam['zpz1']['high']
+        crl_combo = XanesParam['crl_combo']['crl_combo_num']
+
+        self.dsb_monoe_l.setValue(e_low), self.dsb_monoe_h.setValue(e_high)
+        self.dsb_ugap_l.setValue(ugap_low), self.dsb_ugap_h.setValue(ugap_high)
+        self.dsb_crl_l.setValue(crl_low), self.dsb_crl_h.setValue(crl_high)
+        self.dsb_zpz_l.setValue(zpz1_low), self.dsb_zpz_h.setValue(zpz1_high)
+        self.le_crl_combo_xanes.setText(crl_combo)
+
+    def loadCommonXanesParams(self):
+        with open(os.path.join('.','xanes_common_elem_params.json'), 'r') as fp:
+            self.commonXanesParam = json.load(fp)
+
+
     def insertCommonXanesParams(self):
-        pass
+        mot_list = [self.dsb_monoe_l, self.dsb_monoe_h, self.dsb_ugap_l, self.dsb_ugap_h,
+                    self.dsb_crl_l, self.dsb_crl_h, self.dsb_zpz_l, self.dsb_zpz_h, self.le_crl_combo_xanes]
+        commonElems = self.commonXanesParam.keys()
+
+        button_name = self.sender().objectName()
+        if button_name in commonElems:
+            elemParam = self.commonXanesParam[button_name]
+            self.fillXanesParamBoxes(elemParam)
+
+        else:
+            pass
+
 
     def generateEList(self):
 
