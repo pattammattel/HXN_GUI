@@ -520,7 +520,8 @@ class Ui(QtWidgets.QMainWindow):
         self.dsb_y_off.valueChanged.connect(self.offsetCorrectedPos)
         self.pb_grabXY_1.clicked.connect(self.insertCurrentPos1)
         self.pb_grabXY_2.clicked.connect(self.insertCurrentPos2)
-        # self.pb_grabXY_2.clicked.connect(self.insertCurrentPos(self.dsb_ref2_x,self.dsb_ref2_y))
+        self.pb_import_param.clicked.connect(self.importScalingParamFile)
+        self.pb_export_param.clicked.connect(self.exportScalingParamFile)
         self.pb_gotoTargetPos.clicked.connect(self.gotoTargetPos)
 
     def loadRefImage(self):
@@ -626,19 +627,49 @@ class Ui(QtWidgets.QMainWindow):
         self.lm1_px, self.lm1_py = self.le_ref1_pxls.text().split(',')  # r chooses this pixel
         self.lm2_px, self.lm2_py = self.le_ref2_pxls.text().split(',')  # chooses this pixel
 
-        self.lm1_x, self.lm1_y = self.dsb_ref1_x.value(), self.dsb_ref1_y.value()  # motor values from the microscope at pixel pos 1
-        self.lm2_x, self.lm2_y = self.dsb_ref2_x.value(), self.dsb_ref2_y.value()  # motor values from the microscope at pixel pos 2
+        # motor values from the microscope at pixel pos 1
+        self.lm1_x, self.lm1_y = self.dsb_ref1_x.value(), self.dsb_ref1_y.value()
+        # motor values from the microscope at pixel pos 2
+        self.lm2_x, self.lm2_y = self.dsb_ref2_x.value(), self.dsb_ref2_y.value()
 
     def exportScalingParamFile(self):
         self.getScalingParams()
         self.scalingParam = {}
-        ref_pos1 = {'px1': self.lm1_px, 'py1':self.lm1_py, 'cx1':self.lm1_x, 'cy1':self.lm1_y}
-        ref_pos2 = {'px2': self.lm2_px, 'py2': self.lm2_py, 'cx2': self.lm2_x, 'cy2': self.lm2_y}
+        ref_pos1 = {'px1': int(self.lm1_px), 'py1':int(self.lm1_py), 'cx1':self.lm1_x, 'cy1':self.lm1_y}
+        ref_pos2 = {'px2': int(self.lm2_px), 'py2': int(self.lm2_py), 'cx2': self.lm2_x, 'cy2': self.lm2_y}
         self.scalingParam['lm1_vals'] = ref_pos1
         self.scalingParam['lm2_vals'] = ref_pos2
 
+        file_name = QtWidgets.QFileDialog().getSaveFileName(self, "Save Parameter File", 'scaling_parameters.json',
+                                                                 'json file(*json)')
+        if file_name:
+
+            with open(f'{file_name[0]}', 'w') as fp:
+                json.dump(self.scalingParam,fp, indent=4)
+        else:
+            pass
+
+    def importScalingParamFile(self):
+        file_name = QtWidgets.QFileDialog().getOpenFileName(self, "Open Parameter File", '',
+                                                                 'json file(*json)')
+        if file_name:
+            with open(file_name[0], 'r') as fp:
+                self.scalingParam = json.load(fp)
+        else:
+            pass
+
+        px1, py1 = self.scalingParam['lm1_vals']['px1'], self.scalingParam['lm1_vals']['py1']
+        px2, py2 = self.scalingParam['lm2_vals']['px2'], self.scalingParam['lm2_vals']['py2']
+
+        self.le_ref1_pxls.setText(f'{px1},{py1}')
+        self.dsb_ref1_x.setValue(self.scalingParam['lm1_vals']['cx1'])
+        self.dsb_ref1_y.setValue(self.scalingParam['lm1_vals']['cy1'])
+        self.le_ref2_pxls.setText(f'{px2},{py2}')
+        self.dsb_ref2_x.setValue(self.scalingParam['lm2_vals']['cx2'])
+        self.dsb_ref2_y.setValue(self.scalingParam['lm2_vals']['cy2'])
+
     def scalingCalculation(self):
-        self.getScalingParams()
+        self.generateScalingParam()
         self.yshape, self.xshape = np.shape(self.ref_image)
         self.pixel_val_x = (self.lm2_x - self.lm1_x) / (int(self.lm2_px) - int(self.lm1_px))  # pixel value of X
         self.pixel_val_y = (self.lm2_y - self.lm1_y) / (int(self.lm2_py) - int(self.lm1_py))  # pixel value of Y; ususally same as X
@@ -657,9 +688,6 @@ class Ui(QtWidgets.QMainWindow):
         # self.img2.setRect(QtCore.QRect(xi,yf,yi,xf))
         self.img2.hoverEvent = self.imageHoverEvent2
         self.img2.mousePressEvent = self.MouseClickEventToPos
-
-    def exportCalibration(self):
-        pass
 
     def imageHoverEvent2(self, event):
         """Show the position, pixel, and value under the mouse cursor.

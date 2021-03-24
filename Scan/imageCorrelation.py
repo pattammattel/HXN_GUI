@@ -173,7 +173,6 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
         self.dsb_ref2_x.setValue(self.scalingParam['lm2_vals']['cx2'])
         self.dsb_ref2_y.setValue(self.scalingParam['lm2_vals']['cy2'])
 
-
     def scalingCalculation(self):
         self.generateScalingParam()
         self.yshape, self.xshape = np.shape(self.ref_image)
