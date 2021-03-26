@@ -56,13 +56,12 @@ class ListWidget(QtWidgets.QMainWindow):
         else:
             pass
 
-
     def importROIDict(self):
-        self.roiDict = {}
+
         file_name = QFileDialog().getOpenFileName(self, "Open Parameter File",
                                                   ' ', 'json file(*json)')
         if file_name:
-
+            self.roiDict = {}
             with open(file_name[0], 'r') as fp:
                 self.roiDict = json.load(fp)
 

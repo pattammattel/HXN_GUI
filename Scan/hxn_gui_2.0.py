@@ -92,14 +92,15 @@ class Ui(QtWidgets.QMainWindow):
 
         # sample position
         self.pb_save_pos.clicked.connect(self.generatePositionDict)
-        self.pb_move_pos.clicked.connect(self.gotoROIPosition)
+        self.pb_roiList_import.clicked.connect(self.importROIDict)
+        self.pb_roiList_export.clicked.connect(self.exportROIDict)
+        self.pb_roiList_clear.clicked.connect(self.clearROIList)
+        self.sampleROI_List.itemClicked.connect(self.showROIPos)
         self.pb_recover_scan_pos.clicked.connect(self.gotoPosSID)
         self.pb_show_scan_pos.clicked.connect(self.viewScanPosSID)
         self.pb_print_scan_meta.clicked.connect(self.viewScanMetaData)
-        self.sampleROI_List.itemDoubleClicked.connect(self.showROIPosition)
         self.pb_recover_scan_pos.clicked.connect(self.gotoPosSID)
         self.pb_show_scan_pos.clicked.connect(self.viewScanPosSID)
-        self.pb_print_scan_meta.connect(self.viewScanMetaData)
 
         # Quick fill scan Params
         self.pb_3030.clicked.connect(self.fill_common_scan_params)
@@ -549,13 +550,22 @@ class Ui(QtWidgets.QMainWindow):
             zp.zpz1: zpz1_pos, zpsth: th,
             zps.zpsx: zp_sx, zps.zpsz: zp_sz
         }
-        roi_name = 'ROI' + str(len(self.roiDict) + 1)
-        self.roiDict[roi_name] = roi  # a .json file to export
+        roi_name = 'ROI' + str(self.sampleROI_List.count())
+        self.roiDict[roi_name] = roi
         self.sampleROI_List.addItem(roi_name)
-        item = self.sampleROI_List.item(str(len(self.roiDict) + 1))
+        item = self.sampleROI_List.item(self.sampleROI_List.count()-1)
         item.setFlags(item.flags() | QtCore.Qt.ItemIsEditable)
 
-    def exportROIList(self):
+    def applyDictWithLabel(self):
+        label_ = {}
+        for idx in range(self.sampleROI_List.count()):
+            label = self.sampleROI_List.item(idx).text()
+            label_[label] = idx
+        self.roiDict['user_labels'] = label_
+        print(self.roiDict)
+
+    def exportROIDict(self):
+        self.applyDictWithLabel()
         file_name = QFileDialog().getSaveFileName(self, "Save Parameter File",
                                                   'hxn_zp_roi_list.json',
                                                   'json file(*json)')
@@ -566,16 +576,32 @@ class Ui(QtWidgets.QMainWindow):
         else:
             pass
 
-    def importROIList(self):
+    def importROIDict(self):
 
         file_name = QFileDialog().getOpenFileName(self, "Open Parameter File",
                                                   ' ', 'json file(*json)')
         if file_name:
-
+            self.roiDict = {}
             with open(file_name[0], 'r') as fp:
                 self.roiDict = json.load(fp)
+
+            print(self.roiDict['user_labels'])
+
+            self.sampleROI_List.clear()
+            for num,items in enumerate(self.roiDict['user_labels']):
+                self.sampleROI_List.addItem(items)
+                item = self.sampleROI_List.item(num)
+                item.setFlags(item.flags() | QtCore.Qt.ItemIsEditable)
         else:
             pass
+
+    def clearROIList(self):
+        self.sampleROI_List.clear()
+
+    def showROIPos(self,item):
+        item_num = self.sampleROI_List.row(item)
+        print(self.roiDict[f'ROI{item_num}'])
+
 
 
     def gotoROIPosition(self):
