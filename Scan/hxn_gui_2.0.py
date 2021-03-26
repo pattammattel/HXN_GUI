@@ -29,7 +29,7 @@ class Ui(QtWidgets.QMainWindow):
         self.webbrowserSetUpHxnWS1()
 
         self.energies = []
-        self.roiList = {}
+        self.roiDict = {}
 
         # updating resolution/tot time
         self.dwell.valueChanged.connect(self.initParams)
@@ -549,22 +549,38 @@ class Ui(QtWidgets.QMainWindow):
             zp.zpz1: zpz1_pos, zpsth: th,
             zps.zpsx: zp_sx, zps.zpsz: zp_sz
         }
-        roi_name = 'ROI' + str(len(self.roiList) + 1)
-        self.roiList[roi_name] = roi  # a .json file to export
-        self.addROIListToWidget()
+        roi_name = 'ROI' + str(len(self.roiDict) + 1)
+        self.roiDict[roi_name] = roi  # a .json file to export
+        self.sampleROI_List.addItem(roi_name)
+        item = self.sampleROI_List.item(str(len(self.roiDict) + 1))
+        item.setFlags(item.flags() | QtCore.Qt.ItemIsEditable)
 
-    def addROIListToWidget(self):
-        self.sampleROI_List.clear()
-        for item_num, item_ in enumerate(self.roiList):
-            self.sampleROI_List.addItem("ROI" + str(item_num))
+    def exportROIList(self):
+        file_name = QFileDialog().getSaveFileName(self, "Save Parameter File",
+                                                  'hxn_zp_roi_list.json',
+                                                  'json file(*json)')
+        if file_name:
 
-        # change to append item so the item can be renamed by the user
-        # item = listwidget.item(index)
-        # item.setFlags(item.flags() | QtCore.Qt.ItemIsEditable)
+            with open(file_name[0], 'w') as fp:
+                json.dump(self.roiDict, fp, indent=4)
+        else:
+            pass
+
+    def importROIList(self):
+
+        file_name = QFileDialog().getOpenFileName(self, "Open Parameter File",
+                                                  ' ', 'json file(*json)')
+        if file_name:
+
+            with open(file_name[0], 'r') as fp:
+                self.roiDict = json.load(fp)
+        else:
+            pass
+
 
     def gotoROIPosition(self):
         roi_num = self.sampleROI_List.currentRow()
-        param_file = self.roiList[roi_num]
+        param_file = self.roiDict[roi_num]
         for key, value in param_file.items():
             if not key == zp.zpz1:
                 RE(bps.mov(key, value))
@@ -574,10 +590,13 @@ class Ui(QtWidgets.QMainWindow):
 
     def showROIPosition(self, item):
         item_num = self.sampleROI_List.row(item)
-        param_file = self.roiList[item_num]
+        param_file = self.roiDict[item_num]
         self.ple_info.appendPlainText(('*' * 20))
         for key, value in param_file.items():
             self.ple_info.appendPlainText(f'{key.name}:{value:.4f}')
+
+        #self.sampleROI_List.itemClicked.connect(lambda: self.ple_info.appendPlainText(
+        # (self.roiDict[self.sampleROI_List.currentItem().text()])))
 
     def gotoPosSID(self):
         sd = self.le_sid_position.text()

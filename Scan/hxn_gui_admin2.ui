@@ -1195,7 +1195,7 @@ font: 15pt &quot;Modern No. 20&quot;;
            <enum>QTabWidget::North</enum>
           </property>
           <property name="currentIndex">
-           <number>1</number>
+           <number>0</number>
           </property>
           <property name="documentMode">
            <bool>true</bool>
@@ -1215,8 +1215,8 @@ font: 15pt &quot;Modern No. 20&quot;;
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>928</width>
-                 <height>359</height>
+                 <width>1105</width>
+                 <height>393</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1904,8 +1904,8 @@ font: 15pt &quot;Modern No. 20&quot;;
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>858</width>
-                 <height>383</height>
+                 <width>1105</width>
+                 <height>393</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -2105,9 +2105,9 @@ font: 15pt &quot;Modern No. 20&quot;;
                <property name="geometry">
                 <rect>
                  <x>0</x>
-                 <y>-47</y>
-                 <width>1190</width>
-                 <height>431</height>
+                 <y>0</y>
+                 <width>1105</width>
+                 <height>393</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -2121,7 +2121,7 @@ font: 15pt &quot;Modern No. 20&quot;;
                   </property>
                   <property name="sizeHint" stdset="0">
                    <size>
-                    <width>91</width>
+                    <width>122</width>
                     <height>17</height>
                    </size>
                   </property>
@@ -2134,7 +2134,7 @@ font: 15pt &quot;Modern No. 20&quot;;
                   </property>
                   <property name="sizeHint" stdset="0">
                    <size>
-                    <width>90</width>
+                    <width>122</width>
                     <height>20</height>
                    </size>
                   </property>
@@ -5300,8 +5300,8 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>880</width>
-             <height>337</height>
+             <width>1127</width>
+             <height>341</height>
             </rect>
            </property>
            <attribute name="label">
@@ -5738,7 +5738,7 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
               <property name="sizeHint" stdset="0">
                <size>
                 <width>20</width>
-                <height>79</height>
+                <height>118</height>
                </size>
               </property>
              </spacer>
@@ -6820,7 +6820,7 @@ Click Auto Refill He Button</string>
      <x>0</x>
      <y>0</y>
      <width>1277</width>
-     <height>34</height>
+     <height>27</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuOptions">
