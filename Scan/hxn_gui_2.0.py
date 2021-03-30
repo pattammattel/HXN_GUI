@@ -456,8 +456,30 @@ class Ui(QtWidgets.QMainWindow):
                            self.mot2_s, self.mot2_e, self.mot2_steps, self.dwell_t))
 
     #tomo
-    def zpTomo(self):
+    def zpTomoStepResCalc(self):
         pass
+
+    def zpTomo(self):
+
+        startAngle = self.sb_tomo_start_angle.value()
+        endAngle = self.sb_tomo_end_angle.value()
+        stepsAngle = self.sb_tomo_steps.value()
+
+        xAlignStart = None
+        xAlignEnd = None
+        xAlignSteps = None
+        xAlignDwell = None
+        xAlignElem = None
+        xAlignThreshold = None
+
+        yAlignStart = None
+        yAlignEnd = None
+        yAlignSteps = None
+        yAlignDwell = None
+        yAlignElem = None
+        yAlignThreshold = None
+
+
 
     #special scans
     def zpMosaic(self):

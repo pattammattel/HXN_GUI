@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1277</width>
+    <width>1268</width>
     <height>1348</height>
    </rect>
   </property>
@@ -1215,8 +1215,8 @@ font: 15pt &quot;Modern No. 20&quot;;
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>1105</width>
-                 <height>393</height>
+                 <width>1202</width>
+                 <height>420</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1248,13 +1248,6 @@ font: 15pt &quot;Modern No. 20&quot;;
                            </property>
                            <property name="text">
                             <string>Save Curent Position</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <widget class="QPushButton" name="pushButton_3">
-                           <property name="text">
-                            <string>Show Pos</string>
                            </property>
                           </widget>
                          </item>
@@ -1904,8 +1897,8 @@ font: 15pt &quot;Modern No. 20&quot;;
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>1105</width>
-                 <height>393</height>
+                 <width>1202</width>
+                 <height>420</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -2106,8 +2099,8 @@ font: 15pt &quot;Modern No. 20&quot;;
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>1105</width>
-                 <height>393</height>
+                 <width>1202</width>
+                 <height>420</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -2918,8 +2911,8 @@ font: 15pt &quot;Modern No. 20&quot;;
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>1105</width>
-                 <height>340</height>
+                 <width>822</width>
+                 <height>112</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -3383,7 +3376,7 @@ font: 15pt &quot;Modern No. 20&quot;;
 font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
               </property>
               <property name="text">
-               <string>Estimated Time is XX hours</string>
+               <string>Estimated Time is (XX hours + Overhead)</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
@@ -3419,6 +3412,12 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
                         <verstretch>0</verstretch>
                        </sizepolicy>
                       </property>
+                      <property name="minimum">
+                       <number>-120</number>
+                      </property>
+                      <property name="maximum">
+                       <number>120</number>
+                      </property>
                      </widget>
                     </item>
                    </layout>
@@ -3443,6 +3442,15 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
                         <verstretch>0</verstretch>
                        </sizepolicy>
                       </property>
+                      <property name="minimum">
+                       <number>-120</number>
+                      </property>
+                      <property name="maximum">
+                       <number>120</number>
+                      </property>
+                      <property name="value">
+                       <number>90</number>
+                      </property>
                      </widget>
                     </item>
                    </layout>
@@ -3466,12 +3474,18 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QSpinBox" name="sb_tomo_start_steps">
+                     <widget class="QSpinBox" name="sb_tomo_steps">
                       <property name="sizePolicy">
                        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                         <horstretch>0</horstretch>
                         <verstretch>0</verstretch>
                        </sizepolicy>
+                      </property>
+                      <property name="maximum">
+                       <number>500</number>
+                      </property>
+                      <property name="value">
+                       <number>90</number>
                       </property>
                      </widget>
                     </item>
@@ -3492,11 +3506,30 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
+                    <property name="maximum">
+                     <double>100.000000000000000</double>
+                    </property>
+                    <property name="value">
+                     <double>1.000000000000000</double>
+                    </property>
                    </widget>
                   </item>
                  </layout>
                 </item>
-                <item row="0" column="1">
+                <item row="0" column="4">
+                 <widget class="QPushButton" name="pb_tomo_tot_time">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Calculate Tot. Time</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="3">
                  <widget class="QPushButton" name="pb_view_tomo_angle">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -3510,15 +3543,16 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
                  </widget>
                 </item>
                 <item row="0" column="2">
-                 <widget class="QPushButton" name="pb_tomo_tot_time">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
+                 <widget class="QLineEdit" name="lineEdit_3">
                   <property name="text">
-                   <string>Calculate Tot. Time</string>
+                   <string>Ni</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="1">
+                 <widget class="QLabel" name="label_43">
+                  <property name="text">
+                   <string>Elem</string>
                   </property>
                  </widget>
                 </item>
@@ -3810,6 +3844,9 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
                           <property name="text">
                            <string>Align Elem</string>
                           </property>
+                          <property name="alignment">
+                           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                          </property>
                          </widget>
                         </item>
                         <item>
@@ -3821,7 +3858,7 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
                            </sizepolicy>
                           </property>
                           <property name="text">
-                           <string>Cr</string>
+                           <string>Ni</string>
                           </property>
                          </widget>
                         </item>
@@ -3883,6 +3920,9 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
                           <property name="text">
                            <string>Align Elem</string>
                           </property>
+                          <property name="alignment">
+                           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                          </property>
                          </widget>
                         </item>
                         <item>
@@ -3894,7 +3934,7 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
                            </sizepolicy>
                           </property>
                           <property name="text">
-                           <string>Cr</string>
+                           <string>Ni</string>
                           </property>
                          </widget>
                         </item>
@@ -4632,15 +4672,15 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
         <item row="0" column="0">
          <widget class="QToolBox" name="toolBox_2">
           <property name="currentIndex">
-           <number>2</number>
+           <number>0</number>
           </property>
           <widget class="QWidget" name="page_3">
            <property name="geometry">
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>880</width>
-             <height>341</height>
+             <width>1224</width>
+             <height>359</height>
             </rect>
            </property>
            <attribute name="label">
@@ -4931,8 +4971,8 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>880</width>
-             <height>341</height>
+             <width>1233</width>
+             <height>364</height>
             </rect>
            </property>
            <attribute name="label">
@@ -5300,8 +5340,8 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>1127</width>
-             <height>341</height>
+             <width>1233</width>
+             <height>373</height>
             </rect>
            </property>
            <attribute name="label">
@@ -5750,8 +5790,8 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>100</width>
-             <height>30</height>
+             <width>1233</width>
+             <height>359</height>
             </rect>
            </property>
            <attribute name="label">
@@ -6819,7 +6859,7 @@ Click Auto Refill He Button</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1277</width>
+     <width>1268</width>
      <height>27</height>
     </rect>
    </property>
