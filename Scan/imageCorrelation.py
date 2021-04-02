@@ -7,14 +7,14 @@ import pyqtgraph as pg
 from scipy.ndimage import rotate
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets, uic
 
-def rotateAndScale(img, scaleFactor = 0.5, degreesCCW = 30):
+def rotateAndScale(img, scaleFactor = 0.5, InPlaneRot_Degree = 30):
     (oldY,oldX) = img.shape #note: numpy uses (y,x) convention but most OpenCV functions use (x,y)
-    M = cv2.getRotationMatrix2D(center=(oldX/2,oldY/2), angle=degreesCCW, scale=scaleFactor) #rotate about center of image.
+    M = cv2.getRotationMatrix2D(center=(oldX/2,oldY/2), angle=InPlaneRot_Degree, scale=scaleFactor) #rotate about center of image.
 
     #choose a new image size.
     newX,newY = oldX*scaleFactor,oldY*scaleFactor
     #include this if you want to prevent corners being cut off
-    r = np.deg2rad(degreesCCW)
+    r = np.deg2rad(InPlaneRot_Degree)
     newX,newY = (abs(np.sin(r)*newY) + abs(np.cos(r)*newX),abs(np.sin(r)*newX) + abs(np.cos(r)*newY))
 
     #the warpAffine function call, below, basically works like this:
@@ -23,21 +23,22 @@ def rotateAndScale(img, scaleFactor = 0.5, degreesCCW = 30):
 
     #So I will find the translation that moves the result to the center of that region.
     (tx,ty) = ((newX-oldX)/2,(newY-oldY)/2)
-    M[0,2] += tx #third column of matrix holds translation, which takes effect after rotation.
-    M[1,2] += ty
+    M2 = M
+    M2[0,2] += tx #third column of matrix holds translation, which takes effect after rotation.
+    M2[1,2] += ty
 
-    rotatedImg = cv2.warpAffine(img, M, dsize=(int(newX),int(newY)))
-    return rotatedImg
+    rotatedImg = cv2.warpAffine(img, M2, dsize=(int(newX),int(newY)))
+    return M, rotatedImg
 
 
-def rotateScaleTranslate(img, Translation=(200, 500), scaleFactor=(0.5,0.5), InPlaneRot_Degree=30):
+def rotateScaleTranslate(img, Translation=(200, 500), scaleFactor=0.5, InPlaneRot_Degree=30):
     (oldY, oldX) = img.shape  # note: numpy uses (y,x) convention but most OpenCV functions use (x,y)
     M = cv2.getRotationMatrix2D(center=(oldX / 2, oldY / 2), angle=InPlaneRot_Degree,
                                 scale=scaleFactor)  # rotate about center of image.
     print(M)
 
     # choose a new image size.
-    newX, newY = oldX * scaleFactor[0], oldY * scaleFactor[1]
+    newX, newY = oldX * scaleFactor, oldY * scaleFactor
     # include this if you want to prevent corners being cut off
     r = np.deg2rad(InPlaneRot_Degree)
     newX, newY = (abs(np.sin(r) * newY) + abs(np.cos(r) * newX), abs(np.sin(r) * newX) + abs(np.cos(r) * newY))
@@ -136,7 +137,7 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
             self.coords.append((i, j))
             val = self.ref_image[i, j]
             ppos = self.img.mapToParent(pos)
-            x, y = np.around(ppos.x()*1000, 2) , np.around(ppos.y()*1000, 2) #mm to um
+            x, y = np.around(ppos.x(), 2) , np.around(ppos.y(), 2) #mm to um
             # x, y = smarx.pos, smary.pos
             self.coords.append((x, y))
             if len(self.coords) == 2:
@@ -151,7 +152,7 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
                 self.dsb_ref2_x.setValue(self.coords[-1][0])
                 self.dsb_ref2_y.setValue(self.coords[-1][1])
 
-    def createLabAxisImage(self, Translation = (2000,-1000), scaleFactor = (0.5,0.5), InPlaneRot_Degree = 15):
+    def createLabAxisImage(self, image):
         # A plot area (ViewBox + axes) for displaying the image
 
         try:
@@ -167,11 +168,8 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
         hist = pg.HistogramLUTItem()
         hist.setImageItem(self.img2)
         self.labaxis_view.addItem(hist)
-
-        self.affineMatrix, self.affineImage = rotateScaleTranslate(Translation, scaleFactor, InPlaneRot_Degree)
-
         self.p2.addItem(self.img2)
-        self.img2.setImage(self.affineImage)
+        self.img2.setImage(image)
         self.img2.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
         #self.img2.setImage(self.ref_image.T,opacity = 0.5)
 
@@ -222,17 +220,21 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
         self.dsb_ref2_y.setValue(self.scalingParam['lm2_vals']['cy2'])
 
     def scalingCalculation(self):
-        self.generateScalingParam()
+        self.getScalingParams()
         self.yshape, self.xshape = np.shape(self.ref_image)
-        self.pixel_val_x = (self.lm2_x - self.lm1_x) / (int(self.lm2_px) - int(self.lm1_px))  # pixel value of X
-        self.pixel_val_y = (self.lm2_y - self.lm1_y) / (int(self.lm2_py) - int(self.lm1_py))  # pixel value of Y; ususally same as X
+        # pixel value of X
+        self.pixel_val_x = (self.lm2_x - self.lm1_x) / (int(self.lm2_px) - int(self.lm1_px))
+        # pixel value of Y; ususally same as X
+        self.pixel_val_y = (self.lm2_y - self.lm1_y) / (int(self.lm2_py) - int(self.lm1_py))
 
         self.xi = self.lm1_x - (self.pixel_val_x * int(self.lm1_px))  # xmotor pos at origin (0,0)
         xf = self.xi + (self.pixel_val_x * self.xshape)  # xmotor pos at the end (0,0)
         self.yi = self.lm1_y - (self.pixel_val_y * int(self.lm1_py))  # xmotor pos at origin (0,0)
         yf = self.yi + (self.pixel_val_y * self.yshape)  # xmotor pos at origin (0,0)
 
-        self.createLabAxisImage(Translation = (self.xi,self.yi), scaleFactor = 0.5, InPlaneRot_Degree = 15)
+        self.affineMatrix, self.affineImage = rotateAndScale(self.ref_image, scaleFactor = self.pixel_val_x,
+                                                             InPlaneRot_Degree = self.dsb_rotAngle.value())
+        self.createLabAxisImage(self.affineImage)
 
         self.label_scale_info.setText(f'Scaling: {self.pixel_val_x:.4f}, {self.pixel_val_y:.4f}, \n '
                                       f' X Range {self.xi:.2f}:{xf:.2f}, \n'
@@ -254,8 +256,8 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
         i = int(np.clip(i, 0, self.ref_image.shape[0] - 1))
         j = int(np.clip(j, 0, self.ref_image.shape[1] - 1))
         val = self.ref_image[i, j]
-        x = self.xi + (self.pixel_val_x * i)
-        y = self.yi + (self.pixel_val_y * j)
+        x = self.xi + (i)
+        y = self.yi + (j)
         self.p2.setTitle(f'pos: {x:.2f},{y:.2f}  pixel: {i, j}  value: {val:.2f}')
 
     def MouseClickEventToPos(self, event):
@@ -266,8 +268,8 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
             i, j = pos.x(), pos.y()
             i = int(np.clip(i, 0, self.ref_image.shape[0] - 1))
             j = int(np.clip(j, 0, self.ref_image.shape[1] - 1))
-            self.xWhere = self.xi + (self.pixel_val_x * i)
-            self.yWhere = self.yi + (self.pixel_val_y * j)
+            self.xWhere = self.xi + i
+            self.yWhere = self.yi + j
             self.offsetCorrectedPos()
 
     def offsetCorrectedPos(self):
