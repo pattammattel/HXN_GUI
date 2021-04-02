@@ -8,7 +8,7 @@ from scipy.ndimage import rotate
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets, uic
 
 def rotateAndScale(img, scaleFactor = 0.5, InPlaneRot_Degree = 30):
-    (oldY,oldX) = img.shape #note: numpy uses (y,x) convention but most OpenCV functions use (x,y)
+    (oldY,oldX) = np.shape(img) #note: numpy uses (y,x) convention but most OpenCV functions use (x,y)
     M = cv2.getRotationMatrix2D(center=(oldX/2,oldY/2), angle=InPlaneRot_Degree, scale=scaleFactor) #rotate about center of image.
 
     #choose a new image size.
@@ -28,11 +28,12 @@ def rotateAndScale(img, scaleFactor = 0.5, InPlaneRot_Degree = 30):
     M2[1,2] += ty
 
     rotatedImg = cv2.warpAffine(img, M2, dsize=(int(newX),int(newY)))
-    return M, rotatedImg
+    return M,rotatedImg
 
 
 def rotateScaleTranslate(img, Translation=(200, 500), scaleFactor=0.5, InPlaneRot_Degree=30):
-    (oldY, oldX) = img.shape  # note: numpy uses (y,x) convention but most OpenCV functions use (x,y)
+    (oldY, oldX) = np.shape(img)  # note: numpy uses (y,x) convention but most OpenCV functions use (x,y)
+    print(oldX, oldY)
     M = cv2.getRotationMatrix2D(center=(oldX / 2, oldY / 2), angle=InPlaneRot_Degree,
                                 scale=scaleFactor)  # rotate about center of image.
     print(M)
@@ -82,6 +83,7 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
             if self.ref_image.ndim == 3:
                 self.ref_image = self.ref_image.sum(2)
             self.statusbar.showMessage(f'{self.file_name[0]} selected')
+            self.yshape, self.xshape = np.shape(self.ref_image)
         else:
             self.statusbar.showMessage("No file has selected")
             pass
@@ -128,29 +130,39 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
     def MouseClickEvent(self, event):
         """Show the position, pixel, and value under the mouse cursor.
         """
-        if event.button() == QtCore.Qt.LeftButton:
 
+        if event.button() == QtCore.Qt.LeftButton:
             pos = event.pos()
             i, j = pos.x(), pos.y()
             i = int(np.clip(i, 0, self.ref_image.shape[0] - 1))
             j = int(np.clip(j, 0, self.ref_image.shape[1] - 1))
-            self.coords.append((i, j))
-            val = self.ref_image[i, j]
-            ppos = self.img.mapToParent(pos)
-            x, y = np.around(ppos.x(), 2) , np.around(ppos.y(), 2) #mm to um
-            # x, y = smarx.pos, smary.pos
-            self.coords.append((x, y))
-            if len(self.coords) == 2:
-                self.le_ref1_pxls.setText(f'{self.coords[0][0]}, {self.coords[0][1]}')
-                self.dsb_ref1_x.setValue(self.coords[1][0])
-                self.dsb_ref1_y.setValue(self.coords[1][1])
-            elif len(self.coords) == 4:
-                self.le_ref1_pxls.setText(f'{self.coords[0][0]},{self.coords[0][1]}')
-                self.dsb_ref1_x.setValue(self.coords[1][0])
-                self.dsb_ref1_y.setValue(self.coords[1][1])
-                self.le_ref2_pxls.setText(f'{self.coords[2][0]},{self.coords[2][1]}')
-                self.dsb_ref2_x.setValue(self.coords[-1][0])
-                self.dsb_ref2_y.setValue(self.coords[-1][1])
+
+            if self.rb_calib_mode.isChecked():
+                self.coords.append((i, j))
+                val = self.ref_image[i, j]
+                ppos = self.img.mapToParent(pos)
+                x, y = np.around(ppos.x(), 2) , np.around(ppos.y(), 2) #mm to um
+                # x, y = smarx.pos, smary.pos
+                self.coords.append((x, y))
+                if len(self.coords) == 2:
+                        self.le_ref1_pxls.setText(f'{self.coords[0][0]}, {self.coords[0][1]}')
+                        self.dsb_ref1_x.setValue(self.coords[1][0])
+                        self.dsb_ref1_y.setValue(self.coords[1][1])
+                elif len(self.coords) == 4:
+                        self.le_ref1_pxls.setText(f'{self.coords[0][0]},{self.coords[0][1]}')
+                        self.dsb_ref1_x.setValue(self.coords[1][0])
+                        self.dsb_ref1_y.setValue(self.coords[1][1])
+                        self.le_ref2_pxls.setText(f'{self.coords[2][0]},{self.coords[2][1]}')
+                        self.dsb_ref2_x.setValue(self.coords[-1][0])
+                        self.dsb_ref2_y.setValue(self.coords[-1][1])
+
+            elif self.rb_nav_mode.isChecked():
+                self.xWhere, self.yWhere = self.affineMatrix@[i,j,1]
+                print(i,j)
+                print(self.xWhere, self.yWhere)
+                print(self.affineMatrix)
+                self.rectROI.setPos((self.xWhere, self.yWhere), y = None, update = True, finish = True)
+                self.offsetCorrectedPos()
 
     def createLabAxisImage(self, image):
         # A plot area (ViewBox + axes) for displaying the image
@@ -170,7 +182,10 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
         self.labaxis_view.addItem(hist)
         self.p2.addItem(self.img2)
         self.img2.setImage(image)
-        self.img2.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
+        self.rectROI = pg.RectROI([int(self.yshape // 2), int(self.xshape // 2)],
+                                  [self.yshape//10, self.yshape//10], pen='r')
+        self.p2.addItem(self.rectROI)
+        #self.img2.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
         #self.img2.setImage(self.ref_image.T,opacity = 0.5)
 
     def getScalingParams(self):
@@ -221,7 +236,6 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
 
     def scalingCalculation(self):
         self.getScalingParams()
-        self.yshape, self.xshape = np.shape(self.ref_image)
         # pixel value of X
         self.pixel_val_x = (self.lm2_x - self.lm1_x) / (int(self.lm2_px) - int(self.lm1_px))
         # pixel value of Y; ususally same as X
@@ -232,8 +246,11 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
         self.yi = self.lm1_y - (self.pixel_val_y * int(self.lm1_py))  # xmotor pos at origin (0,0)
         yf = self.yi + (self.pixel_val_y * self.yshape)  # xmotor pos at origin (0,0)
 
-        self.affineMatrix, self.affineImage = rotateAndScale(self.ref_image, scaleFactor = self.pixel_val_x,
+        _,__ = rotateAndScale(self.ref_image, scaleFactor = self.pixel_val_x,
                                                              InPlaneRot_Degree = self.dsb_rotAngle.value())
+        self.affineMatrix, self.affineImage = rotateScaleTranslate(self.ref_image, Translation = (0,0), scaleFactor = self.pixel_val_x,
+                                                             InPlaneRot_Degree = self.dsb_rotAngle.value())
+
         self.createLabAxisImage(self.affineImage)
 
         self.label_scale_info.setText(f'Scaling: {self.pixel_val_x:.4f}, {self.pixel_val_y:.4f}, \n '
@@ -242,7 +259,7 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
         #self.img2.scale(abs(self.pixel_val_x), abs(self.pixel_val_y))
         #self.img2.translate(self.xi, self.yi)
         # self.img2.setRect(QtCore.QRect(xi,yf,yi,xf))
-        self.img2.hoverEvent = self.imageHoverEvent2
+        #self.img2.hoverEvent = self.imageHoverEvent2
         self.img2.mousePressEvent = self.MouseClickEventToPos
 
     def imageHoverEvent2(self, event):
