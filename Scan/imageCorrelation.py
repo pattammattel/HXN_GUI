@@ -216,7 +216,7 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
                 #xDiff, yDiff =  new_w-w, new_w-w
                 al, bt= np.cos(angle), np.sin(angle)
                 xDiff, yDiff = ((1-al)*cx - bt*cy)+((new_w/2)-cx),((1-al)*cy + bt*cx)+((new_h/2)-cy)
-                self.rectROI.setPos((self.xWhere, self.yWhere), y = None, update = True, finish = True)
+                self.rectROI.setPos((self.xWhere+xDiff, self.yWhere+yDiff), y = None, update = True, finish = True)
                 print(f'Ref pixels{i, j}')
                 print(f'xWhere;{self.xWhere:.1f},yWhere;{self.yWhere:.1f}')
                 print(f' ROI_Pos = {self.rectROI.pos()}')
