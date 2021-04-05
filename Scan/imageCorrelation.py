@@ -203,7 +203,7 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
                         self.dsb_ref2_y.setValue(self.coords[-1][1])
 
             elif self.rb_nav_mode.isChecked():
-                #self.xWhere, self.yWhere = self.affineMatrix@[i,j,1]
+
                 print(i,j)
                 bb = [[i, j]]
                 (h, w) = self.ref_image.shape[:2]
@@ -211,7 +211,8 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
                 (new_h, new_w) = self.affineImage.shape[:2]
                 (new_cx, new_cy) = (new_w // 2, new_h // 2)
                 angle = np.radians(self.dsb_rotAngle.value())
-                self.xWhere, self.yWhere = rotate_box(bb, cx, cy, h, w, theta=self.dsb_rotAngle.value())
+                #self.xWhere, self.yWhere = rotate_box(bb, cx, cy, h, w, theta=self.dsb_rotAngle.value())
+                self.xWhere, self.yWhere = self.affineMatrix @ [i, j, 1]
                 #xDiff, yDiff =  new_w-w, new_w-w
                 al, bt= np.cos(angle), np.sin(angle)
                 xDiff, yDiff = ((1-al)*cx - bt*cy)+((new_w/2)-cx),((1-al)*cy + bt*cx)+((new_h/2)-cy)
@@ -239,8 +240,9 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
         self.labaxis_view.addItem(hist)
         self.p2.addItem(self.img2)
         self.img2.setImage(image)
-        self.rectROI = pg.RectROI([int(self.yshape // 2), int(self.xshape // 2)],
-                                  [self.yshape//10, self.yshape//10], pen='r')
+        imX,imY = image.shape[:2]
+        self.rectROI = pg.RectROI([int(imX // 2), int(imX // 2)],
+                                  [imY//10, imY//10], pen='r')
         self.p2.addItem(self.rectROI)
         #self.img2.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
         #self.img2.setImage(self.ref_image.T,opacity = 0.5)
@@ -306,12 +308,12 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
         self.yi = self.lm1_y - (self.pixel_val_y * int(self.lm1_py))  # xmotor pos at origin (0,0)
         yf = self.yi + (self.pixel_val_y * self.yshape)  # xmotor pos at origin (0,0)
 
-        #_,__ = rotateAndScale(self.ref_image, scaleFactor = self.pixel_val_x,
-                                                             #InPlaneRot_Degree = self.dsb_rotAngle.value())
+        self.affineMatrix, self.affineImage = rotateAndScale(self.ref_image, scaleFactor = self.pixel_val_x,
+                                                             InPlaneRot_Degree = self.dsb_rotAngle.value())
         #self.affineMatrix, self.affineImage = rotateScaleTranslate(self.ref_image, Translation = (0,0), scaleFactor = self.pixel_val_x,
                                                              #InPlaneRot_Degree = self.dsb_rotAngle.value())
 
-        self.affineImage = rotate_bound(self.ref_image,self.dsb_rotAngle.value())
+        #self.affineImage = rotate_bound(self.ref_image,self.dsb_rotAngle.value())
 
         self.createLabAxisImage(self.affineImage)
 
