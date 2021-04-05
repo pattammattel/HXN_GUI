@@ -56,6 +56,52 @@ def rotateScaleTranslate(img, Translation=(200, 500), scaleFactor=0.5, InPlaneRo
     rotatedImg = cv2.warpAffine(np.float32(img), M, (int(newX), int(newY)))
     return M, rotatedImg
 
+def rotate_box(bb, cx, cy, h, w, theta=5):
+    new_bb = list(bb)
+    for i,coord in enumerate(bb):
+        # opencv calculates standard transformation matrix
+        theta = np.radians(theta)
+        M = cv2.getRotationMatrix2D((cx, cy), theta, 1.0)
+        # Grab  the rotation components of the matrix)
+        cos = np.abs(M[0, 0])
+        sin = np.abs(M[0, 1])
+        # compute the new bounding dimensions of the image
+        nW = int((h * sin) + (w * cos))
+        nH = int((h * cos) + (w * sin))
+        # adjust the rotation matrix to take into account translation
+        M[0, 2] += (nW / 2) - cx
+        M[1, 2] += (nH / 2) - cy
+        # Prepare the vector to be transformed
+        v = [coord[0],coord[1],1]
+        # Perform the actual rotation and return the image
+        calculated = np.dot(M,v)
+        #new_bb[i] = (calculated[0],calculated[1])
+    return calculated[0],calculated[1]
+
+def rotate_bound(image, angle):
+    # grab the dimensions of the image and then determine the
+    # centre
+    (h, w) = image.shape[:2]
+    (cX, cY) = (w // 2, h // 2)
+
+    # grab the rotation matrix (applying the negative of the
+    # angle to rotate clockwise), then grab the sine and cosine
+    # (i.e., the rotation components of the matrix)
+    M = cv2.getRotationMatrix2D((cX, cY), angle, 1.0)
+    cos = np.abs(M[0, 0])
+    sin = np.abs(M[0, 1])
+
+    # compute the new bounding dimensions of the image
+    nW = int((h * sin) + (w * cos))
+    nH = int((h * cos) + (w * sin))
+
+    # adjust the rotation matrix to take into account translation
+    M[0, 2] += (nW / 2) - cX
+    M[1, 2] += (nH / 2) - cY
+
+    # perform the actual rotation and return the image
+    return cv2.warpAffine(image, M, (nW, nH))
+
 
 class ImageCorrelationWindow(QtWidgets.QMainWindow):
     def __init__(self, ref_image=None):
@@ -157,11 +203,22 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
                         self.dsb_ref2_y.setValue(self.coords[-1][1])
 
             elif self.rb_nav_mode.isChecked():
-                self.xWhere, self.yWhere = self.affineMatrix@[i,j,1]
+                #self.xWhere, self.yWhere = self.affineMatrix@[i,j,1]
                 print(i,j)
-                print(self.xWhere, self.yWhere)
-                print(self.affineMatrix)
+                bb = [[i, j]]
+                (h, w) = self.ref_image.shape[:2]
+                (cx, cy) = (w // 2, h // 2)
+                (new_h, new_w) = self.affineImage.shape[:2]
+                (new_cx, new_cy) = (new_w // 2, new_h // 2)
+                angle = np.radians(self.dsb_rotAngle.value())
+                self.xWhere, self.yWhere = rotate_box(bb, cx, cy, h, w, theta=self.dsb_rotAngle.value())
+                #xDiff, yDiff =  new_w-w, new_w-w
+                al, bt= np.cos(angle), np.sin(angle)
+                xDiff, yDiff = ((1-al)*cx - bt*cy)+((new_w/2)-cx),((1-al)*cy + bt*cx)+((new_h/2)-cy)
                 self.rectROI.setPos((self.xWhere, self.yWhere), y = None, update = True, finish = True)
+                print(f'Ref pixels{i, j}')
+                print(f'xWhere;{self.xWhere:.1f},yWhere;{self.yWhere:.1f}')
+                print(f' ROI_Pos = {self.rectROI.pos()}')
                 self.offsetCorrectedPos()
 
     def createLabAxisImage(self, image):
@@ -197,6 +254,9 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
         self.lm1_x, self.lm1_y = self.dsb_ref1_x.value(), self.dsb_ref1_y.value()
         # motor values from the microscope at pixel pos 2
         self.lm2_x, self.lm2_y = self.dsb_ref2_x.value(), self.dsb_ref2_y.value()
+        self.rb_calib_mode.setChecked(False)
+        self.rb_nav_mode.setChecked(True)
+
 
     def exportScalingParamFile(self):
         self.getScalingParams()
@@ -246,10 +306,12 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
         self.yi = self.lm1_y - (self.pixel_val_y * int(self.lm1_py))  # xmotor pos at origin (0,0)
         yf = self.yi + (self.pixel_val_y * self.yshape)  # xmotor pos at origin (0,0)
 
-        _,__ = rotateAndScale(self.ref_image, scaleFactor = self.pixel_val_x,
-                                                             InPlaneRot_Degree = self.dsb_rotAngle.value())
-        self.affineMatrix, self.affineImage = rotateScaleTranslate(self.ref_image, Translation = (0,0), scaleFactor = self.pixel_val_x,
-                                                             InPlaneRot_Degree = self.dsb_rotAngle.value())
+        #_,__ = rotateAndScale(self.ref_image, scaleFactor = self.pixel_val_x,
+                                                             #InPlaneRot_Degree = self.dsb_rotAngle.value())
+        #self.affineMatrix, self.affineImage = rotateScaleTranslate(self.ref_image, Translation = (0,0), scaleFactor = self.pixel_val_x,
+                                                             #InPlaneRot_Degree = self.dsb_rotAngle.value())
+
+        self.affineImage = rotate_bound(self.ref_image,self.dsb_rotAngle.value())
 
         self.createLabAxisImage(self.affineImage)
 
