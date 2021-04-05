@@ -27,7 +27,7 @@ def rotateAndScale(img, scaleFactor = 0.5, InPlaneRot_Degree = 30):
     M2[0,2] += tx #third column of matrix holds translation, which takes effect after rotation.
     M2[1,2] += ty
 
-    rotatedImg = cv2.warpAffine(img, M, dsize=(int(newX),int(newY)))
+    rotatedImg = cv2.warpAffine(img, M2, dsize=(int(newX),int(newY)))
     return M,rotatedImg
 
 def rotateScaleTranslate(img, Translation=(200, 500), scaleFactor=0.5, InPlaneRot_Degree=30):
@@ -213,6 +213,7 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
                 '''
                 self.xWhere = (i-cx)*np.cos(angle)-((j-cy)*np.sin(angle)) +cx
                 self.yWhere = (j-cy)*np.cos(angle)+((i-cx)*np.sin(angle)) +cy
+                
                 print(self.affineMatrix[0, 2],self.affineMatrix[0, 2])
                 cos = self.affineMatrix[0,0]
                 sin = self.affineMatrix[0,1]
@@ -223,9 +224,10 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
                 self.affineMatrix[1, 2] += yDiff
                 #xDiff, yDiff = ((1-al)*cx - bt*cy)+((new_w/2)-cx),((1-al)*cy + bt*cx)+((new_h/2)-cy)
                 '''
+
                 corrX, corrY = 0, 0
-                self.xWhere, self.yWhere = self.affineMatrix @ [i-cx, j-cy, 1]
-                self.rectROI.setPos((self.xWhere+cx+corrX, self.yWhere+cy+corrY), y = None, update = True, finish = True)
+                self.xWhere, self.yWhere = self.affineMatrix @ [i, j, 1]
+                self.rectROI.setPos((self.xWhere, self.yWhere), y = None, update = True, finish = True)
                 print(f'oldShape: {(h,w)} , NewShape: {np.shape(self.affineImage)}')
                 print(f'Ref pixels{i, j}')
                 print(f'xWhere;{self.xWhere:.1f},yWhere;{self.yWhere:.1f}')
