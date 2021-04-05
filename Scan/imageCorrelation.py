@@ -27,9 +27,8 @@ def rotateAndScale(img, scaleFactor = 0.5, InPlaneRot_Degree = 30):
     M2[0,2] += tx #third column of matrix holds translation, which takes effect after rotation.
     M2[1,2] += ty
 
-    rotatedImg = cv2.warpAffine(img, M2, dsize=(int(newX),int(newY)))
+    rotatedImg = cv2.warpAffine(img, M, dsize=(int(newX),int(newY)))
     return M,rotatedImg
-
 
 def rotateScaleTranslate(img, Translation=(200, 500), scaleFactor=0.5, InPlaneRot_Degree=30):
     (oldY, oldX) = np.shape(img)  # note: numpy uses (y,x) convention but most OpenCV functions use (x,y)
@@ -203,20 +202,31 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
                         self.dsb_ref2_y.setValue(self.coords[-1][1])
 
             elif self.rb_nav_mode.isChecked():
-
-                print(i,j)
-                bb = [[i, j]]
                 (h, w) = self.ref_image.shape[:2]
                 (cx, cy) = (w // 2, h // 2)
                 (new_h, new_w) = self.affineImage.shape[:2]
                 (new_cx, new_cy) = (new_w // 2, new_h // 2)
                 angle = np.radians(self.dsb_rotAngle.value())
-                #self.xWhere, self.yWhere = rotate_box(bb, cx, cy, h, w, theta=self.dsb_rotAngle.value())
-                self.xWhere, self.yWhere = self.affineMatrix @ [i, j, 1]
-                #xDiff, yDiff =  new_w-w, new_w-w
-                al, bt= np.cos(angle), np.sin(angle)
-                xDiff, yDiff = ((1-al)*cx - bt*cy)+((new_w/2)-cx),((1-al)*cy + bt*cx)+((new_h/2)-cy)
-                self.rectROI.setPos((self.xWhere+xDiff, self.yWhere+yDiff), y = None, update = True, finish = True)
+
+                self.affineMatrix, self.affineImage = rotateAndScale(self.ref_image, scaleFactor=self.pixel_val_x,
+                                                                     InPlaneRot_Degree=self.dsb_rotAngle.value())
+                '''
+                self.xWhere = (i-cx)*np.cos(angle)-((j-cy)*np.sin(angle)) +cx
+                self.yWhere = (j-cy)*np.cos(angle)+((i-cx)*np.sin(angle)) +cy
+                print(self.affineMatrix[0, 2],self.affineMatrix[0, 2])
+                cos = self.affineMatrix[0,0]
+                sin = self.affineMatrix[0,1]
+                nW = int((h * sin) + (w * cos))
+                nH = int((h * cos) + (w * sin))
+                xDiff, yDiff = nW/2 - cx, nH/2 - cy
+                self.affineMatrix[0, 2] += xDiff
+                self.affineMatrix[1, 2] += yDiff
+                #xDiff, yDiff = ((1-al)*cx - bt*cy)+((new_w/2)-cx),((1-al)*cy + bt*cx)+((new_h/2)-cy)
+                '''
+                corrX, corrY = 0, 0
+                self.xWhere, self.yWhere = self.affineMatrix @ [i-cx, j-cy, 1]
+                self.rectROI.setPos((self.xWhere+cx+corrX, self.yWhere+cy+corrY), y = None, update = True, finish = True)
+                print(f'oldShape: {(h,w)} , NewShape: {np.shape(self.affineImage)}')
                 print(f'Ref pixels{i, j}')
                 print(f'xWhere;{self.xWhere:.1f},yWhere;{self.yWhere:.1f}')
                 print(f' ROI_Pos = {self.rectROI.pos()}')
@@ -258,7 +268,6 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
         self.lm2_x, self.lm2_y = self.dsb_ref2_x.value(), self.dsb_ref2_y.value()
         self.rb_calib_mode.setChecked(False)
         self.rb_nav_mode.setChecked(True)
-
 
     def exportScalingParamFile(self):
         self.getScalingParams()
