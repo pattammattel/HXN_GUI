@@ -207,9 +207,14 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
                 (new_h, new_w) = self.affineImage.shape[:2]
                 (new_cx, new_cy) = (new_w // 2, new_h // 2)
                 angle = np.radians(self.dsb_rotAngle.value())
+                (tx, ty) = ((new_w - w) / 2, (new_h - h) / 2)
 
-                self.affineMatrix, self.affineImage = rotateAndScale(self.ref_image, scaleFactor=self.pixel_val_x,
+                _, self.affineImage = rotateAndScale(self.ref_image, scaleFactor=self.pixel_val_x,
                                                                      InPlaneRot_Degree=self.dsb_rotAngle.value())
+
+                self.affineMatrix, _ = rotateScaleTranslate(self.ref_image, Translation = (tx,ty),
+                                                            scaleFactor = self.pixel_val_x,
+                                                            InPlaneRot_Degree = self.dsb_rotAngle.value())
 
                 #self.xWhere, self.yWhere = rotate_box([[i,j]],cx,cy,h,w,self.dsb_rotAngle.value())
                 '''
@@ -227,10 +232,11 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
                 #xDiff, yDiff = ((1-al)*cx - bt*cy)+((new_w/2)-cx),((1-al)*cy + bt*cx)+((new_h/2)-cy)
                 '''
 
-                self.xWhere = (i-cx)*np.cos(angle)-((j-cy)*np.sin(angle)) +cx + np.cos(angle)*((new_cx-cx)/2)
-                self.yWhere = (j-cy)*np.cos(angle)+((i-cx)*np.sin(angle)) +cy + (new_h-h)/2
+                #self.xWhere = (i-cx)*np.cos(angle)-((j-cy)*np.sin(angle)) +cx + np.cos(angle)*((new_cx-cx)/2) #working
+                #self.yWhere = (j-cy)*np.cos(angle)+((i-cx)*np.sin(angle)) +cy + (new_h-h)/2
+                xDiff, yDiff = cx + np.cos(angle)*((new_cx-cx)/2), cy + (new_h-h)/2
 
-                #self.xWhere, self.yWhere = self.affineMatrix @ [i, j, 1]
+                self.xWhere, self.yWhere = self.affineMatrix @ [i, j, 1]
                 self.rectROI.setPos((self.xWhere, self.yWhere), y = None, update = True, finish = True)
                 print(f'oldShape: {(h,w)} , NewShape: {np.shape(self.affineImage)}')
                 print(f'Ref pixels{i, j}')
