@@ -217,13 +217,21 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
                 self.affineMatrix, _ = rotateScaleTranslate(self.ref_image, Translation = (tx,ty),
                                                             scaleFactor = self.pixel_val_x,
                                                             InPlaneRot_Degree = self.dsb_rotAngle.value())
+
+
                 self.xWhere, self.yWhere = self.affineMatrix @ [i, j, 1]
+
                 sclCos = np.cos(angle)*self.pixel_val_x
                 sclSin = np.sin(angle)*self.pixel_val_x
 
-                self.xCalc = (i - cx) * sclCos - ((j - cy) * sclSin) + cx
-                self.yCalc = (j - cy) * sclCos + ((i - cx) * sclSin) + cy
+                self.xCalc = (i - cx) * sclCos - ((j - cy) * sclSin) + new_cx
+                self.yCalc = (j - cy) * sclCos + ((i - cx) * sclSin) + new_cy
                 xDiff, yDiff = self.xCalc-self.xWhere, self.yCalc-self.yWhere
+
+                self.affineMatrix[0,2] += xDiff
+                self.affineMatrix[1,2] += yDiff
+
+                self.xWhere, self.yWhere = self.affineMatrix @ [i, j, 1]
 
                 self.rectROI.setPos((self.xWhere, self.yWhere), y = None, update = True, finish = True)
                 print(f'oldShape: {(h,w)} , NewShape: {np.shape(self.affineImage)}')
