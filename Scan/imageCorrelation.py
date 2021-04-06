@@ -223,11 +223,11 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
                 sclCos = np.cos(angle)*self.pixel_val_x
                 sclSin = np.sin(angle)*self.pixel_val_x
 
-                self.xCalc = (i - cx) * sclCos - ((j - cy) * sclSin) + (cx*self.pixel_val_x) + tx
-                self.yCalc = (j - cy) * sclCos + ((i - cx) * sclSin) + (cy*self.pixel_val_x) + ty
+                self.xCalc = (i - cx) * sclCos - ((j - cy) * sclSin) + (cx*self.pixel_val_x)
+                self.yCalc = (j - cy) * sclCos + ((i - cx) * sclSin) + (cy*self.pixel_val_x)
                 xDiff, yDiff = self.xCalc-self.xWhere, self.yCalc-self.yWhere
 
-                self.affineMatrix[0,2] += (new_w-w)/2
+                self.affineMatrix[0,2] += xDiff
                 self.affineMatrix[1,2] += yDiff
 
                 self.xWhere, self.yWhere = self.affineMatrix @ [i, j, 1]
