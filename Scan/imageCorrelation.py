@@ -101,7 +101,6 @@ def rotate_bound(image, angle):
     # perform the actual rotation and return the image
     return cv2.warpAffine(image, M, (nW, nH))
 
-
 class ImageCorrelationWindow(QtWidgets.QMainWindow):
     def __init__(self, ref_image=None):
         super(ImageCorrelationWindow, self).__init__()
@@ -224,16 +223,16 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
                 sclCos = np.cos(angle)*self.pixel_val_x
                 sclSin = np.sin(angle)*self.pixel_val_x
 
-                self.xCalc = (i - cx) * sclCos - ((j - cy) * sclSin) + cx*self.pixel_val_x
-                self.yCalc = (j - cy) * sclCos + ((i - cx) * sclSin) + cy*self.pixel_val_x
+                self.xCalc = (i - cx) * sclCos - ((j - cy) * sclSin) + (cx*self.pixel_val_x) + tx
+                self.yCalc = (j - cy) * sclCos + ((i - cx) * sclSin) + (cy*self.pixel_val_x) + ty
                 xDiff, yDiff = self.xCalc-self.xWhere, self.yCalc-self.yWhere
 
-                self.affineMatrix[0,2] += xDiff
+                self.affineMatrix[0,2] += (new_w-w)/2
                 self.affineMatrix[1,2] += yDiff
 
                 self.xWhere, self.yWhere = self.affineMatrix @ [i, j, 1]
-
-                self.rectROI.setPos((self.xWhere, self.yWhere), y = None, update = True, finish = True)
+                imX, imY = self.affineImage.shape
+                self.rectROI.setPos((self.xWhere-(imY//20), self.yWhere-(imY//20)), y = None, update = True, finish = True)
                 print(f'oldShape: {(h,w)} , NewShape: {np.shape(self.affineImage)}')
                 print(f'Ref pixels{i, j}')
                 print(f'xWhere;{self.xWhere:.1f},yWhere;{self.yWhere:.1f}')
@@ -247,7 +246,6 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
             self.labaxis_view.clear()
         except:
             pass
-
 
         self.p2 = self.labaxis_view.addPlot(title="")
 
