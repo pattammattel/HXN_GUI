@@ -202,6 +202,11 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
                         self.dsb_ref2_y.setValue(self.coords[-1][1])
 
             elif self.rb_nav_mode.isChecked():
+
+                _, self.affineImage = rotateAndScale(self.ref_image, scaleFactor=self.pixel_val_x,
+                                                     InPlaneRot_Degree=self.dsb_rotAngle.value())
+
+
                 (h, w) = self.ref_image.shape[:2]
                 (cx, cy) = (w // 2, h // 2)
                 (new_h, new_w) = self.affineImage.shape[:2]
@@ -209,34 +214,17 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
                 angle = np.radians(self.dsb_rotAngle.value())
                 (tx, ty) = ((new_w - w) / 2, (new_h - h) / 2)
 
-                _, self.affineImage = rotateAndScale(self.ref_image, scaleFactor=self.pixel_val_x,
-                                                                     InPlaneRot_Degree=self.dsb_rotAngle.value())
-
                 self.affineMatrix, _ = rotateScaleTranslate(self.ref_image, Translation = (tx,ty),
                                                             scaleFactor = self.pixel_val_x,
                                                             InPlaneRot_Degree = self.dsb_rotAngle.value())
-
-                #self.xWhere, self.yWhere = rotate_box([[i,j]],cx,cy,h,w,self.dsb_rotAngle.value())
-                '''
-                self.xWhere = (i-cx)*np.cos(angle)-((j-cy)*np.sin(angle)) +cx
-                self.yWhere = (j-cy)*np.cos(angle)+((i-cx)*np.sin(angle)) +cy
-                
-                print(self.affineMatrix[0, 2],self.affineMatrix[0, 2])
-                cos = self.affineMatrix[0,0]
-                sin = self.affineMatrix[0,1]
-                nW = int((h * sin) + (w * cos))
-                nH = int((h * cos) + (w * sin))
-                xDiff, yDiff = nW/2 - cx, nH/2 - cy
-                self.affineMatrix[0, 2] += xDiff
-                self.affineMatrix[1, 2] += yDiff
-                #xDiff, yDiff = ((1-al)*cx - bt*cy)+((new_w/2)-cx),((1-al)*cy + bt*cx)+((new_h/2)-cy)
-                '''
-
-                #self.xWhere = (i-cx)*np.cos(angle)-((j-cy)*np.sin(angle)) +cx + np.cos(angle)*((new_cx-cx)/2) #working
-                #self.yWhere = (j-cy)*np.cos(angle)+((i-cx)*np.sin(angle)) +cy + (new_h-h)/2
-                xDiff, yDiff = cx + np.cos(angle)*((new_cx-cx)/2), cy + (new_h-h)/2
-
                 self.xWhere, self.yWhere = self.affineMatrix @ [i, j, 1]
+                sclCos = np.cos(angle)*self.pixel_val_x
+                sclSin = np.sin(angle)*self.pixel_val_x
+
+                self.xCalc = (i - cx) * sclCos - ((j - cy) * sclSin) + cx
+                self.yCalc = (j - cy) * sclCos + ((i - cx) * sclSin) + cy
+                xDiff, yDiff = self.xCalc-self.xWhere, self.yCalc-self.yWhere
+
                 self.rectROI.setPos((self.xWhere, self.yWhere), y = None, update = True, finish = True)
                 print(f'oldShape: {(h,w)} , NewShape: {np.shape(self.affineImage)}')
                 print(f'Ref pixels{i, j}')
@@ -329,10 +317,10 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
         self.yi = self.lm1_y - (self.pixel_val_y * int(self.lm1_py))  # xmotor pos at origin (0,0)
         yf = self.yi + (self.pixel_val_y * self.yshape)  # xmotor pos at origin (0,0)
 
-        self.affineMatrix, self.affineImage = rotateAndScale(self.ref_image, scaleFactor = self.pixel_val_x,
+        _, self.affineImage = rotateAndScale(self.ref_image, scaleFactor = self.pixel_val_x,
                                                              InPlaneRot_Degree = self.dsb_rotAngle.value())
-        #self.affineMatrix, self.affineImage = rotateScaleTranslate(self.ref_image, Translation = (0,0), scaleFactor = self.pixel_val_x,
-                                                             #InPlaneRot_Degree = self.dsb_rotAngle.value())
+        self.affineMatrix, _ = rotateScaleTranslate(self.ref_image, Translation = (0,0), scaleFactor = self.pixel_val_x,
+                                                             InPlaneRot_Degree = self.dsb_rotAngle.value())
 
         #self.affineImage = rotate_bound(self.ref_image,self.dsb_rotAngle.value())
 
