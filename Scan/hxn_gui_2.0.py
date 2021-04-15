@@ -480,8 +480,6 @@ class Ui(QtWidgets.QMainWindow):
         yAlignElem = None
         yAlignThreshold = None
 
-
-
     #special scans
     def zpMosaic(self):
         pass
