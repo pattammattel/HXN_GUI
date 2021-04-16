@@ -163,8 +163,8 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
             return
         pos = event.pos()
         i, j = pos.x(), pos.y()
-        #i = int(np.clip(i, 0, self.ref_image.shape[0] - 1))
-        #j = int(np.clip(j, 0, self.ref_image.shape[1] - 1))
+        i = int(np.clip(i, 0, self.ref_image.shape[1] - 1))
+        j = int(np.clip(j, 0, self.ref_image.shape[0] - 1))
         #val = self.ref_image[int(i), int(j)]
         ppos = self.img.mapToParent(pos)
         x, y = np.around(ppos.x(), 2), np.around(ppos.y(), 2)
@@ -178,16 +178,14 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
             pos = self.img.mapToParent(event.pos())
             i, j = pos.x(), pos.y()
             limits = self.img.mapToParent(QtCore.QPointF(self.ref_image.shape[0],self.ref_image.shape[1]))
-            print(limits)
             i = int(np.clip(i, 0, limits.y() - 1))
             j = int(np.clip(j, 0, limits.x() - 1))
-            print(i, j)
 
             if self.rb_calib_mode.isChecked():
                 self.coords.append((int(i), int(j)))
                 #val = self.ref_image[i, j]
                 ppos = self.img.mapToParent(pos)
-                x, y = np.around(i, 2) , np.around(i, 2) #mm to um
+                x, y = np.around(i, 2) , np.around(j, 2) #mm to um
                 # x, y = smarx.pos, smary.pos
                 self.coords.append((x, y))
                 if len(self.coords) == 2:
