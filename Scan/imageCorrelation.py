@@ -202,7 +202,8 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
 
             elif self.rb_nav_mode.isChecked():
 
-                self.affineImage = rotate_bound(self.ref_image,self.dsb_rotAngle.value())
+                self.affineImage = rotate_bound(self.ref_image,self.dsb_rotAngle.value(),
+                                                scale=self.pixel_val_x)
 
                 (h, w) = self.ref_image.shape[:2]
                 (cx, cy) = (w // 2, h // 2)
@@ -213,7 +214,7 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
                     inputAngle += 360
 
                 bb = [[i,j]]
-                self.xWhere, self.yWhere = rotate_box(bb, cx,cy,h,w,self.dsb_rotAngle.value())
+                self.xWhere, self.yWhere = rotate_box(bb, cx,cy,h,w,self.dsb_rotAngle.value(),scale = self.pixel_val_x )
                 print(f'Ref: {bb}, reached: {self.xWhere, self.yWhere}')
                 self.rectROI.setPos((self.xWhere, self.yWhere))
 
@@ -301,7 +302,7 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
         self.yi = self.lm1_y - (self.pixel_val_y * int(self.lm1_py))  # xmotor pos at origin (0,0)
         yf = self.yi + (self.pixel_val_y * self.yshape)  # xmotor pos at origin (0,0)
 
-        self.affineImage = rotate_bound(self.ref_image,self.dsb_rotAngle.value())
+        self.affineImage = rotate_bound(self.ref_image,self.dsb_rotAngle.value(), scale = self.pixel_val_x)
 
         self.createLabAxisImage(self.affineImage)
 
@@ -310,8 +311,7 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
                                       f'Y Range {self.yi:.2f}:{yf:.2f}')
         #self.img2.scale(abs(self.pixel_val_x), abs(self.pixel_val_y))
         #self.img2.translate(self.xi, self.yi)
-        # self.img2.setRect(QtCore.QRect(xi,yf,yi,xf))
-        #self.img2.hoverEvent = self.imageHoverEvent2
+
         self.img2.mousePressEvent = self.MouseClickEventToPos
 
     def imageHoverEvent2(self, event):
