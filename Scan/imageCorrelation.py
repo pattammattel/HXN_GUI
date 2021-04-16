@@ -115,14 +115,14 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
         # connections
         self.actionLoad_refImage.triggered.connect(self.loadRefImage)
         self.pb_apply_calculation.clicked.connect(self.scalingCalculation)
-        self.dsb_x_off.valueChanged.connect(self.offsetCorrectedPos)
-        self.dsb_y_off.valueChanged.connect(self.offsetCorrectedPos)
         self.pb_grabXY_1.clicked.connect(self.insertCurrentPos1)
         self.pb_grabXY_2.clicked.connect(self.insertCurrentPos2)
         self.pb_import_param.clicked.connect(self.importScalingParamFile)
         self.pb_export_param.clicked.connect(self.exportScalingParamFile)
         self.pb_gotoTargetPos.clicked.connect(self.gotoTargetPos)
         self.actionAdd_refImage2.triggered.connect(self.loadSecondRefImage)
+        self.hsb_ref_img1_op.valueChanged.connect(self.changeOpacityImg1)
+        self.hsb_ref_img2_op.valueChanged.connect(self.changeOpacityImg3)
 
     def loadRefImage(self):
         self.file_name = QtWidgets.QFileDialog().getOpenFileName(self, "Select Ref Image", '',
@@ -172,6 +172,17 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
 
         else:
             pass
+
+    def changeOpacityImg1(self):
+        op = self.hsb_ref_img1_op.value()
+        self.hsb_ref_img1_op_num.setText(str(op))
+        self.img.setImage(self.ref_image, opacity = op/100)
+
+
+    def changeOpacityImg3(self):
+        op = self.hsb_ref_img2_op.value()
+        self.hsb_ref_img2_op_num.setText(str(op))
+        self.img3.setImage(self.ref_image2, opacity=op/100)
 
     def imageHoverEvent(self, event):
         """Show the position, pixel, and value under the mouse cursor.
@@ -233,7 +244,7 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
 
                 bb = [[i,j]]
                 self.xWhere, self.yWhere = rotate_box(bb, cx,cy,h,w,self.dsb_rotAngle.value(),scale = self.pixel_val_x )
-                print(f'Query: {bb}, Target: ({self.xWhere:.2f}, {self.yWhere:2f}')
+                print(f'Query: {(i,j)}, Target: ({self.xWhere:.2f}, {self.yWhere:2f})')
                 roi_sx,roi_sy =  self.rectROI.size()
                 self.rectROI.setPos((self.xWhere-roi_sx/2, self.yWhere-roi_sy/2))
 
@@ -354,8 +365,8 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
             self.offsetCorrectedPos()
 
     def offsetCorrectedPos(self):
-        self.dsb_calc_x.setValue(self.xWhere + (self.dsb_x_off.value() * 0.001))
-        self.dsb_calc_y.setValue(self.yWhere + (self.dsb_y_off.value() * 0.001))
+        self.dsb_calc_x.setValue(self.xWhere)
+        self.dsb_calc_y.setValue(self.yWhere)
 
     def insertCurrentPos1(self):
         try:
