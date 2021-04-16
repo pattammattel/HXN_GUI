@@ -6,9 +6,10 @@ import numpy as np
 import pyqtgraph as pg
 from scipy.ndimage import rotate
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets, uic
+pg.setConfigOption('imageAxisOrder', 'row-major')
 
 def rotateAndScale(img, scaleFactor = 0.5, InPlaneRot_Degree = 30):
-    (oldY,oldX) = np.shape(img) #note: numpy uses (y,x) convention but most OpenCV functions use (x,y)
+    (oldY,oldX) = np.shape(img)[:2] #note: numpy uses (y,x) convention but most OpenCV functions use (x,y)
     M = cv2.getRotationMatrix2D(center=(oldX/2,oldY/2), angle=InPlaneRot_Degree, scale=scaleFactor) #rotate about center of image.
 
     #choose a new image size.
@@ -31,7 +32,7 @@ def rotateAndScale(img, scaleFactor = 0.5, InPlaneRot_Degree = 30):
     return M2,rotatedImg
 
 def rotateScaleTranslate(img, Translation=(200, 500), scaleFactor=0.5, InPlaneRot_Degree=30):
-    (oldY, oldX) = np.shape(img)  # note: numpy uses (y,x) convention but most OpenCV functions use (x,y)
+    (oldY, oldX) = np.shape(img)[:2]  # note: numpy uses (y,x) convention but most OpenCV functions use (x,y)
     print(oldX, oldY)
     M = cv2.getRotationMatrix2D(center=(oldX / 2, oldY / 2), angle=InPlaneRot_Degree,
                                 scale=scaleFactor)  # rotate about center of image.
@@ -55,11 +56,12 @@ def rotateScaleTranslate(img, Translation=(200, 500), scaleFactor=0.5, InPlaneRo
     rotatedImg = cv2.warpAffine(np.float32(img), M, (int(newX), int(newY)))
     return M, rotatedImg
 
-def rotate_box(bb, cx, cy, h, w, theta=5):
+
+def rotate_box(bb, cx, cy, h, w, theta):
     new_bb = list(bb)
-    for i,coord in enumerate(bb):
+    for i, coord in enumerate(bb):
         # opencv calculates standard transformation matrix
-        theta = np.radians(theta)
+
         M = cv2.getRotationMatrix2D((cx, cy), theta, 1.0)
         # Grab  the rotation components of the matrix)
         cos = np.abs(M[0, 0])
@@ -71,11 +73,12 @@ def rotate_box(bb, cx, cy, h, w, theta=5):
         M[0, 2] += (nW / 2) - cx
         M[1, 2] += (nH / 2) - cy
         # Prepare the vector to be transformed
-        v = [coord[0],coord[1],1]
+        v = [coord[0], coord[1], 1]
         # Perform the actual rotation and return the image
-        calculated = np.dot(M,v)
-        #new_bb[i] = (calculated[0],calculated[1])
-    return calculated[0],calculated[1]
+        calculated = np.dot(M, v)
+        new_bb[i] = (calculated[0], calculated[1])
+    return calculated[0], calculated[1]
+
 
 def rotate_bound(image, angle):
     # grab the dimensions of the image and then determine the
@@ -86,6 +89,7 @@ def rotate_bound(image, angle):
     # grab the rotation matrix (applying the negative of the
     # angle to rotate clockwise), then grab the sine and cosine
     # (i.e., the rotation components of the matrix)
+
     M = cv2.getRotationMatrix2D((cX, cY), angle, 1.0)
     cos = np.abs(M[0, 0])
     sin = np.abs(M[0, 1])
@@ -122,37 +126,32 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
     def loadRefImage(self):
         self.file_name = QtWidgets.QFileDialog().getOpenFileName(self, "Select Ref Image", '',
                                                                  'image file(*png *jpeg *tiff *tif )')
+
         if self.file_name:
-            self.ref_image = plt.imread(self.file_name[0])
-            if self.ref_image.ndim == 3:
-                self.ref_image = self.ref_image.sum(2)
-            self.statusbar.showMessage(f'{self.file_name[0]} selected')
-            self.yshape, self.xshape = np.shape(self.ref_image)
+            self.ref_image = cv2.imread(self.file_name[0])
+            self.ref_image = cv2.cvtColor(self.ref_image, cv2.COLOR_BGR2RGB)
+            self.yshape, self.xshape = np.shape(self.ref_image)[:2]
         else:
             self.statusbar.showMessage("No file has selected")
             pass
-
+        
         try:
             self.ref_view.clear()
         except:
             pass
 
-
         # A plot area (ViewBox + axes) for displaying the image
         self.p1 = self.ref_view.addPlot(title="")
-
+        self.p1.getViewBox().invertY(True)
         # Item for displaying image data
         self.img = pg.ImageItem()
-        hist = pg.HistogramLUTItem()
-        hist.setImageItem(self.img)
-        self.ref_view.addItem(hist)
-
         self.p1.addItem(self.img)
-        self.ref_image = rotate(self.ref_image, -90)
+        #self.ref_image = rotate(self.ref_image, 90)
         self.img.setImage(self.ref_image)
         self.img.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
         # self.img.translate(100, 50)
         # self.img.scale(0.5, 0.5)
+        
         self.img.hoverEvent = self.imageHoverEvent
         self.img.mousePressEvent = self.MouseClickEvent
 
@@ -164,28 +163,31 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
             return
         pos = event.pos()
         i, j = pos.x(), pos.y()
-        i = int(np.clip(i, 0, self.ref_image.shape[0] - 1))
-        j = int(np.clip(j, 0, self.ref_image.shape[1] - 1))
-        val = self.ref_image[i, j]
+        #i = int(np.clip(i, 0, self.ref_image.shape[0] - 1))
+        #j = int(np.clip(j, 0, self.ref_image.shape[1] - 1))
+        #val = self.ref_image[int(i), int(j)]
         ppos = self.img.mapToParent(pos)
         x, y = np.around(ppos.x(), 2), np.around(ppos.y(), 2)
-        self.p1.setTitle(f'pos: {x, y}  pixel: {i, j}  value: {val}')
+        self.p1.setTitle(f'pos: {x, y}  pixel: {i, j}')
 
     def MouseClickEvent(self, event):
         """Show the position, pixel, and value under the mouse cursor.
         """
 
         if event.button() == QtCore.Qt.LeftButton:
-            pos = event.pos()
+            pos = self.img.mapToParent(event.pos())
             i, j = pos.x(), pos.y()
-            i = int(np.clip(i, 0, self.ref_image.shape[0] - 1))
-            j = int(np.clip(j, 0, self.ref_image.shape[1] - 1))
+            limits = self.img.mapToParent(QtCore.QPointF(self.ref_image.shape[0],self.ref_image.shape[1]))
+            print(limits)
+            i = int(np.clip(i, 0, limits.y() - 1))
+            j = int(np.clip(j, 0, limits.x() - 1))
+            print(i, j)
 
             if self.rb_calib_mode.isChecked():
-                self.coords.append((i, j))
-                val = self.ref_image[i, j]
+                self.coords.append((int(i), int(j)))
+                #val = self.ref_image[i, j]
                 ppos = self.img.mapToParent(pos)
-                x, y = np.around(ppos.x(), 2) , np.around(ppos.y(), 2) #mm to um
+                x, y = np.around(i, 2) , np.around(i, 2) #mm to um
                 # x, y = smarx.pos, smary.pos
                 self.coords.append((x, y))
                 if len(self.coords) == 2:
@@ -202,41 +204,21 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
 
             elif self.rb_nav_mode.isChecked():
 
-                _, self.affineImage = rotateAndScale(self.ref_image, scaleFactor=self.pixel_val_x,
-                                                     InPlaneRot_Degree=self.dsb_rotAngle.value())
-
+                self.affineImage = rotate_bound(self.ref_image,self.dsb_rotAngle.value())
 
                 (h, w) = self.ref_image.shape[:2]
                 (cx, cy) = (w // 2, h // 2)
                 (new_h, new_w) = self.affineImage.shape[:2]
                 (new_cx, new_cy) = (new_w // 2, new_h // 2)
-                angle = np.radians(self.dsb_rotAngle.value())
-                (tx, ty) = ((new_w - w) / 2, (new_h - h) / 2)
+                inputAngle = self.dsb_rotAngle.value()
+                if inputAngle<0:
+                    inputAngle += 360
 
-                self.affineMatrix, _ = rotateScaleTranslate(self.ref_image, Translation = (tx,ty),
-                                                            scaleFactor = self.pixel_val_x,
-                                                            InPlaneRot_Degree = self.dsb_rotAngle.value())
+                bb = [[i,j]]
+                self.xWhere, self.yWhere = rotate_box(bb, cx,cy,h,w,self.dsb_rotAngle.value())
+                print(f'Ref: {bb}, reached: {self.xWhere, self.yWhere}')
+                self.rectROI.setPos((self.xWhere, self.yWhere))
 
-
-                self.xWhere, self.yWhere = self.affineMatrix @ [i, j, 1]
-
-                sclCos = np.cos(angle)*self.pixel_val_x
-                sclSin = np.sin(angle)*self.pixel_val_x
-
-                self.xCalc = (i - cx) * sclCos - ((j - cy) * sclSin) + (cx*self.pixel_val_x)
-                self.yCalc = (j - cy) * sclCos + ((i - cx) * sclSin) + (cy*self.pixel_val_x)
-                xDiff, yDiff = self.xCalc-self.xWhere, self.yCalc-self.yWhere
-
-                self.affineMatrix[0,2] += xDiff
-                self.affineMatrix[1,2] += yDiff
-
-                self.xWhere, self.yWhere = self.affineMatrix @ [i, j, 1]
-                imX, imY = self.affineImage.shape
-                self.rectROI.setPos((self.xWhere-(imY//20), self.yWhere-(imY//20)), y = None, update = True, finish = True)
-                print(f'oldShape: {(h,w)} , NewShape: {np.shape(self.affineImage)}')
-                print(f'Ref pixels{i, j}')
-                print(f'xWhere;{self.xWhere:.1f},yWhere;{self.yWhere:.1f}')
-                print(f' ROI_Pos = {self.rectROI.pos()}')
                 self.offsetCorrectedPos()
 
     def createLabAxisImage(self, image):
@@ -251,14 +233,12 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
 
         # Item for displaying image data
         self.img2 = pg.ImageItem()
-        hist = pg.HistogramLUTItem()
-        hist.setImageItem(self.img2)
-        self.labaxis_view.addItem(hist)
         self.p2.addItem(self.img2)
+        self.p2.getViewBox().invertY(True)
         self.img2.setImage(image)
         imX,imY = image.shape[:2]
-        self.rectROI = pg.RectROI([int(imX // 2), int(imX // 2)],
-                                  [imY//10, imY//10], pen='r')
+        self.rectROI = pg.RectROI([int(imX // 2), int(imY // 2)],
+                                  [imY//10, imY//10],pen='r')
         self.p2.addItem(self.rectROI)
         #self.img2.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
         #self.img2.setImage(self.ref_image.T,opacity = 0.5)
@@ -323,12 +303,7 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
         self.yi = self.lm1_y - (self.pixel_val_y * int(self.lm1_py))  # xmotor pos at origin (0,0)
         yf = self.yi + (self.pixel_val_y * self.yshape)  # xmotor pos at origin (0,0)
 
-        _, self.affineImage = rotateAndScale(self.ref_image, scaleFactor = self.pixel_val_x,
-                                                             InPlaneRot_Degree = self.dsb_rotAngle.value())
-        self.affineMatrix, _ = rotateScaleTranslate(self.ref_image, Translation = (0,0), scaleFactor = self.pixel_val_x,
-                                                             InPlaneRot_Degree = self.dsb_rotAngle.value())
-
-        #self.affineImage = rotate_bound(self.ref_image,self.dsb_rotAngle.value())
+        self.affineImage = rotate_bound(self.ref_image,self.dsb_rotAngle.value())
 
         self.createLabAxisImage(self.affineImage)
 
@@ -348,12 +323,7 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
             self.p2.setTitle("")
             return
         pos = event.pos()
-        i, j = pos.x(), pos.y()
-        i = int(np.clip(i, 0, self.ref_image.shape[0] - 1))
-        j = int(np.clip(j, 0, self.ref_image.shape[1] - 1))
-        val = self.ref_image[i, j]
-        x = self.xi + (i)
-        y = self.yi + (j)
+        x, y = pos.x(), pos.y()
         self.p2.setTitle(f'pos: {x:.2f},{y:.2f}  pixel: {i, j}  value: {val:.2f}')
 
     def MouseClickEventToPos(self, event):
@@ -362,10 +332,8 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
         if event.button() == QtCore.Qt.LeftButton:
             pos = event.pos()
             i, j = pos.x(), pos.y()
-            i = int(np.clip(i, 0, self.ref_image.shape[0] - 1))
-            j = int(np.clip(j, 0, self.ref_image.shape[1] - 1))
-            self.xWhere = self.xi + i
-            self.yWhere = self.yi + j
+            self.xWhere =  i
+            self.yWhere =  j
             self.offsetCorrectedPos()
 
     def offsetCorrectedPos(self):
