@@ -122,6 +122,7 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
         self.pb_import_param.clicked.connect(self.importScalingParamFile)
         self.pb_export_param.clicked.connect(self.exportScalingParamFile)
         self.pb_gotoTargetPos.clicked.connect(self.gotoTargetPos)
+        self.actionAdd_refImage2.triggered.connect(self.loadSecondRefImage)
 
     def loadRefImage(self):
         self.file_name = QtWidgets.QFileDialog().getOpenFileName(self, "Select Ref Image", '',
@@ -153,6 +154,19 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
         
         self.img.hoverEvent = self.imageHoverEvent
         self.img.mousePressEvent = self.MouseClickEvent
+
+    def loadSecondRefImage(self):
+        file_name = QtWidgets.QFileDialog().getOpenFileName(self, "Select Ref Image", '',
+                                                                 'image file(*png *jpeg *tiff *tif )')
+        if file_name:
+            self.ref_image2 = cv2.imread(file_name[0])
+            self.ref_image2 = cv2.cvtColor(self.ref_image2, cv2.COLOR_BGR2RGB)
+
+        self.img3 = pg.ImageItem()
+        self.p1.addItem(self.img3)
+        self.img3.setImage(self.ref_image2,opacity=0.5)
+        self.img3.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
+        self.img.setZValue(10)
 
     def imageHoverEvent(self, event):
         """Show the position, pixel, and value under the mouse cursor.
@@ -239,7 +253,7 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
         self.rectROI = pg.RectROI([int(imX // 2), int(imY // 2)],
                                   [imY//10, imY//10],pen='r')
         self.p2.addItem(self.rectROI)
-        #self.img2.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
+        self.img2.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
         #self.img2.setImage(self.ref_image.T,opacity = 0.5)
 
     def getScalingParams(self):

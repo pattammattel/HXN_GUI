@@ -638,7 +638,7 @@ font: 12pt &quot;MS Shell Dlg 2&quot;;</string>
      <string>File</string>
     </property>
     <addaction name="actionLoad_refImage"/>
-    <addaction name="actionAdd_a_Reference_Image"/>
+    <addaction name="actionAdd_refImage2"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
@@ -676,9 +676,9 @@ font: 12pt &quot;MS Shell Dlg 2&quot;;</string>
     <string>Ctrl+O</string>
    </property>
   </action>
-  <action name="actionAdd_a_Reference_Image">
+  <action name="actionAdd_refImage2">
    <property name="text">
-    <string>Overlay Reference Image</string>
+    <string>Load Ref Image2</string>
    </property>
   </action>
  </widget>
