@@ -58,7 +58,6 @@ def rotateScaleTranslate(img, Translation=(200, 500), scaleFactor=0.5, InPlaneRo
     rotatedImg = cv2.warpAffine(np.float32(img), M, (int(newX), int(newY)))
     return M, rotatedImg
 
-
 def rotate_box(bb, cx, cy, h, w, theta, scale = 1):
     new_bb = list(bb)
     for i, coord in enumerate(bb):
@@ -81,14 +80,13 @@ def rotate_box(bb, cx, cy, h, w, theta, scale = 1):
         new_bb[i] = (calculated[0], calculated[1])
     return calculated[0], calculated[1]
 
-
 def rotate_bound(image, angle, scale = 1):
     # grab the dimensions of the image and then determine the
     # centre
     (h, w) = image.shape[:2]
     (cX, cY) = (w // 2, h // 2)
 
-    # grab the rotation matrix (applying the negative of the
+    # grab the rotation matrix (apply the negative of the
     # angle to rotate clockwise), then grab the sine and cosine
     # (i.e., the rotation components of the matrix)
 
@@ -216,8 +214,9 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
 
                 bb = [[i,j]]
                 self.xWhere, self.yWhere = rotate_box(bb, cx,cy,h,w,self.dsb_rotAngle.value(),scale = self.pixel_val_x )
-                print(f'Ref: {bb}, reached: {self.xWhere, self.yWhere}')
-                self.rectROI.setPos((self.xWhere, self.yWhere))
+                print(f'Query: {bb}, Target: ({self.xWhere:.2f}, {self.yWhere:2f}')
+                roi_sx,roi_sy =  self.rectROI.size()
+                self.rectROI.setPos((self.xWhere-roi_sx/2, self.yWhere-roi_sy/2))
 
                 self.offsetCorrectedPos()
 
@@ -234,7 +233,7 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
         # Item for displaying image data
         self.img2 = pg.ImageItem()
         self.p2.addItem(self.img2)
-        self.p2.getViewBox().invertY(True)
+        self.p2.getViewBox().invertY(True) #for row-major images
         self.img2.setImage(image)
         imX,imY = image.shape[:2]
         self.rectROI = pg.RectROI([int(imX // 2), int(imY // 2)],
@@ -323,7 +322,7 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
             return
         pos = event.pos()
         x, y = pos.x(), pos.y()
-        self.p2.setTitle(f'pos: {x:.2f},{y:.2f}  pixel: {i, j}  value: {val:.2f}')
+        self.p2.setTitle(f'pos: {x:.2f},{y:.2f}')
 
     def MouseClickEventToPos(self, event):
         """Show the position, pixel, and value under the mouse cursor.
