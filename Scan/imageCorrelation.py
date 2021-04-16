@@ -1,12 +1,14 @@
 import sys,os,json,collections
-import tifffile as tf
-import matplotlib.pyplot as plt
 import cv2
 import numpy as np
 import pyqtgraph as pg
-from scipy.ndimage import rotate
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets, uic
 pg.setConfigOption('imageAxisOrder', 'row-major')
+
+#Refs: https://github.com/darylclimb/image_affine_transform/blob/master/transformation.ipynb
+#https://docs.opencv.org/2.4/modules/imgproc/doc/geometric_transformations.html
+#https://cristianpb.github.io/blog/image-rotation-opencv
+#https://www.pyimagesearch.com/2017/01/02/rotate-images-correctly-with-opencv-and-python/
 
 def rotateAndScale(img, scaleFactor = 0.5, InPlaneRot_Degree = 30):
     (oldY,oldX) = np.shape(img)[:2] #note: numpy uses (y,x) convention but most OpenCV functions use (x,y)
@@ -146,7 +148,6 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
         # Item for displaying image data
         self.img = pg.ImageItem()
         self.p1.addItem(self.img)
-        #self.ref_image = rotate(self.ref_image, 90)
         self.img.setImage(self.ref_image)
         self.img.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
         # self.img.translate(100, 50)
