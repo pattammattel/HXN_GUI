@@ -57,12 +57,12 @@ def rotateScaleTranslate(img, Translation=(200, 500), scaleFactor=0.5, InPlaneRo
     return M, rotatedImg
 
 
-def rotate_box(bb, cx, cy, h, w, theta):
+def rotate_box(bb, cx, cy, h, w, theta, scale = 1):
     new_bb = list(bb)
     for i, coord in enumerate(bb):
         # opencv calculates standard transformation matrix
 
-        M = cv2.getRotationMatrix2D((cx, cy), theta, 1.0)
+        M = cv2.getRotationMatrix2D((cx, cy), theta, scale)
         # Grab  the rotation components of the matrix)
         cos = np.abs(M[0, 0])
         sin = np.abs(M[0, 1])
@@ -80,7 +80,7 @@ def rotate_box(bb, cx, cy, h, w, theta):
     return calculated[0], calculated[1]
 
 
-def rotate_bound(image, angle):
+def rotate_bound(image, angle, scale = 1):
     # grab the dimensions of the image and then determine the
     # centre
     (h, w) = image.shape[:2]
@@ -90,7 +90,7 @@ def rotate_bound(image, angle):
     # angle to rotate clockwise), then grab the sine and cosine
     # (i.e., the rotation components of the matrix)
 
-    M = cv2.getRotationMatrix2D((cX, cY), angle, 1.0)
+    M = cv2.getRotationMatrix2D((cX, cY), angle, scale)
     cos = np.abs(M[0, 0])
     sin = np.abs(M[0, 1])
 
