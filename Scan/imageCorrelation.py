@@ -178,7 +178,6 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
         self.hsb_ref_img1_op_num.setText(str(op))
         self.img.setImage(self.ref_image, opacity = op/100)
 
-
     def changeOpacityImg3(self):
         op = self.hsb_ref_img2_op.value()
         self.hsb_ref_img2_op_num.setText(str(op))
@@ -370,8 +369,8 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
 
     def insertCurrentPos1(self):
         try:
-            posX = smarx.position
-            posY = smary.position
+            posX = smarx.position*1000
+            posY = smary.position*1000
         except:
             posX = 0
             posY = 0
@@ -381,8 +380,8 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
 
     def insertCurrentPos2(self):
         try:
-            posX = smarx.position
-            posY = smary.position
+            posX = smarx.position*1000
+            posY = smary.position*1000
         except:
             posX = 1
             posY = 1
