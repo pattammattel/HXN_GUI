@@ -62,7 +62,6 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
             cmap = pg.colormap.get('CET-L14')
             self.img2.setImage(self.ref_image2,lut = cmap_dict['green'])
             self.img2.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
-            #self.img.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
         else:
             pass
 
