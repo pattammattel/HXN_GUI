@@ -5,11 +5,19 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets, uic
 import tifffile as tf
 pg.setConfigOption('imageAxisOrder', 'row-major')
-from pyqtgraph.graphicsItems.GradientEditorItem import Gradients
+from itertools import combinations
 
-cmap_names = ['CET-L14','CET-L15','CET-L16']
+cmap_names = ['CET-L13','CET-L14','CET-L15']
+cmap_combo = combinations(cmap_names, 2)
+cmap_label1 = ['r','g','b']
+cmap_label2 = ['rg','rb','gb']
+cmap_dict = {}
+for i,name in zip(cmap_names,cmap_label1):
+    cmap_dict[name] = pg.colormap.get(i).getLookupTable(alpha=True)
 
-
+for i,name in zip(cmap_combo,cmap_label2):
+    cmap_dict[name] = (pg.colormap.get(i[0]).getLookupTable(alpha=True)+
+                       pg.colormap.get(i[1]).getLookupTable(alpha=True))//2
 
 class MultiChannelWindow(QtWidgets.QMainWindow):
     def __init__(self, ref_image=None):
@@ -34,8 +42,7 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
             # Item for displaying image data
             self.img = pg.ImageItem()
             self.p1.addItem(self.img)
-            cmap = pg.colormap.get('CET-L13')
-            self.img.setImage(self.ref_image, lut = cmap.getLookupTable(alpha=True))
+            self.img.setImage(self.ref_image, lut = cmap_dict['rg'])
             #self.img.setCompositionMode(QtGui.QPainter.CompositionMode_Multiply)
 
 
@@ -53,7 +60,7 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
             self.img2 = pg.ImageItem()
             self.p1.addItem(self.img2)
             cmap = pg.colormap.get('CET-L14')
-            self.img2.setImage(self.ref_image2,lut = cmap.getLookupTable(alpha=True))
+            self.img2.setImage(self.ref_image2,lut = cmap_dict['rb'])
             self.img2.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
             #self.img.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
         else:
@@ -70,10 +77,9 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
             self.p1.addItem(self.img3)
             cmap = pg.colormap.get('CET-L15')
             cmap2 = pg.colormap.get('CET-L14')
-            self.img3.setImage(self.ref_image3, lut=(cmap.getLookupTable(alpha=True)+cmap2.getLookupTable(alpha=True))//2)
-            #self.img3.setImage(self.ref_image3,lut = cmap.getLookupTable(alpha=True))
+            self.img3.setImage(self.ref_image3, lut = cmap_dict['gb'])
             self.img3.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
-            #self.img.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
+
         else:
             pass
 
