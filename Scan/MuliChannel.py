@@ -9,8 +9,8 @@ from itertools import combinations
 
 cmap_names = ['CET-L13','CET-L14','CET-L15']
 cmap_combo = combinations(cmap_names, 2)
-cmap_label1 = ['r','g','b']
-cmap_label2 = ['rg','rb','gb']
+cmap_label1 = ['red','green','blue']
+cmap_label2 = ['yellow','magenta','cyan']
 cmap_dict = {}
 for i,name in zip(cmap_names,cmap_label1):
     cmap_dict[name] = pg.colormap.get(i).getLookupTable(alpha=True)
@@ -42,7 +42,7 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
             # Item for displaying image data
             self.img = pg.ImageItem()
             self.p1.addItem(self.img)
-            self.img.setImage(self.ref_image, lut = cmap_dict['rg'])
+            self.img.setImage(self.ref_image, lut = cmap_dict['red'])
             #self.img.setCompositionMode(QtGui.QPainter.CompositionMode_Multiply)
 
 
@@ -60,7 +60,7 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
             self.img2 = pg.ImageItem()
             self.p1.addItem(self.img2)
             cmap = pg.colormap.get('CET-L14')
-            self.img2.setImage(self.ref_image2,lut = cmap_dict['rb'])
+            self.img2.setImage(self.ref_image2,lut = cmap_dict['green'])
             self.img2.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
             #self.img.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
         else:
@@ -77,7 +77,7 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
             self.p1.addItem(self.img3)
             cmap = pg.colormap.get('CET-L15')
             cmap2 = pg.colormap.get('CET-L14')
-            self.img3.setImage(self.ref_image3, lut = cmap_dict['gb'])
+            self.img3.setImage(self.ref_image3, lut = cmap_dict['blue'])
             self.img3.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
 
         else:
