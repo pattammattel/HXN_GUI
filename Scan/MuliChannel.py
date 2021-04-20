@@ -33,10 +33,8 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
             # Item for displaying image data
             self.img = pg.ImageItem()
             self.p1.addItem(self.img)
-            colormap = cm.get_cmap("Reds")  # cm.get_cmap("CMRmap")
-            colormap._init()
-            lut = (colormap._lut * 255).view(np.ndarray)  # Convert matplotlib colormap from 0-1 to 0 -255 for Qt
-            self.img.setImage(self.ref_image, lut = lut)
+            cmap = pg.colormap.get('CET-L13')
+            self.img.setImage(self.ref_image, lut = cmap.getLookupTable(alpha=True))
             #self.img.setCompositionMode(QtGui.QPainter.CompositionMode_Multiply)
 
 
@@ -53,11 +51,9 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
 
             self.img2 = pg.ImageItem()
             self.p1.addItem(self.img2)
-            colormap = cm.get_cmap("Greens")  # cm.get_cmap("CMRmap")
-            colormap._init()
-            lut = (colormap._lut * 255).view(np.ndarray)  # Convert matplotlib colormap from 0-1 to 0 -255 for Qt
-            self.img2.setImage(self.ref_image2,lut = lut)
-            self.img2.setCompositionMode(QtGui.QPainter.CompositionMode_Multiply)
+            cmap = pg.colormap.get('CET-L14')
+            self.img2.setImage(self.ref_image2,lut = cmap.getLookupTable(alpha=True))
+            self.img2.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
             #self.img.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
         else:
             pass
@@ -71,11 +67,9 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
 
             self.img3 = pg.ImageItem()
             self.p1.addItem(self.img3)
-            colormap = cm.get_cmap("Blues")  # cm.get_cmap("CMRmap")
-            colormap._init()
-            lut = (colormap._lut * 255).view(np.ndarray)  # Convert matplotlib colormap from 0-1 to 0 -255 for Qt
-            self.img3.setImage(self.ref_image3,lut = lut)
-            self.img3.setCompositionMode(QtGui.QPainter.CompositionMode_Multiply)
+            cmap = pg.colormap.get('CET-L15')
+            self.img3.setImage(self.ref_image3,lut = cmap.getLookupTable(alpha=True))
+            self.img3.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
             #self.img.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
         else:
             pass
