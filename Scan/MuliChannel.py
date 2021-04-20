@@ -3,11 +3,12 @@ import cv2
 import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets, uic
-from matplotlib import cm
-import matplotlib.pyplot as plt
 import tifffile as tf
 pg.setConfigOption('imageAxisOrder', 'row-major')
 from pyqtgraph.graphicsItems.GradientEditorItem import Gradients
+
+cmap_names = ['CET-L14','CET-L15','CET-L16']
+
 
 
 class MultiChannelWindow(QtWidgets.QMainWindow):
@@ -68,7 +69,9 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
             self.img3 = pg.ImageItem()
             self.p1.addItem(self.img3)
             cmap = pg.colormap.get('CET-L15')
-            self.img3.setImage(self.ref_image3,lut = cmap.getLookupTable(alpha=True))
+            cmap2 = pg.colormap.get('CET-L14')
+            self.img3.setImage(self.ref_image3, lut=(cmap.getLookupTable(alpha=True)+cmap2.getLookupTable(alpha=True))//2)
+            #self.img3.setImage(self.ref_image3,lut = cmap.getLookupTable(alpha=True))
             self.img3.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
             #self.img.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
         else:
