@@ -4,8 +4,9 @@ import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets, uic
 import tifffile as tf
-pg.setConfigOption('imageAxisOrder', 'row-major')
 from itertools import combinations
+
+pg.setConfigOption('imageAxisOrder', 'row-major')
 
 cmap_names = ['CET-L13','CET-L14','CET-L15']
 cmap_combo = combinations(cmap_names, 2)
@@ -28,7 +29,7 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         self.canvas.getViewBox().invertY(True)
 
         #connections
-        self.actionLoad_1.triggered.connect(self.loadMultipleImages)
+        self.actionLoad.triggered.connect(self.loadMultipleImages)
 
     def generateImageDictionary(self):
         filter = "TIFF (*.tiff);;TIF (*.tif)"
