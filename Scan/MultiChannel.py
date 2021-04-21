@@ -22,12 +22,15 @@ for i,name in zip(cmap_combo,cmap_label2):
                        pg.colormap.get(i[1]).getLookupTable(alpha=True))//2
 
 class MultiChannelWindow(QtWidgets.QMainWindow):
-    def __init__(self, ref_image=None):
+    def __init__(self):
         super(MultiChannelWindow, self).__init__()
         uic.loadUi('mutlichannel.ui', self)
 
         self.canvas = self.img_view.addPlot(title="")
         self.canvas.getViewBox().invertY(True)
+        self.canvas.setAspectLocked(True)
+
+        self.cb_choose_color.addItems([i for i in cmap_dict.keys()])
 
         #connections
         self.actionLoad.triggered.connect(self.loadMultipleImages)
@@ -78,10 +81,12 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
     def displayImageNames(self,image_dictionary):
         for im_name,vals in image_dictionary.items():
             self.listWidget.addItem(f"{im_name}, {vals['Color']}")
+            self.listWidget.setCurrentRow(0)
 
     def updateImageDictionary(self):
         newColor = self.cb_choose_color.currentText()
         editItem = self.listWidget.currentItem().text()
+        editRow = self.listWidget.currentRow()
         editItemName = editItem.split(',')[0]
         self.image_dict[editItemName] = {'ImageName':editItemName,
                                          'ImageDir':self.imageDir,
@@ -89,6 +94,18 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
                                          }
         self.createMultiColorView(self.image_dict)
         self.displayImageNames(self.image_dict)
+        self.listWidget.setCurrentRow(editRow)
+
+    def saveState(self):
+
+        file_name = QtWidgets.QFileDialog().getSaveFileName(self, "Save Current State", 'mulicolor_params.json',
+                                                                 'json file(*json)')
+        if file_name[0]:
+
+            with open(f'{file_name[0]}', 'w') as fp:
+                json.dump(self.image_dict,fp, indent=4)
+        else:
+            pass
 
 
 if __name__ == "__main__":

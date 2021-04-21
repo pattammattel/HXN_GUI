@@ -293,7 +293,7 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
 
         file_name = QtWidgets.QFileDialog().getSaveFileName(self, "Save Parameter File", 'scaling_parameters.json',
                                                                  'json file(*json)')
-        if file_name:
+        if file_name[0]:
 
             with open(f'{file_name[0]}', 'w') as fp:
                 json.dump(self.scalingParam,fp, indent=4)
@@ -303,7 +303,7 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
     def importScalingParamFile(self):
         file_name = QtWidgets.QFileDialog().getOpenFileName(self, "Open Parameter File", '',
                                                                  'json file(*json)')
-        if file_name:
+        if file_name[0]:
             with open(file_name[0], 'r') as fp:
                 self.scalingParam = json.load(fp)
         else:
