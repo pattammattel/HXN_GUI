@@ -40,20 +40,23 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         if names[0]:
             self.image_dict = {}
             for colorName, image in zip(cmap_dict.keys(),names[0]):
-                self.image_dict[f'{os.path.basename(image)}'] = {'Image':np.squeeze(tf.imread(image)), 'Color':colorName}
+                self.image_dict[f'{os.path.basename(image)}'] = {'ImagePath':image,
+                                                                 'Color':colorName
+                                                                 }
         else:
             pass
 
-    def loadAnImage(self, image, colormap):
+    def loadAnImage(self, image_path, colormap):
         img = pg.ImageItem()
         self.canvas.addItem(img)
+        image = np.squeeze(tf.imread(image_path))
         img.setImage(image, lut=colormap)
         img.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
 
     def createMultiColorView(self, image_dictionary):
 
-        for im_color in image_dictionary.values():
-            self.loadAnImage(im_color['Image'], cmap_dict[im_color['Color']])
+        for path_color in image_dictionary.values():
+            self.loadAnImage(path_color['Image'], cmap_dict[path_color['Color']])
 
     def loadMultipleImages(self):
         ''' Load Images with default color assignment'''
