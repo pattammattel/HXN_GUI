@@ -31,6 +31,7 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
 
         #connections
         self.actionLoad.triggered.connect(self.loadMultipleImages)
+        self.cb_choose_color.currentTextChanged.connect(self.updateImageDictionary)
 
     def generateImageDictionary(self):
         filter = "TIFF (*.tiff);;TIF (*.tif)"
@@ -39,10 +40,11 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         names = file_name.getOpenFileNames(self, "Open files", " ", filter)
         if names[0]:
             self.image_dict = {}
+            self.imageDir = os.path.dirname(names[0][0])
             for colorName, image in zip(cmap_dict.keys(),names[0]):
-                im_name, im_dir = os.path.basename(image),os.path.dirname(image)
+                im_name = os.path.basename(image)
                 self.image_dict[f'{os.path.basename(image)}'] = {'ImageName':im_name,
-                                                                 'ImageDir':im_dir,
+                                                                 'ImageDir':self.imageDir,
                                                                  'Color':colorName
                                                                  }
         else:
@@ -56,7 +58,8 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         img.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
 
     def createMultiColorView(self, image_dictionary):
-
+        self.canvas.clear()
+        self.listWidget.clear()
         for path_and_color in image_dictionary.values():
             self.loadAnImage(os.path.join(path_and_color['ImageDir'],path_and_color['ImageName']),
                              cmap_dict[path_and_color['Color']])
@@ -64,11 +67,8 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
     def loadMultipleImages(self):
         ''' Load Images with default color assignment'''
         with pg.BusyCursor():
-            self.canvas.clear()
-            self.listWidget.clear()
             self.generateImageDictionary()
             if self.image_dict:
-
                 self.createMultiColorView(self.image_dict)
                 self.displayImageNames(self.image_dict)
 
@@ -80,8 +80,15 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
             self.listWidget.addItem(f"{im_name}, {vals['Color']}")
 
     def updateImageDictionary(self):
-        newColor = self.cb_choose_color.currentItem()
+        newColor = self.cb_choose_color.currentText()
         editItem = self.listWidget.currentItem().text()
+        editItemName = editItem.split(',')[0]
+        self.image_dict[editItemName] = {'ImageName':editItemName,
+                                         'ImageDir':self.imageDir,
+                                         'Color':newColor
+                                         }
+        self.createMultiColorView(self.image_dict)
+        self.displayImageNames(self.image_dict)
 
 
 if __name__ == "__main__":
