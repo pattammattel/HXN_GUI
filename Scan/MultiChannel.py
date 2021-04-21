@@ -39,8 +39,8 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         names = file_name.getOpenFileNames(self, "Open files", " ", filter)
         if names[0]:
             self.image_dict = {}
-            for color, image in zip(cmap_dict.keys(),names[0]):
-                self.image_dict[f'{os.path.basename(image)}, {color}'] = np.squeeze(tf.imread(image))
+            for colorName, image in zip(cmap_dict.keys(),names[0]):
+                self.image_dict[f'{os.path.basename(image)}'] = {'Image':np.squeeze(tf.imread(image)), 'Color':colorName}
         else:
             pass
 
@@ -52,8 +52,8 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
 
     def createMultiColorView(self, image_dictionary):
 
-        for im, colors in zip(image_dictionary.values(),cmap_dict.values()):
-            self.loadAnImage(im, colors)
+        for im_color in image_dictionary.values():
+            self.loadAnImage(im_color['Image'], cmap_dict[im_color['Color']])
 
     def loadMultipleImages(self):
         ''' Load Images with default color assignment'''
