@@ -39,10 +39,8 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         names = file_name.getOpenFileNames(self, "Open files", " ", filter)
         if names[0]:
             self.image_dict = {}
-            for n, image in enumerate(names[0]):
-                self.image_dict[str(os.path.basename(image))] = np.squeeze(tf.imread(image))
-
-            print(self.image_dict)
+            for color, image in zip(cmap_dict.keys(),names[0]):
+                self.image_dict[f'{os.path.basename(image)}, {color}'] = np.squeeze(tf.imread(image))
         else:
             pass
 
