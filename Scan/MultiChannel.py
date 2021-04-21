@@ -107,6 +107,18 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         else:
             pass
 
+    def exportState(self):
+        file_name = QtWidgets.QFileDialog().getOpenFileName(self, "Open a State File", '',
+                                                                 'json file(*json)')
+        if file_name[0]:
+            with open(file_name[0], 'r') as fp:
+                self.image_dict = json.load(fp)
+
+            self.createMultiColorView(self.image_dict)
+            self.displayImageNames(self.image_dict)
+        else:
+            pass
+
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
