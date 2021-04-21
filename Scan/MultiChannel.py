@@ -40,7 +40,9 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         if names[0]:
             self.image_dict = {}
             for colorName, image in zip(cmap_dict.keys(),names[0]):
-                self.image_dict[f'{os.path.basename(image)}'] = {'ImagePath':image,
+                im_name, im_dir = os.path.basename(image),os.path.dirname(image)
+                self.image_dict[f'{os.path.basename(image)}'] = {'ImageName':im_name,
+                                                                 'ImageDir':im_dir,
                                                                  'Color':colorName
                                                                  }
         else:
@@ -55,8 +57,9 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
 
     def createMultiColorView(self, image_dictionary):
 
-        for path_color in image_dictionary.values():
-            self.loadAnImage(path_color['Image'], cmap_dict[path_color['Color']])
+        for path_and_color in image_dictionary.values():
+            self.loadAnImage(os.path.join(path_and_color['ImageDir'],path_and_color['ImageName']),
+                             cmap_dict[path_and_color['Color']])
 
     def loadMultipleImages(self):
         ''' Load Images with default color assignment'''
@@ -73,8 +76,12 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
                 pass
 
     def displayImageNames(self,image_dictionary):
-        for im_name in image_dictionary.keys():
-            self.listWidget.addItem(im_name)
+        for im_name,vals in image_dictionary.items():
+            self.listWidget.addItem(f"{im_name}, {vals['Color']}")
+
+    def updateImageDictionary(self):
+        newColor = self.cb_choose_color.currentItem()
+        editItem = self.listWidget.currentItem().text()
 
 
 if __name__ == "__main__":
