@@ -24,12 +24,42 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         super(MultiChannelWindow, self).__init__()
         uic.loadUi('mutlichannel.ui', self)
 
-        self.actionLoad_1.triggered.connect(self.loadImage)
+        self.canvas = self.img_view.addPlot(title="")
+        self.canvas.getViewBox().invertY(True)
+
+        self.actionLoad_1.triggered.connect(self.loadMultipleImages)
         self.actionLoad_2.triggered.connect(self.loadImage2)
         self.actionLoad_3.triggered.connect(self.loadImage3)
         self.actionLoad_4.triggered.connect(self.loadImage4)
         self.actionLoad_5.triggered.connect(self.loadImage5)
         self.actionLoad_6.triggered.connect(self.loadImage6)
+
+    def generateImageDictionary(self):
+        filter = "TIFF (*.tiff);;TIF (*.tif)"
+        file_name = QtWidgets.QFileDialog()
+        file_name.setFileMode(QtWidgets.QFileDialog.ExistingFiles)
+        names = file_name.getOpenFileNames(self, "Open files", " ", filter)
+        if names[0]:
+            self.image_dict = {}
+            for n, image in enumerate(names[0]):
+                self.image_dict['image'+str(n+1)] = np.squeeze(tf.imread(image))
+        else:
+            pass
+
+    def loadAnImage(self, image, colormap):
+        img = pg.ImageItem()
+        self.canvas.addItem(img)
+        img.setImage(image, lut=colormap)
+        img.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
+
+    def createMultiColorView(self, image_dictionary):
+        self.canvas.clear()
+        for im, colors in zip(image_dictionary.values(),cmap_dict.values()):
+            self.loadAnImage(im, colors)
+
+    def loadMultipleImages(self):
+        self.generateImageDictionary()
+        self.createMultiColorView(self.image_dict)
 
     def loadImage(self):
         self.file_name = QtWidgets.QFileDialog().getOpenFileName(self, "Select Ref Image", '',
@@ -39,12 +69,15 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
             #self.ref_image = cv2.imread(self.file_name[0])
             #self.ref_image = cv2.cvtColor(self.ref_image, cv2.COLOR_BGR2RGB)
 
-            # A plot area (ViewBox + axes) for displaying the image
+
             self.p1 = self.img_view.addPlot(title="")
             self.p1.getViewBox().invertY(True)
             # Item for displaying image data
             self.img = pg.ImageItem()
+            hlut = pg.HistogramLUTItem(image=self.img,fillHistogram = False)
             self.p1.addItem(self.img)
+            #self.p1.addItem(hlut)
+            #hlut.gradient.setColorMap(cmap_dict['red'])
             self.img.setImage(self.ref_image, lut = cmap_dict['red'])
             #self.img.setCompositionMode(QtGui.QPainter.CompositionMode_Multiply)
 
@@ -62,7 +95,6 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
 
             self.img2 = pg.ImageItem()
             self.p1.addItem(self.img2)
-            cmap = pg.colormap.get('CET-L14')
             self.img2.setImage(self.ref_image2,lut = cmap_dict['green'])
             self.img2.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
         else:
@@ -77,8 +109,6 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
 
             self.img3 = pg.ImageItem()
             self.p1.addItem(self.img3)
-            cmap = pg.colormap.get('CET-L15')
-            cmap2 = pg.colormap.get('CET-L14')
             self.img3.setImage(self.ref_image3, lut = cmap_dict['blue'])
             self.img3.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
 
