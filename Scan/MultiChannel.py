@@ -5,6 +5,7 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets, uic
 import tifffile as tf
 from itertools import combinations
+import time
 
 pg.setConfigOption('imageAxisOrder', 'row-major')
 
@@ -39,7 +40,9 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         if names[0]:
             self.image_dict = {}
             for n, image in enumerate(names[0]):
-                self.image_dict['image'+str(n+1)] = np.squeeze(tf.imread(image))
+                self.image_dict[str(os.path.basename(image))] = np.squeeze(tf.imread(image))
+
+            print(self.image_dict)
         else:
             pass
 
@@ -50,14 +53,27 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         img.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
 
     def createMultiColorView(self, image_dictionary):
-        self.canvas.clear()
+
         for im, colors in zip(image_dictionary.values(),cmap_dict.values()):
             self.loadAnImage(im, colors)
 
     def loadMultipleImages(self):
         ''' Load Images with default color assignment'''
-        self.generateImageDictionary()
-        self.createMultiColorView(self.image_dict)
+        with pg.BusyCursor():
+            self.canvas.clear()
+            self.listWidget.clear()
+            self.generateImageDictionary()
+            if self.image_dict:
+
+                self.createMultiColorView(self.image_dict)
+                self.displayImageNames(self.image_dict)
+
+            else:
+                pass
+
+    def displayImageNames(self,image_dictionary):
+        for im_name in image_dictionary.keys():
+            self.listWidget.addItem(im_name)
 
 
 if __name__ == "__main__":
