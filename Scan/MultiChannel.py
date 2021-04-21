@@ -68,8 +68,6 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
             self.ref_image = np.squeeze(tf.imread(self.file_name[0]))
             #self.ref_image = cv2.imread(self.file_name[0])
             #self.ref_image = cv2.cvtColor(self.ref_image, cv2.COLOR_BGR2RGB)
-
-
             self.p1 = self.img_view.addPlot(title="")
             self.p1.getViewBox().invertY(True)
             # Item for displaying image data
