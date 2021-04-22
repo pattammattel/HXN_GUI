@@ -35,6 +35,8 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         #connections
         self.actionLoad.triggered.connect(self.loadMultipleImages)
         self.cb_choose_color.currentTextChanged.connect(self.updateImageDictionary)
+        self.actionLoad_State_File.triggered.connect(self.importState)
+        self.actionSave_State.triggered.connect(self.exportState)
 
     def generateImageDictionary(self):
         filter = "TIFF (*.tiff);;TIF (*.tif)"
@@ -96,7 +98,7 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         self.displayImageNames(self.image_dict)
         self.listWidget.setCurrentRow(editRow)
 
-    def saveState(self):
+    def exportState(self):
 
         file_name = QtWidgets.QFileDialog().getSaveFileName(self, "Save Current State", 'mulicolor_params.json',
                                                                  'json file(*json)')
@@ -107,7 +109,7 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         else:
             pass
 
-    def exportState(self):
+    def importState(self):
         file_name = QtWidgets.QFileDialog().getOpenFileName(self, "Open a State File", '',
                                                                  'json file(*json)')
         if file_name[0]:
