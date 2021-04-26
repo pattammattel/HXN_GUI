@@ -101,14 +101,11 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
             self.listWidget.setCurrentRow(0)
 
     def sliderSetUp(self, im_array):
-        low,high = im_array.min()/im_array.max()*100, 100
+        low,high = im_array.min()*100/im_array.max(), 100
         self.sldr_low.setMaximum(high)
         self.sldr_low.setMinimum(low)
         self.sldr_high.setMaximum(high)
         self.sldr_high.setMinimum(low)
-        self.sldr_low.setMaximum(self.sldr_high.value())
-        self.sldr_low.setMaximum(self.sldr_high.value())
-        self.sldr_high.setMinimum(self.sldr_low.value())
 
     def listItemChange(self,item):
         editItem = item.text()
@@ -117,8 +114,13 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         editItemColor = editItem.split(',')[1]
         im_array = np.squeeze(tf.imread(os.path.join(self.imageDir, editItemName)))
         self.sliderSetUp(im_array)
-        self.low_high_vals.setText(f'{self.sldr_low.value()/(100*im_array.max()):.2f},'
-                                   f'{self.sldr_high.value()/(100*im_array.max()):.2f}')
+        setValLow = self.image_dict[editItemName]['CmapLimits'][0]*100/im_array.max()
+        setValHigh = self.image_dict[editItemName]['CmapLimits'][1]*100/im_array.max()
+        print(setValLow,setValHigh)
+        self.sldr_low.setValue(setValLow)
+        self.sldr_high.setValue(setValHigh)
+        self.low_high_vals.setText(f'low:{self.sldr_low.value()/(100*im_array.max()):.2f},'
+                                   f'high:{self.sldr_high.value()/(100*im_array.max()):.2f}')
         self.cb_choose_color.setCurrentText(editItemColor)
 
     def updateImageDictionary(self):
@@ -137,6 +139,8 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
                                          'Color':newColor,
                                          'CmapLimits': cmap_limits
                                          }
+
+        print(cmap_limits)
         self.createMultiColorView(self.image_dict)
         self.displayImageNames(self.image_dict)
         self.listWidget.setCurrentRow(editRow)
