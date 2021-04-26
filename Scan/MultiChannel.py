@@ -35,6 +35,8 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         #connections
         self.actionLoad.triggered.connect(self.loadMultipleImages)
         self.cb_choose_color.currentTextChanged.connect(self.updateImageDictionary)
+        self.sldr_high.valueChanged.connect(self.updateImageDictionary)
+        self.sldr_low.valueChanged.connect(self.updateImageDictionary)
         self.actionLoad_State_File.triggered.connect(self.importState)
         self.actionSave_State.triggered.connect(self.exportState)
 
@@ -47,37 +49,40 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
             self.image_dict = {}
             self.imageDir = os.path.dirname(names[0][0])
             for colorName, image in zip(cmap_dict.keys(),names[0]):
+                im_array = np.squeeze(tf.imread(image))
+                low,high = im_array.min(), im_array.max()
                 im_name = os.path.basename(image)
                 self.image_dict[f'{os.path.basename(image)}'] = {'ImageName':im_name,
                                                                  'ImageDir':self.imageDir,
-                                                                 'Color':colorName
+                                                                 'Image':im_array,
+                                                                 'Color':colorName,
+                                                                 'CmapLimits':(low,high)
                                                                  }
         else:
             pass
 
-    def loadAnImage(self, image_path, colormap):
+    def loadAnImage(self, image, colormap, cmap_limits):
         img = pg.ImageItem()
         self.canvas.addItem(img)
-        image = np.squeeze(tf.imread(image_path))
         cmap = pg.ColorMap(pos = np.linspace(0,1,len(colormap)), color = colormap)
         img.setImage(image, lut=cmap.getLookupTable())
 
         bar = pg.ColorBarItem(
-            values = (0, np.max(image)),
+            values = cmap_limits,
             cmap=cmap,
-            label=f'{os.path.basename(image_path)}',
             limits = (0, None),
             orientation = 'vertical'
         )
-        bar.setImageItem(img, insert_in=self.canvas)
+        bar.setImageItem(img)
         img.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
 
     def createMultiColorView(self, image_dictionary):
         self.canvas.clear()
         self.listWidget.clear()
         for path_and_color in image_dictionary.values():
-            self.loadAnImage(os.path.join(path_and_color['ImageDir'],path_and_color['ImageName']),
-                             cmap_dict[path_and_color['Color']])
+            self.loadAnImage(path_and_color['Image'],
+                             cmap_dict[path_and_color['Color']],
+                             path_and_color['CmapLimits'])
 
     def loadMultipleImages(self):
         ''' Load Images with default color assignment'''
@@ -95,14 +100,31 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
             self.listWidget.addItem(f"{im_name}, {vals['Color']}")
             self.listWidget.setCurrentRow(0)
 
+    def sliderSetUp(self, im_array):
+        low,high = im_array.min()/im_array.max()*100, 100
+        self.sldr_low.setMaximum(high)
+        self.sldr_low.setMinimum(low)
+        self.sldr_high.setMaximum(high)
+        self.sldr_high.setMinimum(low)
+        self.sldr_low.setMaximum(self.sldr_high.value()+1)
+        self.sldr_high.setMinimum(self.sldr_low.value()+1)
+
+
     def updateImageDictionary(self):
         newColor = self.cb_choose_color.currentText()
         editItem = self.listWidget.currentItem().text()
         editRow = self.listWidget.currentRow()
         editItemName = editItem.split(',')[0]
+        im_array = np.squeeze(tf.imread(os.path.join(self.imageDir,editItemName)))
+        self.sliderSetUp(im_array)
+        cmap_limits = (self.sldr_low.value()/(100*im_array.max()),
+                       self.sldr_high.value()/(100*im_array.max()))
+        self.low_high_vals.setText(f'{cmap_limits[0]:.2f},{cmap_limits[1]:.2f}')
         self.image_dict[editItemName] = {'ImageName':editItemName,
                                          'ImageDir':self.imageDir,
-                                         'Color':newColor
+                                         'Image':im_array,
+                                         'Color':newColor,
+                                         'CmapLimits': cmap_limits
                                          }
         self.createMultiColorView(self.image_dict)
         self.displayImageNames(self.image_dict)
