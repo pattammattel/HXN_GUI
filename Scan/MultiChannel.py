@@ -59,7 +59,17 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         img = pg.ImageItem()
         self.canvas.addItem(img)
         image = np.squeeze(tf.imread(image_path))
-        img.setImage(image, lut=colormap)
+        cmap = pg.ColorMap(pos = np.linspace(0,1,len(colormap)), color = colormap)
+        img.setImage(image, lut=cmap.getLookupTable())
+
+        bar = pg.ColorBarItem(
+            values = (0, np.max(image)),
+            cmap=cmap,
+            label=f'{os.path.basename(image_path)}',
+            limits = (0, None),
+            orientation = 'vertical'
+        )
+        bar.setImageItem( img, insert_in=self.canvas)
         img.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
 
     def createMultiColorView(self, image_dictionary):
