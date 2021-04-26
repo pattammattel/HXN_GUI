@@ -69,7 +69,7 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
             limits = (0, None),
             orientation = 'vertical'
         )
-        bar.setImageItem( img, insert_in=self.canvas)
+        bar.setImageItem(img, insert_in=self.canvas)
         img.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
 
     def createMultiColorView(self, image_dictionary):
