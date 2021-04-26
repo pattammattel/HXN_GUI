@@ -35,8 +35,8 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         #connections
         self.actionLoad.triggered.connect(self.loadMultipleImages)
         self.cb_choose_color.currentTextChanged.connect(self.updateImageDictionary)
-        self.sldr_high.valueChanged.connect(self.updateImageDictionary)
-        self.sldr_low.valueChanged.connect(self.updateImageDictionary)
+        self.pb_update_low_high.clicked.connect(self.updateImageDictionary)
+        self.listWidget.itemClicked.connect(self.listItemChange)
         self.actionLoad_State_File.triggered.connect(self.importState)
         self.actionSave_State.triggered.connect(self.exportState)
 
@@ -97,7 +97,7 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
 
     def displayImageNames(self,image_dictionary):
         for im_name,vals in image_dictionary.items():
-            self.listWidget.addItem(f"{im_name}, {vals['Color']}")
+            self.listWidget.addItem(f"{im_name},{vals['Color']}")
             self.listWidget.setCurrentRow(0)
 
     def sliderSetUp(self, im_array):
@@ -106,9 +106,20 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         self.sldr_low.setMinimum(low)
         self.sldr_high.setMaximum(high)
         self.sldr_high.setMinimum(low)
-        self.sldr_low.setMaximum(self.sldr_high.value()+1)
-        self.sldr_high.setMinimum(self.sldr_low.value()+1)
+        self.sldr_low.setMaximum(self.sldr_high.value())
+        self.sldr_low.setMaximum(self.sldr_high.value())
+        self.sldr_high.setMinimum(self.sldr_low.value())
 
+    def listItemChange(self,item):
+        editItem = item.text()
+        #editItem = self.listWidget.currentItem().text()
+        editItemName = editItem.split(',')[0]
+        editItemColor = editItem.split(',')[1]
+        im_array = np.squeeze(tf.imread(os.path.join(self.imageDir, editItemName)))
+        self.sliderSetUp(im_array)
+        self.low_high_vals.setText(f'{self.sldr_low.value()/(100*im_array.max()):.2f},'
+                                   f'{self.sldr_high.value()/(100*im_array.max()):.2f}')
+        self.cb_choose_color.setCurrentText(editItemColor)
 
     def updateImageDictionary(self):
         newColor = self.cb_choose_color.currentText()
@@ -156,7 +167,6 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
-    # app.setAttribute(QtCore.Qt.AA_Use96Dpi)
     window = MultiChannelWindow()
     window.show()
     sys.exit(app.exec_())
