@@ -110,7 +110,6 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
 
     def listItemChange(self,item):
         editItem = item.text()
-        #editItem = self.listWidget.currentItem().text()
         editItemName = editItem.split(',')[0]
         editItemColor = editItem.split(',')[1]
         im_array = np.squeeze(tf.imread(os.path.join(self.imageDir, editItemName)))
