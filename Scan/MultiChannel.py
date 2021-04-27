@@ -85,12 +85,17 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
             pass
 
     def loadAnImage(self, image_path, colormap, cmap_limits):
+        # get pg image item
         img = pg.ImageItem()
+        # add image to the graphicsview wideget
         self.canvas.addItem(img)
+        # set the color map
         cmap = pg.ColorMap(pos=np.linspace(0, 1, len(colormap)), color=colormap)
         image = np.squeeze(tf.imread(image_path))
+        # set image to the image item with cmap
         img.setImage(image, lut=cmap.getLookupTable())
 
+        # set colorbar for thresholding
         bar = pg.ColorBarItem(
             values=cmap_limits,
             cmap=cmap,
@@ -98,6 +103,7 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
             orientation='vertical'
         )
         bar.setImageItem(img)
+        #set composition mode to plus for overlaying
         img.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
 
     def createMultiColorView(self, image_dictionary):
