@@ -1,0 +1,29 @@
+{
+    "py_hfo_feso_xanes_fit_-0001.tiff": {
+        "ImageName": "py_hfo_feso_xanes_fit_-0001.tiff",
+        "ImageDir": "C:/Users/pattammattel/Desktop/HXN_GUI/Scan",
+        "Color": "red",
+        "CmapLimits": [
+            0.0,
+            1.0332852602005005
+        ]
+    },
+    "py_hfo_feso_xanes_fit_-0002.tiff": {
+        "ImageName": "py_hfo_feso_xanes_fit_-0002.tiff",
+        "ImageDir": "C:/Users/pattammattel/Desktop/HXN_GUI/Scan",
+        "Color": "green",
+        "CmapLimits": [
+            0.0,
+            0.26598691940307617
+        ]
+    },
+    "py_hfo_feso_xanes_fit_-0003.tiff": {
+        "ImageName": "py_hfo_feso_xanes_fit_-0003.tiff",
+        "ImageDir": "C:/Users/pattammattel/Desktop/HXN_GUI/Scan",
+        "Color": "blue",
+        "CmapLimits": [
+            0.0,
+            0.11316147446632385
+        ]
+    }
+}

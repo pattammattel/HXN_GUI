@@ -22,6 +22,18 @@ for i, name in zip(cmap_combo, cmap_label2):
                        pg.colormap.get(i[1]).getLookupTable(alpha=True)) // 2
 
 
+class jsonEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        else:
+            return super(jsonEncoder, self).default(obj)
+
+
 class MultiChannelWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super(MultiChannelWindow, self).__init__()
@@ -67,7 +79,7 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
                 self.image_dict[f'{os.path.basename(image)}'] = {'ImageName': im_name,
                                                                  'ImageDir': self.imageDir,
                                                                  'Color': colorName,
-                                                                 'CmapLimits': [low, high]
+                                                                 'CmapLimits': (low, high)
                                                                  }
         else:
             pass
@@ -130,8 +142,6 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         self.sliderSetUp(im_array)
         setValLow = (self.image_dict[editItemName]['CmapLimits'][0] * 100) / im_array.max()
         setValHigh = (self.image_dict[editItemName]['CmapLimits'][1] * 100) / im_array.max()
-        print(editItemName)
-        print(f"saved {setValLow, setValHigh}")
         self.sldr_low.setValue(int(setValLow))
         self.sldr_high.setValue(int(setValHigh))
         self.low_high_vals.setText(f'low:{self.sldr_low.value()},'
@@ -143,10 +153,11 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         editItem = self.listWidget.currentItem().text()
         editRow = self.listWidget.currentRow()
         editItemName = editItem.split(',')[0]
+        self.imageDir = self.image_dict[editItemName]['ImageDir']
         im_array = np.squeeze(tf.imread(os.path.join(self.imageDir, editItemName)))
         self.sliderSetUp(im_array)
-        cmap_limits = [self.sldr_low.value() * im_array.max() / 100,
-                       self.sldr_high.value() * im_array.max() / 100]
+        cmap_limits = (self.sldr_low.value() * im_array.max() / 100,
+                       self.sldr_high.value() * im_array.max() / 100)
         self.low_high_vals.setText(f'low:{cmap_limits[0]:.2f},high:{cmap_limits[1]:.2f}')
         self.image_dict[editItemName] = {'ImageName': editItemName,
                                          'ImageDir': self.imageDir,
@@ -154,7 +165,6 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
                                          'CmapLimits': cmap_limits
                                          }
 
-        print(cmap_limits)
         self.createMultiColorView(self.image_dict)
         self.displayImageNames(self.image_dict)
         self.listWidget.setCurrentRow(editRow)
@@ -163,11 +173,15 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
 
         file_name = QtWidgets.QFileDialog().getSaveFileName(self, "Save Current State", 'multicolor_params.json',
                                                             'json file(*json)')
+        '''
+        for val in self.image_dict.values():
+            val['CmapLimits'] = json.dumps(str(val['CmapLimits']))
+        '''
 
         if file_name[0]:
 
             with open(f'{file_name[0]}', 'w') as fp:
-                json.dump(self.image_dict, fp, indent=4)
+                json.dump(self.image_dict, fp, indent=4, cls = jsonEncoder)
 
         else:
             pass
@@ -178,6 +192,7 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         if file_name[0]:
             with open(file_name[0], 'r') as fp:
                 self.image_dict = json.load(fp)
+
 
             self.createMultiColorView(self.image_dict)
             self.displayImageNames(self.image_dict)
