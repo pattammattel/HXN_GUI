@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets, uic
+import pyqtgraph.exporters
 import tifffile as tf
 from itertools import combinations
 import time
@@ -35,6 +36,7 @@ class jsonEncoder(json.JSONEncoder):
 
 
 class MultiChannelWindow(QtWidgets.QMainWindow):
+
     def __init__(self):
         super(MultiChannelWindow, self).__init__()
         uic.loadUi('mutlichannel.ui', self)
@@ -52,6 +54,7 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         self.listWidget.itemClicked.connect(self.listItemChange)
         self.actionLoad_State_File.triggered.connect(self.importState)
         self.actionSave_State.triggered.connect(self.exportState)
+        self.actionSave_View.triggered.connect(self.saveImage)
 
     def generateImageDictionary(self):
         """Creates a dictionary contains image path, color scheme chosen, throshold limits etc.
@@ -214,6 +217,13 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
             self.displayImageNames(self.image_dict)
         else:
             pass
+
+    def saveImage(self):
+        file_name = QtWidgets.QFileDialog().getSaveFileName(self, "Save Image", 'multicolor_image.png',
+                                                            'PNG(*.png);; TIFF(*.tiff);; JPG(*.jpg)')
+        exporter = pg.exporters.ImageExporter(self.canvas.getViewBox())
+        exporter.export(file_name[0])
+
 
 
 if __name__ == "__main__":
