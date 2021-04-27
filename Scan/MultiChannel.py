@@ -101,10 +101,12 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
             self.listWidget.setCurrentRow(0)
 
     def sliderSetUp(self, im_array):
-        self.sldr_low.setMaximum(0)
-        self.sldr_low.setMinimum(100)
-        self.sldr_high.setMaximum(0)
-        self.sldr_high.setMinimum(100)
+        low = (im_array.min()/im_array.max())*100
+
+        self.sldr_low.setMaximum(100)
+        self.sldr_low.setMinimum(low)
+        self.sldr_high.setMaximum(100)
+        self.sldr_high.setMinimum(low)
 
     def listItemChange(self,item):
         editItem = item.text()
