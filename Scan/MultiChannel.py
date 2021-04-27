@@ -85,6 +85,10 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
             pass
 
     def loadAnImage(self, image_path, colormap, cmap_limits):
+        ''' load single image and colorbar to the widget. This function will be looped for
+        multiple images later
+        '''
+
         # get pg image item
         img = pg.ImageItem()
         # add image to the graphicsview wideget
