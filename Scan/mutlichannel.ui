@@ -78,7 +78,7 @@
        <item row="1" column="1">
         <widget class="QPushButton" name="pb_update_low_high">
          <property name="text">
-          <string>Update</string>
+          <string>Set</string>
          </property>
         </widget>
        </item>
@@ -93,7 +93,7 @@
             </sizepolicy>
            </property>
            <property name="text">
-            <string>vals</string>
+            <string>0,100</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>

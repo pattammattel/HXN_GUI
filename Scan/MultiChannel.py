@@ -101,11 +101,10 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
             self.listWidget.setCurrentRow(0)
 
     def sliderSetUp(self, im_array):
-        low,high = im_array.min()*100/im_array.max(), 100
-        self.sldr_low.setMaximum(high)
-        self.sldr_low.setMinimum(low)
-        self.sldr_high.setMaximum(high)
-        self.sldr_high.setMinimum(low)
+        self.sldr_low.setMaximum(0)
+        self.sldr_low.setMinimum(100)
+        self.sldr_high.setMaximum(0)
+        self.sldr_high.setMinimum(100)
 
     def listItemChange(self,item):
         editItem = item.text()
@@ -114,13 +113,14 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         editItemColor = editItem.split(',')[1]
         im_array = np.squeeze(tf.imread(os.path.join(self.imageDir, editItemName)))
         self.sliderSetUp(im_array)
-        setValLow = self.image_dict[editItemName]['CmapLimits'][0]*100/im_array.max()
-        setValHigh = self.image_dict[editItemName]['CmapLimits'][1]*100/im_array.max()
-        print(setValLow,setValHigh)
-        self.sldr_low.setValue(setValLow)
-        self.sldr_high.setValue(setValHigh)
-        self.low_high_vals.setText(f'low:{self.sldr_low.value()/(100*im_array.max()):.2f},'
-                                   f'high:{self.sldr_high.value()/(100*im_array.max()):.2f}')
+        setValLow =  (self.image_dict[editItemName]['CmapLimits'][0]*100)/im_array.max()
+        setValHigh = (self.image_dict[editItemName]['CmapLimits'][1]*100)/im_array.max()
+        print(editItemName)
+        print(f"saved {setValLow,setValHigh}")
+        self.sldr_low.setValue(int(setValLow))
+        self.sldr_high.setValue(int(setValHigh))
+        self.low_high_vals.setText(f'low:{self.sldr_low.value()},'
+                                   f'high:{self.sldr_high.value()}')
         self.cb_choose_color.setCurrentText(editItemColor)
 
     def updateImageDictionary(self):
@@ -130,9 +130,9 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         editItemName = editItem.split(',')[0]
         im_array = np.squeeze(tf.imread(os.path.join(self.imageDir,editItemName)))
         self.sliderSetUp(im_array)
-        cmap_limits = (self.sldr_low.value()/(100*im_array.max()),
-                       self.sldr_high.value()/(100*im_array.max()))
-        self.low_high_vals.setText(f'{cmap_limits[0]:.2f},{cmap_limits[1]:.2f}')
+        cmap_limits = (self.sldr_low.value()*im_array.max()/100,
+                       self.sldr_high.value()*im_array.max()/100)
+        self.low_high_vals.setText(f'low:{cmap_limits[0]:.2f},high:{cmap_limits[1]:.2f}')
         self.image_dict[editItemName] = {'ImageName':editItemName,
                                          'ImageDir':self.imageDir,
                                          'Image':im_array,
