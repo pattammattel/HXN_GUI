@@ -41,14 +41,21 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         self.actionSave_State.triggered.connect(self.exportState)
 
     def generateImageDictionary(self):
+        """Creates a dictionary contains image path, color scheme chosen, throshold limits etc.
+        when user edits the parameters dictionry will be updated and unwrapped for display later.
+        This dictionary is saved as json file while saving the state"""
+
         filter = "TIFF (*.tiff);;TIF (*.tif)"
         file_name = QtWidgets.QFileDialog()
         file_name.setFileMode(QtWidgets.QFileDialog.ExistingFiles)
+        #choose mutliple tiff files
         names = file_name.getOpenFileNames(self, "Open files", " ", filter)
         if names[0]:
             self.image_dict = {}
+            #select the file directory
             self.imageDir = os.path.dirname(names[0][0])
             for colorName, image in zip(cmap_dict.keys(),names[0]):
+                #squeeze to allow with psedo 3D axis from some tomo recon (eg. 1, 100,100 array)
                 im_array = np.squeeze(tf.imread(image))
                 low,high = im_array.min(), im_array.max()
                 im_name = os.path.basename(image)
@@ -150,10 +157,12 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
 
         file_name = QtWidgets.QFileDialog().getSaveFileName(self, "Save Current State", 'mulicolor_params.json',
                                                                  'json file(*json)')
+
         if file_name[0]:
 
             with open(f'{file_name[0]}', 'w') as fp:
                 json.dump(self.image_dict,fp, indent=4)
+
         else:
             pass
 
