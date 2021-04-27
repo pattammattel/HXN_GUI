@@ -6,7 +6,8 @@
         "CmapLimits": [
             0.0,
             1.0332852602005005
-        ]
+        ],
+        "Opacity": 0.75
     },
     "py_hfo_feso_xanes_fit_-0002.tiff": {
         "ImageName": "py_hfo_feso_xanes_fit_-0002.tiff",
@@ -15,7 +16,8 @@
         "CmapLimits": [
             0.0,
             0.26598691940307617
-        ]
+        ],
+        "Opacity": 0.79
     },
     "py_hfo_feso_xanes_fit_-0003.tiff": {
         "ImageName": "py_hfo_feso_xanes_fit_-0003.tiff",
@@ -24,6 +26,7 @@
         "CmapLimits": [
             0.0,
             0.11316147446632385
-        ]
+        ],
+        "Opacity": 0.69
     }
 }

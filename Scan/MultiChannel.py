@@ -79,12 +79,13 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
                 self.image_dict[f'{os.path.basename(image)}'] = {'ImageName': im_name,
                                                                  'ImageDir': self.imageDir,
                                                                  'Color': colorName,
-                                                                 'CmapLimits': (low, high)
+                                                                 'CmapLimits': (low, high),
+                                                                 'Opacity':1.0
                                                                  }
         else:
             pass
 
-    def loadAnImage(self, image_path, colormap, cmap_limits):
+    def loadAnImage(self, image_path, colormap, cmap_limits, opacity = 1):
         """ load single image and colorbar to the widget. This function will be looped for
         multiple images later
         """
@@ -97,7 +98,7 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         cmap = pg.ColorMap(pos=np.linspace(0, 1, len(colormap)), color=colormap)
         image = np.squeeze(tf.imread(image_path))
         # set image to the image item with cmap
-        img.setImage(image, lut=cmap.getLookupTable())
+        img.setImage(image, lut=cmap.getLookupTable(), opacity = opacity)
 
         # set colorbar for thresholding
         bar = pg.ColorBarItem(
@@ -116,9 +117,9 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         for path_and_color in image_dictionary.values():
             self.loadAnImage(os.path.join(path_and_color['ImageDir'],
                                           path_and_color['ImageName']),
-
                              cmap_dict[path_and_color['Color']],
-                             path_and_color['CmapLimits'])
+                             path_and_color['CmapLimits'],
+                             path_and_color['Opacity'])
 
     def loadMultipleImages(self):
         ''' Load Images with default color assignment'''
@@ -152,8 +153,10 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         self.sliderSetUp(im_array)
         setValLow = (self.image_dict[editItemName]['CmapLimits'][0] * 100) / im_array.max()
         setValHigh = (self.image_dict[editItemName]['CmapLimits'][1] * 100) / im_array.max()
+        setOpacity = self.image_dict[editItemName]['Opacity'] * 100
         self.sldr_low.setValue(int(setValLow))
         self.sldr_high.setValue(int(setValHigh))
+        self.sldr_opacity.setValue(int(setOpacity))
         self.low_high_vals.setText(f'low:{self.sldr_low.value()},'
                                    f'high:{self.sldr_high.value()}')
         self.cb_choose_color.setCurrentText(editItemColor)
@@ -169,10 +172,13 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         cmap_limits = (self.sldr_low.value() * im_array.max() / 100,
                        self.sldr_high.value() * im_array.max() / 100)
         self.low_high_vals.setText(f'low:{cmap_limits[0]:.2f},high:{cmap_limits[1]:.2f}')
+        opacity = self.sldr_opacity.value()/100
+        self.opacity_val.setText(str(opacity))
         self.image_dict[editItemName] = {'ImageName': editItemName,
                                          'ImageDir': self.imageDir,
                                          'Color': newColor,
-                                         'CmapLimits': cmap_limits
+                                         'CmapLimits': cmap_limits,
+                                         'Opacity':opacity
                                          }
 
         self.createMultiColorView(self.image_dict)
