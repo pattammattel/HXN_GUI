@@ -85,13 +85,13 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
             pass
 
     def loadAnImage(self, image_path, colormap, cmap_limits):
-        ''' load single image and colorbar to the widget. This function will be looped for
+        """ load single image and colorbar to the widget. This function will be looped for
         multiple images later
-        '''
+        """
 
         # get pg image item
         img = pg.ImageItem()
-        # add image to the graphicsview wideget
+        # add image to the graphicsview widget
         self.canvas.addItem(img)
         # set the color map
         cmap = pg.ColorMap(pos=np.linspace(0, 1, len(colormap)), color=colormap)
@@ -107,7 +107,7 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
             orientation='vertical'
         )
         bar.setImageItem(img)
-        #set composition mode to plus for overlaying
+        # set composition mode to plus for overlaying
         img.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
 
     def createMultiColorView(self, image_dictionary):
