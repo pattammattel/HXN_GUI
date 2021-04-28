@@ -48,7 +48,8 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         self.cb_choose_color.addItems([i for i in cmap_dict.keys()])
 
         # connections
-        self.actionLoad.triggered.connect(self.loadMultipleImages)
+        self.actionLoad.triggered.connect(self.finalImageView)
+        self.actionLoad_Stack.triggered.connect(self.finalImageView)
         self.cb_choose_color.currentTextChanged.connect(self.updateImageDictionary)
         self.pb_update_low_high.clicked.connect(self.updateImageDictionary)
         self.listWidget.itemClicked.connect(self.listItemChange)
@@ -58,29 +59,40 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
 
     def generateImageDictionary(self):
         """Creates a dictionary contains image path, color scheme chosen, throshold limits etc.
-        when user edits the parameters dictionry will be updated and unwrapped for display later.
+        when user edits the parameters dictionary will be updated and unwrapped for display later.
         This dictionary is saved as json file while saving the state"""
+        clickedAction = self.sender()
+
+        if clickedAction.text() == "Load Images":
+            self.loadMultipleImageFiles()
+
+        elif clickedAction.text() == "Load Stack":
+            self.loadAsStack()
+
+    def loadMultipleImageFiles(self):
 
         filter = "TIFF (*.tiff);;TIF (*.tif)"
-        file_name = QtWidgets.QFileDialog()
-        file_name.setFileMode(QtWidgets.QFileDialog.ExistingFiles)
+        QtWidgets.QFileDialog().setFileMode(QtWidgets.QFileDialog.ExistingFiles)
         # choose mutliple tiff files
-        names = file_name.getOpenFileNames(self, "Open files", " ", filter)
+        names = QtWidgets.QFileDialog().getOpenFileNames(self, "Open files", " ", filter)
         if names[0]:
             self.image_dict = {}
-            # select the file directory
+            # select the file directory. Image files are expected to be in the same folder
             self.imageDir = os.path.dirname(names[0][0])
+
+            # create the dictionary
             for colorName, image in zip(cmap_dict.keys(), names[0]):
-                # squeeze to allow with psedo 3D axis from some tomo recon (eg. 1, 100,100 array)
+                # squeeze to allow with pseudo 3D axis from some tomo recon (eg. 1, 100,100 array)
                 im_array = np.squeeze(tf.imread(image))
                 # set values for thresholding as image min and max
                 low, high = im_array.min(), im_array.max()
-                # name of the tiff file is chosen as key for the dictioary,
+                # name of the tiff file is chosen as key for the dictionary,
                 # inner keys are properties set for that image
                 im_name = os.path.basename(image)
                 # construct the dictionary
                 self.image_dict[f'{os.path.basename(image)}'] = {'ImageName': im_name,
                                                                  'ImageDir': self.imageDir,
+                                                                 'Image':im_array,
                                                                  'Color': colorName,
                                                                  'CmapLimits': (low, high),
                                                                  'Opacity':1.0
@@ -88,7 +100,28 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         else:
             pass
 
-    def loadAnImage(self, image_path, colormap, cmap_limits, opacity = 1):
+    def loadAsStack(self):
+        filter = "TIFF (*.tiff);;TIF (*.tif)"
+        file_name = QtWidgets.QFileDialog().getOpenFileName(self, "Open a Stack", '',
+                                                            'TIFF(*tiff)', filter)
+        if file_name[0]:
+            self.imageDir = os.path.dirname(file_name[0])
+            self.image_dict = {}
+            im_stack  = np.squeeze(tf.imread(file_name[0]))
+            assert im_stack.ndim == 3, "Not a stack"
+
+            for n, (colorName, image) in enumerate(zip(cmap_dict.keys(), im_stack)):
+                low, high = image.min(), image.max()
+                self.image_dict[f'Image {n}'] = {'ImageName': f'Image {n}',
+                                                'ImageDir': self.imageDir,
+                                                'Image':image,
+                                                 'Color': colorName,
+                                                 'CmapLimits': (low, high),
+                                                 'Opacity':1.0
+                                                 }
+
+
+    def loadAnImage(self, image, colormap, cmap_limits, opacity = 1):
         """ load single image and colorbar to the widget. This function will be looped for
         multiple images later
         """
@@ -99,7 +132,7 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         self.canvas.addItem(img)
         # set the color map
         cmap = pg.ColorMap(pos=np.linspace(0, 1, len(colormap)), color=colormap)
-        image = np.squeeze(tf.imread(image_path))
+        #image = np.squeeze(tf.imread(image_path))
         # set image to the image item with cmap
         img.setImage(image, lut=cmap.getLookupTable(), opacity = opacity)
 
@@ -118,13 +151,12 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         self.canvas.clear()
         self.listWidget.clear()
         for path_and_color in image_dictionary.values():
-            self.loadAnImage(os.path.join(path_and_color['ImageDir'],
-                                          path_and_color['ImageName']),
+            self.loadAnImage(path_and_color['Image'],
                              cmap_dict[path_and_color['Color']],
                              path_and_color['CmapLimits'],
                              path_and_color['Opacity'])
 
-    def loadMultipleImages(self):
+    def finalImageView(self):
         ''' Load Images with default color assignment'''
         with pg.BusyCursor():
             self.generateImageDictionary()
@@ -152,7 +184,7 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         editItem = item.text()
         editItemName = editItem.split(',')[0]
         editItemColor = editItem.split(',')[1]
-        im_array = np.squeeze(tf.imread(os.path.join(self.imageDir, editItemName)))
+        im_array = self.image_dict[editItemName]['Image']
         self.sliderSetUp(im_array)
         setValLow = (self.image_dict[editItemName]['CmapLimits'][0] * 100) / im_array.max()
         setValHigh = (self.image_dict[editItemName]['CmapLimits'][1] * 100) / im_array.max()
@@ -170,7 +202,7 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         editRow = self.listWidget.currentRow()
         editItemName = editItem.split(',')[0]
         self.imageDir = self.image_dict[editItemName]['ImageDir']
-        im_array = np.squeeze(tf.imread(os.path.join(self.imageDir, editItemName)))
+        im_array = self.image_dict[editItemName]['Image']
         self.sliderSetUp(im_array)
         cmap_limits = (self.sldr_low.value() * im_array.max() / 100,
                        self.sldr_high.value() * im_array.max() / 100)
@@ -179,6 +211,7 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         self.opacity_val.setText(str(opacity))
         self.image_dict[editItemName] = {'ImageName': editItemName,
                                          'ImageDir': self.imageDir,
+                                         'Image':im_array,
                                          'Color': newColor,
                                          'CmapLimits': cmap_limits,
                                          'Opacity':opacity
