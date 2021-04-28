@@ -48,11 +48,11 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         self.cb_choose_color.addItems([i for i in cmap_dict.keys()])
 
         # connections
-        self.actionLoad.triggered.connect(self.finalImageView)
-        self.actionLoad_Stack.triggered.connect(self.finalImageView)
+        self.actionLoad.triggered.connect(self.createMuliColorAndList)
+        self.actionLoad_Stack.triggered.connect(self.createMuliColorAndList)
         self.cb_choose_color.currentTextChanged.connect(self.updateImageDictionary)
         self.pb_update_low_high.clicked.connect(self.updateImageDictionary)
-        self.listWidget.itemClicked.connect(self.listItemChange)
+        self.listWidget.itemClicked.connect(self.editImageProperties)
         self.actionLoad_State_File.triggered.connect(self.importState)
         self.actionSave_State.triggered.connect(self.exportState)
         self.actionSave_View.triggered.connect(self.saveImage)
@@ -105,6 +105,9 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
             pass
 
     def loadAsStack(self):
+        """ construct the dictionary with image +number as the key.
+        All other steps are similar to the loadMultipleImageFiles function"""
+
         filter = "TIFF (*.tiff);;TIF (*.tif)"
         file_name = QtWidgets.QFileDialog().getOpenFileName(self, "Open a Stack", '',
                                                             'TIFF(*tiff)', filter)
@@ -112,8 +115,9 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
             self.imageDir = os.path.dirname(file_name[0])
             self.image_dict = {}
             im_stack  = np.squeeze(tf.imread(file_name[0]))
+            #asset the file is a stack
             assert im_stack.ndim == 3, "Not a stack"
-
+            #construct the dictionary
             for n, (colorName, image) in enumerate(zip(cmap_dict.keys(), im_stack)):
                 low, high = np.min(image), np.max(image)
                 self.image_dict[f'Image {n+1}'] = {'ImageName': f'Image {n+1}',
@@ -129,7 +133,6 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         """ load single image and colorbar to the widget. This function will be looped for
         multiple images later
         """
-
         # get pg image item
         img = pg.ImageItem()
         # add image to the graphicsview widget
@@ -152,17 +155,32 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         img.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
 
     def createMultiColorView(self, image_dictionary):
+        """ Function creates multi color image view by taking image
+        data and parameters from the dictionary"""
+
+        #clear the plots and list in case of re-loading
         self.canvas.clear()
         self.listWidget.clear()
+
+        # display individual images in for loop
         for path_and_color in image_dictionary.values():
             self.loadAnImage(path_and_color['Image'],
                              cmap_dict[path_and_color['Color']],
                              path_and_color['CmapLimits'],
                              path_and_color['Opacity'])
 
-    def finalImageView(self):
-        ''' Load Images with default color assignment'''
-        with pg.BusyCursor():
+    def displayImageNames(self, image_dictionary):
+        """ Populate the list widget table with image name and color used to plot,
+        using image dictionary input"""
+
+        for im_name, vals in image_dictionary.items():
+            self.listWidget.addItem(f"{im_name},{vals['Color']}")
+            self.listWidget.setCurrentRow(0)
+
+
+    def createMuliColorAndList(self):
+        """ Finally Load Images and poplulate the list widget from the dictionary"""
+        with pg.BusyCursor(): # gives the circle showing gui is doing something
             self.generateImageDictionary()
             if self.image_dict:
                 self.createMultiColorView(self.image_dict)
@@ -171,21 +189,22 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
             else:
                 pass
 
-    def displayImageNames(self, image_dictionary):
-        for im_name, vals in image_dictionary.items():
-            self.listWidget.addItem(f"{im_name},{vals['Color']}")
-            self.listWidget.setCurrentRow(0)
 
     def sliderSetUp(self, im_array):
-        low = (np.min(im_array) / np.max(im_array)) * 100
+        """ Setting the slider min and max from image values"""
 
+        low = (np.min(im_array) / np.max(im_array)) * 100
         self.sldr_low.setMaximum(100)
         self.sldr_low.setMinimum(low)
         self.sldr_high.setMaximum(100)
         self.sldr_high.setMinimum(low)
 
-    def listItemChange(self, item):
+    def editImageProperties(self, item):
+        """ function to control the assigned properties such as color,
+        threshold limits, opacity etc of a single image selected using the list widget item """
+
         editItem = item.text()
+        # get the dictionary key from item text
         editItemName = editItem.split(',')[0]
         editItemColor = editItem.split(',')[1]
         im_array = self.image_dict[editItemName]['Image']
