@@ -105,6 +105,9 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
             pass
 
     def loadAsStack(self):
+        """ construct the dictionary with image +number as the key.
+        All other steps are similar to the loadMultipleImageFiles function"""
+
         filter = "TIFF (*.tiff);;TIF (*.tif)"
         file_name = QtWidgets.QFileDialog().getOpenFileName(self, "Open a Stack", '',
                                                             'TIFF(*tiff)', filter)
@@ -112,8 +115,9 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
             self.imageDir = os.path.dirname(file_name[0])
             self.image_dict = {}
             im_stack  = np.squeeze(tf.imread(file_name[0]))
+            #asset the file is a stack
             assert im_stack.ndim == 3, "Not a stack"
-
+            #construct the dictionary
             for n, (colorName, image) in enumerate(zip(cmap_dict.keys(), im_stack)):
                 low, high = np.min(image), np.max(image)
                 self.image_dict[f'Image {n+1}'] = {'ImageName': f'Image {n+1}',
@@ -152,8 +156,14 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         img.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
 
     def createMultiColorView(self, image_dictionary):
+        """ Function creates multi color image view by taking image
+        data and parameters from the dictionary"""
+
+        #clear the plots and list in case of re-loading
         self.canvas.clear()
         self.listWidget.clear()
+
+        # display individual images in for loop
         for path_and_color in image_dictionary.values():
             self.loadAnImage(path_and_color['Image'],
                              cmap_dict[path_and_color['Color']],
