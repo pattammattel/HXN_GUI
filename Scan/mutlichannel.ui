@@ -13,11 +13,43 @@
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">font: 12pt &quot;Segoe UI&quot;</string>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <property name="styleSheet">
-    <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+    <string notr="true">QPushButton {
+border: 1px solid #555;
+border-radius: 5px;
+background: qradialgradient(cx: 0.3, cy: -0.1,
+fx: 0.7, fy: 0.1,
+radius: 1, stop: 0 #fff, stop: 1 #888);
+background-color: rgb(170, 255, 255);
+}
+
+QPushButton:hover{ 
+	background-color: rgb(255, 255, 0); 
+	}
+
+QPushButton:pressed{ 
+	background-color: rgb(0,255, 0); 
+	}
+
+font: 12pt &quot;Segoe UI&quot;;</string>
    </property>
    <layout class="QGridLayout" name="gridLayout_8">
+    <property name="leftMargin">
+     <number>25</number>
+    </property>
+    <property name="topMargin">
+     <number>25</number>
+    </property>
+    <property name="rightMargin">
+     <number>25</number>
+    </property>
+    <property name="bottomMargin">
+     <number>25</number>
+    </property>
     <item row="0" column="0">
      <widget class="GraphicsLayoutWidget" name="img_view">
       <property name="sizePolicy">
@@ -31,7 +63,7 @@
     <item row="1" column="0">
      <widget class="QGroupBox" name="groupBox">
       <property name="title">
-       <string>Edit Colors</string>
+       <string>Edit</string>
       </property>
       <layout class="QGridLayout" name="gridLayout_2">
        <item row="0" column="1">
@@ -43,14 +75,14 @@
           </sizepolicy>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="page">
           <property name="geometry">
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>396</width>
+            <width>368</width>
             <height>85</height>
            </rect>
           </property>
@@ -90,6 +122,9 @@
                    </property>
                    <property name="focusPolicy">
                     <enum>Qt::NoFocus</enum>
+                   </property>
+                   <property name="toolTip">
+                    <string>click update after making changes </string>
                    </property>
                    <property name="maximum">
                     <number>100</number>
@@ -141,6 +176,9 @@
                    <property name="focusPolicy">
                     <enum>Qt::NoFocus</enum>
                    </property>
+                   <property name="toolTip">
+                    <string>click update after making changes </string>
+                   </property>
                    <property name="maximum">
                     <number>100</number>
                    </property>
@@ -183,7 +221,7 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>554</width>
+            <width>368</width>
             <height>85</height>
            </rect>
           </property>
@@ -211,6 +249,9 @@
              </item>
              <item row="1" column="0">
               <widget class="QSlider" name="sldr_opacity">
+               <property name="toolTip">
+                <string>click update after making changes </string>
+               </property>
                <property name="maximum">
                 <number>100</number>
                </property>
@@ -233,6 +274,9 @@
        </item>
        <item row="1" column="1">
         <widget class="QPushButton" name="pb_update_low_high">
+         <property name="toolTip">
+          <string>execute above changes to the selected item</string>
+         </property>
          <property name="text">
           <string>Update</string>
          </property>
@@ -247,6 +291,9 @@
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
+           </property>
+           <property name="toolTip">
+            <string>change properties of the selected item</string>
            </property>
            <property name="styleSheet">
             <string notr="true">font: 8pt &quot;Segoe UI&quot;;</string>
@@ -296,12 +343,15 @@
      <x>0</x>
      <y>0</y>
      <width>674</width>
-     <height>26</height>
+     <height>27</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
      <string>File</string>
+    </property>
+    <property name="toolTipsVisible">
+     <bool>true</bool>
     </property>
     <addaction name="actionLoad"/>
     <addaction name="actionLoad_Stack"/>
@@ -315,6 +365,9 @@
   <action name="actionLoad">
    <property name="text">
     <string>Load Images</string>
+   </property>
+   <property name="toolTip">
+    <string>Select and load multiple tiff images to create a multi color view</string>
    </property>
   </action>
   <action name="actionLoad_2">
@@ -346,20 +399,32 @@
    <property name="text">
     <string>Export Image</string>
    </property>
+   <property name="toolTip">
+    <string>Export the image view as a sinle image file</string>
+   </property>
   </action>
   <action name="actionSave_State">
    <property name="text">
     <string>Save State File</string>
+   </property>
+   <property name="toolTip">
+    <string>Save the current state of the view. Images and properties are saved</string>
    </property>
   </action>
   <action name="actionLoad_State_File">
    <property name="text">
     <string>Load State File</string>
    </property>
+   <property name="toolTip">
+    <string>Load a state (json file) saved previously.</string>
+   </property>
   </action>
   <action name="actionLoad_Stack">
    <property name="text">
     <string>Load Stack</string>
+   </property>
+   <property name="toolTip">
+    <string>Load images as a stack of tiff</string>
    </property>
   </action>
  </widget>

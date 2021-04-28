@@ -60,13 +60,17 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
     def generateImageDictionary(self):
         """Creates a dictionary contains image path, color scheme chosen, throshold limits etc.
         when user edits the parameters dictionary will be updated and unwrapped for display later.
-        This dictionary is saved as json file while saving the state"""
+        This dictionary is saved as json file while saving the state. Two image loading options are possible.
+        User can either select multiple 2D array images or one 3D array (stack)"""
+
         clickedAction = self.sender()
 
         if clickedAction.text() == "Load Images":
+            # multiple images are selected
             self.loadMultipleImageFiles()
 
         elif clickedAction.text() == "Load Stack":
+            # an image stack is selected
             self.loadAsStack()
 
     def loadMultipleImageFiles(self):
@@ -112,7 +116,7 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
 
             for n, (colorName, image) in enumerate(zip(cmap_dict.keys(), im_stack)):
                 low, high = np.min(image), np.max(image)
-                self.image_dict[f'Image {n}'] = {'ImageName': f'Image {n}',
+                self.image_dict[f'Image {n+1}'] = {'ImageName': f'Image {n+1}',
                                                 'ImageDir': self.imageDir,
                                                 'Image':image,
                                                  'Color': colorName,
