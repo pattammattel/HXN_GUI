@@ -85,7 +85,7 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
                 # squeeze to allow with pseudo 3D axis from some tomo recon (eg. 1, 100,100 array)
                 im_array = np.squeeze(tf.imread(image))
                 # set values for thresholding as image min and max
-                low, high = im_array.min(), im_array.max()
+                low, high = np.min(im_array), np.max(im_array)
                 # name of the tiff file is chosen as key for the dictionary,
                 # inner keys are properties set for that image
                 im_name = os.path.basename(image)
@@ -111,7 +111,7 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
             assert im_stack.ndim == 3, "Not a stack"
 
             for n, (colorName, image) in enumerate(zip(cmap_dict.keys(), im_stack)):
-                low, high = image.min(), image.max()
+                low, high = np.min(image), np.max(image)
                 self.image_dict[f'Image {n}'] = {'ImageName': f'Image {n}',
                                                 'ImageDir': self.imageDir,
                                                 'Image':image,
@@ -134,7 +134,7 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         cmap = pg.ColorMap(pos=np.linspace(0, 1, len(colormap)), color=colormap)
         #image = np.squeeze(tf.imread(image_path))
         # set image to the image item with cmap
-        img.setImage(image, lut=cmap.getLookupTable(), opacity = opacity)
+        img.setImage(np.array(image), lut=cmap.getLookupTable(), opacity = opacity)
 
         # set colorbar for thresholding
         bar = pg.ColorBarItem(
@@ -173,7 +173,7 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
             self.listWidget.setCurrentRow(0)
 
     def sliderSetUp(self, im_array):
-        low = (im_array.min() / im_array.max()) * 100
+        low = (np.min(im_array) / np.max(im_array)) * 100
 
         self.sldr_low.setMaximum(100)
         self.sldr_low.setMinimum(low)
@@ -186,8 +186,8 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         editItemColor = editItem.split(',')[1]
         im_array = self.image_dict[editItemName]['Image']
         self.sliderSetUp(im_array)
-        setValLow = (self.image_dict[editItemName]['CmapLimits'][0] * 100) / im_array.max()
-        setValHigh = (self.image_dict[editItemName]['CmapLimits'][1] * 100) / im_array.max()
+        setValLow = (self.image_dict[editItemName]['CmapLimits'][0] * 100) / np.max(im_array)
+        setValHigh = (self.image_dict[editItemName]['CmapLimits'][1] * 100) / np.max(im_array)
         setOpacity = self.image_dict[editItemName]['Opacity'] * 100
         self.sldr_low.setValue(int(setValLow))
         self.sldr_high.setValue(int(setValHigh))
@@ -204,8 +204,8 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
         self.imageDir = self.image_dict[editItemName]['ImageDir']
         im_array = self.image_dict[editItemName]['Image']
         self.sliderSetUp(im_array)
-        cmap_limits = (self.sldr_low.value() * im_array.max() / 100,
-                       self.sldr_high.value() * im_array.max() / 100)
+        cmap_limits = (self.sldr_low.value() * np.max(im_array) / 100,
+                       self.sldr_high.value() * np.max(im_array) / 100)
         self.low_high_vals.setText(f'low:{cmap_limits[0]:.2f},high:{cmap_limits[1]:.2f}')
         opacity = self.sldr_opacity.value()/100
         self.opacity_val.setText(str(opacity))
