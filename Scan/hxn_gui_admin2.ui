@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1268</width>
+    <width>1475</width>
     <height>1348</height>
    </rect>
   </property>
@@ -1215,7 +1215,7 @@ font: 15pt &quot;Modern No. 20&quot;;
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>1202</width>
+                 <width>1284</width>
                  <height>420</height>
                 </rect>
                </property>
@@ -1897,7 +1897,7 @@ font: 15pt &quot;Modern No. 20&quot;;
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>1202</width>
+                 <width>1284</width>
                  <height>420</height>
                 </rect>
                </property>
@@ -2099,7 +2099,7 @@ font: 15pt &quot;Modern No. 20&quot;;
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>1202</width>
+                 <width>1284</width>
                  <height>420</height>
                 </rect>
                </property>
@@ -4679,7 +4679,7 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>1224</width>
+             <width>1306</width>
              <height>359</height>
             </rect>
            </property>
@@ -4971,8 +4971,8 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>1233</width>
-             <height>364</height>
+             <width>372</width>
+             <height>282</height>
             </rect>
            </property>
            <attribute name="label">
@@ -5340,8 +5340,8 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>1233</width>
-             <height>373</height>
+             <width>616</width>
+             <height>241</height>
             </rect>
            </property>
            <attribute name="label">
@@ -5790,8 +5790,8 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>1233</width>
-             <height>359</height>
+             <width>100</width>
+             <height>30</height>
             </rect>
            </property>
            <attribute name="label">
@@ -6859,7 +6859,7 @@ Click Auto Refill He Button</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1268</width>
+     <width>1475</width>
      <height>27</height>
     </rect>
    </property>

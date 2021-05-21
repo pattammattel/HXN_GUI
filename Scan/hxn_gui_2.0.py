@@ -24,7 +24,8 @@ from xanes2d import *
 class Ui(QtWidgets.QMainWindow):
     def __init__(self):
         super(Ui, self).__init__()
-        uic.loadUi('/home/xf03id/user_macros/HXN_GUI/Scan/hxn_gui_admin2.ui', self)
+        ui_path = os.path.dirname(os.path.abspath(__file__))
+        uic.loadUi(os.path.join(ui_path, "hxn_gui_admin2.ui"), self)
         self.initParams()
         self.ImageCorrelationPage()
         self.webbrowserSetUpHxnWS1()
