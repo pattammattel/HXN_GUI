@@ -1215,8 +1215,8 @@ font: 15pt &quot;Modern No. 20&quot;;
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>1284</width>
-                 <height>420</height>
+                 <width>1409</width>
+                 <height>412</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1897,8 +1897,8 @@ font: 15pt &quot;Modern No. 20&quot;;
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>1284</width>
-                 <height>420</height>
+                 <width>1409</width>
+                 <height>412</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -2099,8 +2099,8 @@ font: 15pt &quot;Modern No. 20&quot;;
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>1284</width>
-                 <height>420</height>
+                 <width>1388</width>
+                 <height>431</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -2911,8 +2911,8 @@ font: 15pt &quot;Modern No. 20&quot;;
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>822</width>
-                 <height>112</height>
+                 <width>966</width>
+                 <height>116</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -4679,8 +4679,8 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>1306</width>
-             <height>359</height>
+             <width>1431</width>
+             <height>343</height>
             </rect>
            </property>
            <attribute name="label">
@@ -4971,8 +4971,8 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>372</width>
-             <height>282</height>
+             <width>436</width>
+             <height>296</height>
             </rect>
            </property>
            <attribute name="label">
@@ -5340,8 +5340,8 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>616</width>
-             <height>241</height>
+             <width>726</width>
+             <height>255</height>
             </rect>
            </property>
            <attribute name="label">
@@ -6052,14 +6052,14 @@ font: 12pt &quot;MS Shell Dlg 2&quot;;</string>
               </widget>
              </item>
              <item row="4" column="0">
-              <widget class="QPushButton" name="pushButton_16">
+              <widget class="QPushButton" name="pb_export_param">
                <property name="text">
                 <string>Save Scaling Parameters</string>
                </property>
               </widget>
              </item>
              <item row="5" column="0">
-              <widget class="QPushButton" name="pushButton_17">
+              <widget class="QPushButton" name="pb_import_param">
                <property name="text">
                 <string>Load Scaling Parameters</string>
                </property>
@@ -6860,7 +6860,7 @@ Click Auto Refill He Button</string>
      <x>0</x>
      <y>0</y>
      <width>1475</width>
-     <height>27</height>
+     <height>34</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuOptions">

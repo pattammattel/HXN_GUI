@@ -77,11 +77,11 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_move_dth_pos.clicked.connect(self.move_dsth)
         self.pb_move_zpz_pos.clicked.connect(self.move_zpz1)
 
-        self.pb_move_smarx_neg.clicked.connect(self.move_smarx(neg_=True))
-        self.pb_move_smary_neg.clicked.connect(self.move_smary(neg_=True))
-        self.pb_move_smarz_neg.clicked.connect(self.move_smarz(neg_=True))
-        self.pb_move_dth_neg.clicked.connect(self.move_dsth(neg_=True))
-        self.pb_move_zpz_neg.clicked.connect(self.move_zpz1(neg_=True))
+        self.pb_move_smarx_neg.clicked.connect(lambda:self.move_smarx(neg_=True))
+        self.pb_move_smary_neg.clicked.connect(lambda:self.move_smary(neg_=True))
+        self.pb_move_smarz_neg.clicked.connect(lambda:self.move_smarz(neg_=True))
+        self.pb_move_dth_pos_neg.clicked.connect(lambda:self.move_dsth(neg_=True))
+        self.pb_move_zpz_neg.clicked.connect(lambda:self.move_zpz1(neg_=True))
 
         # Detector/Camera Motions
         self.pb_merlinOUT.clicked.connect(self.merlinOUT)
