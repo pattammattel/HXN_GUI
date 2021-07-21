@@ -1,17 +1,80 @@
 #conda activate analysis-2019-3.0-hxn-clone2
 
-import sys, os, time, subprocess, logging,gc
+import sys, os, time, subprocess, logging,gc,h5py,traceback
 import matplotlib.pyplot as plt
 import numpy as np
 import time
 
-from PyQt5.QtCore import QThread
+from PyQt5.QtCore import QObject, QTimer, QThread, pyqtSignal, pyqtSlot, QRunnable, QThreadPool
 from PyQt5 import QtWidgets, uic
 from PyQt5.QtWidgets import QMessageBox, QFileDialog
 from pyxrf.api import *
 from epics import caget
 
 logger = logging.getLogger()
+
+
+def getEnergyNScalar(h='h5file'):
+    """
+    Function retrieve the ion chamber readings and
+    mono energy from an h5 file created within pyxrf at HXN
+
+    input: h5 file path
+    output1: normalized IC3 reading ("float")
+    output2: mono energy ("float")
+
+    """
+    # open the h5
+
+
+    f = h5py.File(h, 'r')
+    # get Io and IC3,  edges are removeed to exclude nany dropped frame or delayed reading
+    Io = np.array(f['xrfmap/scalers/val'])[1:-1, 1:-1, 0].mean()
+    I = np.array(f['xrfmap/scalers/val'])[1:-1, 1:-1, 2].mean()
+    # get monoe
+    mono_e = f['xrfmap/scan_metadata'].attrs['instrument_mono_incident_energy']
+
+    # return values
+    return I / Io, mono_e
+
+
+def getCalibSpectrum(path_ = os.getcwd()):
+    """
+
+	Get the I/Io and enegry value from all the h5 files in the given folder
+
+	input: path to folder (string), if none, use current working directory
+	output: calibration array containing energy in column and log(I/Io) in the other (np.array)
+
+
+	"""
+
+    # get the all the files in the directory
+    fileList = os.listdir(path_)
+
+    # empty list to add values
+    spectrum = []
+    energyList = []
+
+    for file in sorted(fileList):
+        if file.endswith('.h5'):  # filer for h5
+            IbyIo, mono_e = getEnergyNScalar(h=file)
+            energyList.append(mono_e)
+            spectrum.append(IbyIo)
+
+    # get the output in two column format
+    calib_spectrum = np.column_stack([energyList, (-1 * np.log10(spectrum))])
+    #sort by energy
+    calib_spectrum = calib_spectrum[np.argsort(calib_spectrum[:, 0])]
+    # save as txt to the parent folder
+    np.savetxt('calibration_spectrum.txt', calib_spectrum)
+    logger.info("calibration spectrum saved in : {path_} ")
+
+    # plot results
+    plt.plot(calib_spectrum[:, 0], calib_spectrum[:, 1])
+    plt.ioff()
+    plt.gcf().show()
+
 
 
 def hxn_auto_loader(wd, param_file_name, scaler_name, buffer_time = 100, hdf = True, xrf_fit = True):
@@ -52,6 +115,8 @@ def hxn_auto_loader(wd, param_file_name, scaler_name, buffer_time = 100, hdf = T
 
     print('\n**waitng for next scan to complete**\n')
 
+    def
+
 
 class xrf_3ID(QtWidgets.QMainWindow):
     def __init__(self):
@@ -62,7 +127,8 @@ class xrf_3ID(QtWidgets.QMainWindow):
         self.pb_param.clicked.connect(self.get_param)
         self.pb_ref.clicked.connect(self.get_ref_file)
         self.pb_start.clicked.connect(self.create_xanes_macro)
-        self.pb_xrf_start.clicked.connect(self.create_pyxrf_batch_macro)
+
+        self.pb_xrf_start.clicked.connect(lambda: self.threadMaker(self.create_pyxrf_batch_macro))
         self.pb_live.clicked.connect(self.start_auto)
         self.pb_open_pyxrf.clicked.connect(self.open_pyxrf)
         self.pb_close_plots.clicked.connect(self.close_all_plots)
@@ -198,6 +264,61 @@ class xrf_3ID(QtWidgets.QMainWindow):
             h = db[sid]
             self.pte_status.clear()
             self.pte_status.appendPlainText(str(h.start['detectors']))
+
+    def threadMaker(self, funct):
+        # Pass the function to execute
+        worker = Worker(funct)  # Any other args, kwargs are passed to the run function
+        worker.signals.result.connect(self.print_output)
+        worker.signals.finished.connect(self.thread_complete)
+        # Execute
+        self.threadpool.start(worker)
+
+
+class WorkerSignals(QObject):
+    '''
+    Defines the signals available from a running worker thread.
+    Supported signals are:
+    - finished: No data
+    - error:`tuple` (exctype, value, traceback.format_exc() )
+    - result: `object` data returned from processing, anything
+    - progress: `tuple` indicating progress metadata
+    '''
+    start = pyqtSignal()
+    finished = pyqtSignal()
+    error = pyqtSignal(tuple)
+    result = pyqtSignal(object)
+
+class Worker(QRunnable):
+    '''
+    Worker thread
+    Inherits from QRunnable to handler worker thread setup, signals and wrap-up.
+    '''
+
+    def __init__(self, fn, *args, **kwargs):
+        super(Worker, self).__init__()
+        # Store constructor arguments (re-used for processing)
+        self.fn = fn
+        self.args = args
+        self.kwargs = kwargs
+        self.signals = WorkerSignals()
+
+    @pyqtSlot()
+    def run(self):
+        '''
+        Initialise the runner function with passed args, kwargs.
+        '''
+        # Retrieve args/kwargs here; and fire processing using them
+        self.signals.start.emit()
+        try:
+            result = self.fn(*self.args, **self.kwargs)
+        except:
+            traceback.print_exc()
+            exctype, value = sys.exc_info()[:2]
+            self.signals.error.emit((exctype, value, traceback.format_exc()))
+        else:
+            self.signals.result.emit(result)  # Return the result of the processing
+        finally:
+            self.signals.finished.emit()  # Done
 
 
 if __name__ == "__main__":
