@@ -115,8 +115,6 @@ def hxn_auto_loader(wd, param_file_name, scaler_name, buffer_time = 100, hdf = T
 
     print('\n**waitng for next scan to complete**\n')
 
-    def
-
 
 class xrf_3ID(QtWidgets.QMainWindow):
     def __init__(self):
@@ -264,6 +262,15 @@ class xrf_3ID(QtWidgets.QMainWindow):
             h = db[sid]
             self.pte_status.clear()
             self.pte_status.appendPlainText(str(h.start['detectors']))
+
+    # Thread Signals
+
+    def print_output(self, s):
+        print(s)
+
+    def thread_complete(self):
+        print("THREAD COMPLETE!")
+
 
     def threadMaker(self, funct):
         # Pass the function to execute
