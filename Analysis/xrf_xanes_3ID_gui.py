@@ -70,8 +70,6 @@ class xrf_3ID(QtWidgets.QMainWindow):
         self.pb_scan_meta.clicked.connect(self.print_metadata)
         self.pb_scan_dets.clicked.connect(self.print_dets)
 
-    
-
         self.show()
 
     def get_wd(self):
@@ -127,8 +125,34 @@ class xrf_3ID(QtWidgets.QMainWindow):
         save_all = self.ch_b_save_all_tiffs.isChecked()
         pre_edge = self.ch_b_baseline.isChecked()
         align = self.cb_align.isChecked()
-        
 
+        build_xanes_map_param = {}
+        build_xanes_map_param["cwd"] = self.le_wd.text()
+        build_xanes_map_param["param"] = self.le_param.text()
+        build_xanes_map_param["last_sid"] = int(self.le_lastid.text())
+        build_xanes_map_param["first_sid"] = int(self.le_startid.text())
+        build_xanes_map_param["ref"] = self.le_ref.text()
+        build_xanes_map_param["fit_method"] = self.cb_fittin_method.currentText()
+        build_xanes_map_param["elem"] = self.xanes_elem.text()
+        build_xanes_map_param["align_elem"] = self.alignment_elem.text()
+        build_xanes_map_param["e_shift"] = float(self.energy_shift.text())
+        build_xanes_map_param["admm_lambda"] = int(self.nnls_lamda.text())
+        build_xanes_map_param["work_flow"] = self.cb_process.currentText()
+        build_xanes_map_param["norm"] = self.le_sclr.text()
+        build_xanes_map_param["save_all"] = self.ch_b_save_all_tiffs.isChecked()
+        build_xanes_map_param["pre_edge"] = self.ch_b_baseline.isChecked()
+        build_xanes_map_param["align"] = self.cb_align.isChecked()
+		
+        self.pte_status.appendPlainText(str(build_xanes_map_param))
+        '''
+        build_xanes_map(first_sid, last_sid, wd = cwd,xrf_subdir = cwd, xrf_fitting_param_fln=param,
+                        scaler_name=norm,sequence=work_flow,
+                        ref_file_name=ref, fitting_method=fit_method,
+                        emission_line=elem, emission_line_alignment=align_elem,
+                        incident_energy_shift_keV=(e_shift*0.001), subtract_pre_edge_baseline = pre_edge,
+                        alignment_enable = align, output_save_all = save_all, use_incident_energy_from_param_file = True)
+		'''
+		
         build_xanes_map(first_sid, last_sid, wd = cwd,xrf_subdir = cwd, xrf_fitting_param_fln=param,
                         scaler_name=norm,sequence=work_flow,
                         ref_file_name=ref, fitting_method=fit_method,

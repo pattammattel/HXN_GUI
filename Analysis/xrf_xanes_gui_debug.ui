@@ -19,6 +19,9 @@
     <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
    </property>
    <layout class="QGridLayout" name="gridLayout_14">
+    <item row="4" column="0">
+     <widget class="QPlainTextEdit" name="pte_status"/>
+    </item>
     <item row="0" column="0" colspan="2">
      <widget class="QGroupBox" name="groupBox">
       <property name="sizePolicy">
@@ -180,15 +183,12 @@
      </widget>
     </item>
     <item row="3" column="0">
-     <widget class="QPlainTextEdit" name="pte_status"/>
-    </item>
-    <item row="2" column="0">
      <widget class="QTabWidget" name="tabWidget">
       <property name="styleSheet">
        <string notr="true">font: 12pt &quot;MS Shell Dlg 2&quot;;</string>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="tab_2">
        <attribute name="title">
@@ -661,6 +661,88 @@ font: 75 10pt &quot;MS Shell Dlg 2&quot;;</string>
            </size>
           </property>
          </spacer>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tab_4">
+       <attribute name="title">
+        <string>XANES_Calibration</string>
+       </attribute>
+       <layout class="QGridLayout" name="gridLayout_20">
+        <item row="0" column="0">
+         <layout class="QGridLayout" name="gridLayout_18">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_11">
+            <property name="text">
+             <string>IC1</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLineEdit" name="le_sclr2_calib">
+            <property name="text">
+             <string>sclr1_ch2</string>
+            </property>
+            <property name="placeholderText">
+             <string>Fe_K</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item row="1" column="0">
+         <spacer name="verticalSpacer_4">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>190</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="0" column="1">
+         <layout class="QGridLayout" name="gridLayout_19">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_12">
+            <property name="text">
+             <string>IC3</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLineEdit" name="le_sclr4_calib">
+            <property name="text">
+             <string>sclr1_ch4</string>
+            </property>
+            <property name="placeholderText">
+             <string>Fe_K</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item row="0" column="3">
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="0" column="2">
+         <widget class="QPushButton" name="pb_xanes_calib">
+          <property name="text">
+           <string>Start</string>
+          </property>
+         </widget>
         </item>
        </layout>
       </widget>
