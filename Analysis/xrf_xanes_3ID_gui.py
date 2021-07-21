@@ -124,15 +124,18 @@ class xrf_3ID(QtWidgets.QMainWindow):
         self.pb_wd.clicked.connect(self.get_wd)
         self.pb_param.clicked.connect(self.get_param)
         self.pb_ref.clicked.connect(self.get_ref_file)
-        self.pb_start.clicked.connect(self.create_xanes_macro)
 
+        self.pb_start.clicked.connect(lambda: self.threadMaker(self.create_xanes_macro))
         self.pb_xrf_start.clicked.connect(lambda: self.threadMaker(self.create_pyxrf_batch_macro))
-        self.pb_live.clicked.connect(self.start_auto)
+        self.pb_live.clicked.connect(lambda: self.threadMaker(self.start_auto))
+
         self.pb_open_pyxrf.clicked.connect(self.open_pyxrf)
         self.pb_close_plots.clicked.connect(self.close_all_plots)
         
         self.pb_scan_meta.clicked.connect(self.print_metadata)
         self.pb_scan_dets.clicked.connect(self.print_dets)
+        self.threadpool = QThreadPool()
+        print(f"Multithreading with maximum  {self.threadpool.maxThreadCount()} threads")
 
         self.show()
 
