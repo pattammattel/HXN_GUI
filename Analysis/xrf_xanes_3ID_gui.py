@@ -1,6 +1,6 @@
-#conda activate analysis-2019-3.0-hxn-clone2
+# conda activate analysis-2019-3.0-hxn-clone2
 
-import sys, os, time, subprocess, logging,gc,h5py,traceback
+import sys, os, time, subprocess, logging, gc, h5py, traceback
 import matplotlib.pyplot as plt
 import numpy as np
 import time
@@ -12,7 +12,7 @@ from pyxrf.api import *
 from epics import caget
 
 logger = logging.getLogger()
-
+ui_path = os.path.dirname(os.path.abspath(__file__))
 
 def getEnergyNScalar(h='h5file'):
     """
@@ -26,7 +26,6 @@ def getEnergyNScalar(h='h5file'):
     """
     # open the h5
 
-
     f = h5py.File(h, 'r')
     # get Io and IC3,  edges are removeed to exclude nany dropped frame or delayed reading
     Io = np.array(f['xrfmap/scalers/val'])[1:-1, 1:-1, 0].mean()
@@ -38,15 +37,14 @@ def getEnergyNScalar(h='h5file'):
     return I / Io, mono_e
 
 
-def getCalibSpectrum(path_ = os.getcwd()):
+def getCalibSpectrum(path_=os.getcwd()):
     """
-
 	Get the I/Io and enegry value from all the h5 files in the given folder
 
+	-------------
 	input: path to folder (string), if none, use current working directory
 	output: calibration array containing energy in column and log(I/Io) in the other (np.array)
-
-
+    -------------
 	"""
 
     # get the all the files in the directory
@@ -64,7 +62,7 @@ def getCalibSpectrum(path_ = os.getcwd()):
 
     # get the output in two column format
     calib_spectrum = np.column_stack([energyList, (-1 * np.log10(spectrum))])
-    #sort by energy
+    # sort by energy
     calib_spectrum = calib_spectrum[np.argsort(calib_spectrum[:, 0])]
     # save as txt to the parent folder
     np.savetxt('calibration_spectrum.txt', calib_spectrum)
@@ -76,13 +74,12 @@ def getCalibSpectrum(path_ = os.getcwd()):
     plt.gcf().show()
 
 
-
-def hxn_auto_loader(wd, param_file_name, scaler_name, buffer_time = 100, hdf = True, xrf_fit = True):
+def hxn_auto_loader(wd, param_file_name, scaler_name, buffer_time=100, hdf=True, xrf_fit=True):
     sid = 100
     printed = False
 
     while True:
-    
+
         gc.collect()
 
         while caget('XF:03IDC-ES{Sclr:2}_cts1.B') < 5000:
@@ -101,11 +98,11 @@ def hxn_auto_loader(wd, param_file_name, scaler_name, buffer_time = 100, hdf = T
 
             if bool(hdr.stop):
                 try:
-                
-                    if hdf: 
+
+                    if hdf:
                         make_hdf(sid, wd=wd, file_overwrite_existing=True)
-                        
-                    if xrf_fit: 
+
+                    if xrf_fit:
                         pyxrf_batch(sid, sid, wd=wd, param_file_name=param_file_name, scaler_name=scaler_name)
 
                     time.sleep(buffer_time)
@@ -119,7 +116,7 @@ def hxn_auto_loader(wd, param_file_name, scaler_name, buffer_time = 100, hdf = T
 class xrf_3ID(QtWidgets.QMainWindow):
     def __init__(self):
         super(xrf_3ID, self).__init__()
-        uic.loadUi("/GPFS/XF03ID1/home/xf03id/user_macros/HXN_GUI/Analysis/xrf_xanes_gui_debug.ui", self)
+        uic.loadUi(os.path.join(ui_path, "xrf_xanes_3ID_gui.ui"), self)
 
         self.pb_wd.clicked.connect(self.get_wd)
         self.pb_param.clicked.connect(self.get_param)
@@ -131,7 +128,7 @@ class xrf_3ID(QtWidgets.QMainWindow):
 
         self.pb_open_pyxrf.clicked.connect(self.open_pyxrf)
         self.pb_close_plots.clicked.connect(self.close_all_plots)
-        
+
         self.pb_scan_meta.clicked.connect(self.print_metadata)
         self.pb_scan_dets.clicked.connect(self.print_dets)
         self.threadpool = QThreadPool()
@@ -142,38 +139,35 @@ class xrf_3ID(QtWidgets.QMainWindow):
     def get_wd(self):
         folder_path = QFileDialog().getExistingDirectory(self, "Select Folder")
         self.le_wd.setText(str(folder_path))
-    
+
     def get_param(self):
         file_name = QFileDialog().getOpenFileName(self, "Open file", '', 'json file (*.json)')
         self.le_param.setText(str(file_name[0]))
-        
+
     def get_ref_file(self):
         file_name = QFileDialog().getOpenFileName(self, "Open file", '', 'ref file (*.txt, *.nor, *.csv)')
         self.le_ref.setText(str(file_name[0]))
-        
-    
+
     def create_pyxrf_batch_macro(self):
-    
+
         cwd = self.le_wd.text()
         last_sid = int(self.le_lastid.text())
         first_sid = int(self.le_startid.text())
         norm = self.le_sclr_2.text()
-        all_sid = np.arange(first_sid, last_sid+1)
+        all_sid = np.arange(first_sid, last_sid + 1)
         logger.info(f'scans to process {all_sid}')
 
         self.pte_status.clear()
         self.pte_status.appendPlainText("All the h5 files will be created first followed by XRF Fitting")
-        
+
         for sids in all_sid:
             if self.rb_make_hdf.isChecked():
-                make_hdf(int(sids),int(sids), wd = cwd, file_overwrite_existing=True)
-                
+                make_hdf(int(sids), int(sids), wd=cwd, file_overwrite_existing=True)
+
             if self.rb_xrf_fit.isChecked():
                 param = self.le_param.text()
-                pyxrf_batch(int(sids), int(sids), wd = cwd, param_file_name =param, scaler_name=norm, save_tiff = True)
-             
-        
-                                   
+                pyxrf_batch(int(sids), int(sids), wd=cwd, param_file_name=param, scaler_name=norm, save_tiff=True)
+
     def create_xanes_macro(self):
 
         gc.collect()
@@ -209,7 +203,7 @@ class xrf_3ID(QtWidgets.QMainWindow):
         build_xanes_map_param["save_all"] = self.ch_b_save_all_tiffs.isChecked()
         build_xanes_map_param["pre_edge"] = self.ch_b_baseline.isChecked()
         build_xanes_map_param["align"] = self.cb_align.isChecked()
-		
+
         self.pte_status.appendPlainText(str(build_xanes_map_param))
         '''
         build_xanes_map(first_sid, last_sid, wd = cwd,xrf_subdir = cwd, xrf_fitting_param_fln=param,
@@ -219,15 +213,24 @@ class xrf_3ID(QtWidgets.QMainWindow):
                         incident_energy_shift_keV=(e_shift*0.001), subtract_pre_edge_baseline = pre_edge,
                         alignment_enable = align, output_save_all = save_all, use_incident_energy_from_param_file = True)
 		'''
-		
-        build_xanes_map(first_sid, last_sid, wd = cwd,xrf_subdir = cwd, xrf_fitting_param_fln=param,
-                        scaler_name=norm,sequence=work_flow,
+
+        build_xanes_map(first_sid, last_sid, wd=cwd, xrf_subdir=cwd, xrf_fitting_param_fln=param,
+                        scaler_name=norm, sequence=work_flow,
                         ref_file_name=ref, fitting_method=fit_method,
                         emission_line=elem, emission_line_alignment=align_elem,
-                        incident_energy_shift_keV=(e_shift*0.001), subtract_pre_edge_baseline = pre_edge,
-                        alignment_enable = align, output_save_all = save_all, use_incident_energy_from_param_file = True)
-                                                                             
-                    
+                        incident_energy_shift_keV=(e_shift * 0.001), subtract_pre_edge_baseline=pre_edge,
+                        alignment_enable=align, output_save_all=save_all, use_incident_energy_from_param_file=True)
+
+    def getCalibrationData(self):
+
+        cwd = self.le_wd.text()
+        last_sid = int(self.le_lastid.text())
+        first_sid = int(self.le_startid.text())
+
+        make_hdf(first_sid, last_sid, wd=cwd, file_overwrite_existing=True)
+        getCalibSpectrum(path_= cwd)
+
+
     def start_auto(self):
         self.pte_status.clear()
         self.pte_status.appendPlainText("live started")
@@ -241,30 +244,29 @@ class xrf_3ID(QtWidgets.QMainWindow):
         QThread.sleep(5)
         self.pb_live.setStyleSheet("background-color: rgb(0, 93, 29)")
         QThread.sleep(10)
-        hxn_auto_loader(wd = cwd,param_file_name = param,scaler_name=norm, 
-                buffer_time = self.sb_buffer_time.value(), hdf = self.rb_make_hdf.isChecked(), 
-                xrf_fit = self.rb_xrf_fit.isChecked())
-        
+        hxn_auto_loader(wd=cwd, param_file_name=param, scaler_name=norm,
+                        buffer_time=self.sb_buffer_time.value(), hdf=self.rb_make_hdf.isChecked(),
+                        xrf_fit=self.rb_xrf_fit.isChecked())
+
         QThread.sleep(2)
-                    
+
     def open_pyxrf(self):
-           subprocess.Popen(['pyxrf'])
+        subprocess.Popen(['pyxrf'])
 
     def close_all_plots(self):
-            return plt.close('all')
-            
-            
+        return plt.close('all')
+
     def print_metadata(self):
-            sid = int(self.le_sid_meta.text())
-            h = db[sid]
-            self.pte_status.clear()
-            self.pte_status.appendPlainText(str(h.start))
-            
+        sid = int(self.le_sid_meta.text())
+        h = db[sid]
+        self.pte_status.clear()
+        self.pte_status.appendPlainText(str(h.start))
+
     def print_dets(self):
-            sid = int(self.le_sid_meta.text())
-            h = db[sid]
-            self.pte_status.clear()
-            self.pte_status.appendPlainText(str(h.start['detectors']))
+        sid = int(self.le_sid_meta.text())
+        h = db[sid]
+        self.pte_status.clear()
+        self.pte_status.appendPlainText(str(h.start['detectors']))
 
     # Thread Signals
 
@@ -273,7 +275,6 @@ class xrf_3ID(QtWidgets.QMainWindow):
 
     def thread_complete(self):
         print("THREAD COMPLETE!")
-
 
     def threadMaker(self, funct):
         # Pass the function to execute
@@ -297,6 +298,7 @@ class WorkerSignals(QObject):
     finished = pyqtSignal()
     error = pyqtSignal(tuple)
     result = pyqtSignal(object)
+
 
 class Worker(QRunnable):
     '''
@@ -333,17 +335,15 @@ class Worker(QRunnable):
 
 if __name__ == "__main__":
 
-    
-
     formatter = logging.Formatter(fmt='%(asctime)s : %(levelname)s : %(message)s')
-    
+
     stream_handler = logging.StreamHandler()
     stream_handler.setFormatter(formatter)
     stream_handler.setLevel(logging.INFO)
     if (logger.hasHandlers()):
-      logger.handlers.clear()
+        logger.handlers.clear()
     logger.addHandler(stream_handler)
-    
+
     app = QtWidgets.QApplication(sys.argv)
     window = xrf_3ID()
     window.show()
