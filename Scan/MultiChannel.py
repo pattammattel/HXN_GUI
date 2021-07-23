@@ -189,7 +189,6 @@ class MultiChannelWindow(QtWidgets.QMainWindow):
             else:
                 pass
 
-
     def sliderSetUp(self, im_array):
         """ Setting the slider min and max from image values"""
 

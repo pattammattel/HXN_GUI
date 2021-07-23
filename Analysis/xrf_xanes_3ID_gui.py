@@ -4,6 +4,7 @@ import sys, os, time, subprocess, logging, gc, h5py, traceback
 import matplotlib.pyplot as plt
 import numpy as np
 import time
+import pyqtgraph as pg
 
 from PyQt5.QtCore import QObject, QTimer, QThread, pyqtSignal, pyqtSlot, QRunnable, QThreadPool
 from PyQt5 import QtWidgets, uic
@@ -13,6 +14,12 @@ from epics import caget
 
 logger = logging.getLogger()
 ui_path = os.path.dirname(os.path.abspath(__file__))
+
+def absoluteFilePaths(directory):
+    for dirpath,_,filenames in os.walk(directory):
+        for f in filenames:
+            yield os.path.abspath(os.path.join(dirpath, f))
+
 
 def getEnergyNScalar(h='h5file'):
     """
@@ -32,7 +39,7 @@ def getEnergyNScalar(h='h5file'):
     I = np.array(f['xrfmap/scalers/val'])[1:-1, 1:-1, 2].mean()
     # get monoe
     mono_e = f['xrfmap/scan_metadata'].attrs['instrument_mono_incident_energy']
-
+    f.close()
     # return values
     return I / Io, mono_e
 
@@ -48,7 +55,7 @@ def getCalibSpectrum(path_=os.getcwd()):
 	"""
 
     # get the all the files in the directory
-    fileList = os.listdir(path_)
+    fileList = list(absoluteFilePaths(path_))
 
     # empty list to add values
     spectrum = []
@@ -65,13 +72,11 @@ def getCalibSpectrum(path_=os.getcwd()):
     # sort by energy
     calib_spectrum = calib_spectrum[np.argsort(calib_spectrum[:, 0])]
     # save as txt to the parent folder
-    np.savetxt('calibration_spectrum.txt', calib_spectrum)
+    #np.savetxt('calibration_spectrum.txt', calib_spectrum)
     logger.info("calibration spectrum saved in : {path_} ")
 
-    # plot results
-    plt.plot(calib_spectrum[:, 0], calib_spectrum[:, 1])
-    plt.ioff()
-    plt.gcf().show()
+    return calib_spectrum
+
 
 
 def hxn_auto_loader(wd, param_file_name, scaler_name, buffer_time=100, hdf=True, xrf_fit=True):
@@ -121,10 +126,17 @@ class xrf_3ID(QtWidgets.QMainWindow):
         self.pb_wd.clicked.connect(self.get_wd)
         self.pb_param.clicked.connect(self.get_param)
         self.pb_ref.clicked.connect(self.get_ref_file)
+        self.batchJob = {}
 
         self.pb_start.clicked.connect(lambda: self.threadMaker(self.create_xanes_macro))
         self.pb_xrf_start.clicked.connect(lambda: self.threadMaker(self.create_pyxrf_batch_macro))
         self.pb_live.clicked.connect(lambda: self.threadMaker(self.start_auto))
+        self.pb_xanes_calib.clicked.connect(self.getCalibrationData)
+        self.pb_plot_calib.clicked.connect(self.plotCalibration)
+        self.pb_save_calib.clicked.connect(self.saveCalibration)
+
+        #batchfiles
+        self.pb_addTobBatch.clicked.connect(self.addToXANESBatchJob)
 
         self.pb_open_pyxrf.clicked.connect(self.open_pyxrf)
         self.pb_close_plots.clicked.connect(self.close_all_plots)
@@ -168,9 +180,8 @@ class xrf_3ID(QtWidgets.QMainWindow):
                 param = self.le_param.text()
                 pyxrf_batch(int(sids), int(sids), wd=cwd, param_file_name=param, scaler_name=norm, save_tiff=True)
 
-    def create_xanes_macro(self):
+    def createParamDictXANES(self):
 
-        gc.collect()
         cwd = self.le_wd.text()
         param = self.le_param.text()
         last_sid = int(self.le_lastid.text())
@@ -205,6 +216,20 @@ class xrf_3ID(QtWidgets.QMainWindow):
         build_xanes_map_param["align"] = self.cb_align.isChecked()
 
         self.pte_status.appendPlainText(str(build_xanes_map_param))
+
+        return build_xanes_map_param
+
+    def addToXANESBatchJob(self):
+        self.batchJob[f"job_{len(self.batchJob)+1}"] = self.createParamDictXANES()
+        self.pte_status.appendPlainText(str(self.batchJob))
+
+    def runBatchFile(self):
+        pass
+
+    def create_xanes_macro(self):
+
+        gc.collect()
+
         '''
         build_xanes_map(first_sid, last_sid, wd = cwd,xrf_subdir = cwd, xrf_fitting_param_fln=param,
                         scaler_name=norm,sequence=work_flow,
@@ -226,10 +251,22 @@ class xrf_3ID(QtWidgets.QMainWindow):
         cwd = self.le_wd.text()
         last_sid = int(self.le_lastid.text())
         first_sid = int(self.le_startid.text())
-
         make_hdf(first_sid, last_sid, wd=cwd, file_overwrite_existing=True)
-        getCalibSpectrum(path_= cwd)
+        worker2 = Worker(getCalibSpectrum, path_ = cwd)
+        worker2.signals.result.connect(self.print_output)
+        list(map(worker2.signals.finished.connect, [self.thread_complete, self.plotCalibration]))
+        #self.calib_spec = getCalibSpectrum(path_= cwd)
 
+        self.pte_status.appendPlainText(str("calibration spec available"))
+
+    def plotCalibration(self):
+        if self.rb_calib_derivative.isChecked():
+            pg.plot(self.calib_spec[:, 0], np.gradient(self.calib_spec[:, 1]))
+        else:
+            pg.plot(self.calib_spec[:, 0], self.calib_spec[:, 1])
+
+    def saveCalibration(self):
+        np.savetxt(os.path.join(self.le_wd.text(),"calibration_spec.txt"), self.calib_spec)
 
     def start_auto(self):
         self.pte_status.clear()
