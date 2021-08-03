@@ -19,6 +19,7 @@ from PyQt5.QtCore import QObject, QTimer, QThread, pyqtSignal, pyqtSlot, QRunnab
 
 from pdf_log import *
 from xanes2d import *
+from xanesFunctions import *
 
 
 class Ui(QtWidgets.QMainWindow):
@@ -162,22 +163,26 @@ class Ui(QtWidgets.QMainWindow):
     def initParams(self):
         self.getScanValues()
 
-        cal_res_x = (abs(self.mot1_s) + abs(self.mot1_e)) / self.mot1_steps
-        cal_res_y = (abs(self.mot2_s) + abs(self.mot2_e)) / self.mot2_steps
+        cal_res_x = abs(self.mot1_e - self.mot1_s) / self.mot1_steps
+        cal_res_y = abs(self.mot2_e - self.mot2_s) / self.mot2_steps
         tot_t_2d = self.mot1_steps * self.mot2_steps * self.dwell_t / 60
         tot_t_1d = self.mot1_steps * self.dwell_t / 60
 
         if self.rb_1d.isChecked():
             self.label_scan_info_calc.setText(f'X: {(cal_res_x * 1000):.2f} nm, Y: {(cal_res_y * 1000):.2f} nm \n'
                                               f'{tot_t_1d:.2f} minutes + overhead')
-            self.label_scanMacro.setText(f'fly1d({self.det}, {self.mot1_s}, '
-                                         f'{self.mot1_e}, {self.mot1_steps}, {self.dwell_t:.3f})')
+            scan_plan = f'<fly1d({self.det}, {self.mot1_s},{self.mot1_e}, {self.mot1_steps}, {self.dwell_t:.3f})'
+
+
 
         else:
             self.label_scan_info_calc.setText(f'X: {(cal_res_x * 1000):.2f} nm, Y: {(cal_res_y * 1000):.2f} nm \n'
                                               f'{tot_t_2d:.2f} minutes + overhead')
-            self.label_scanMacro.setText(f'fly2d({self.det}, {self.mot1_s}, {self.mot1_e}, {self.mot1_steps}, '
-                                         f'{self.mot2_s},{self.mot2_e},{self.mot2_steps},{self.dwell_t:.3f})')
+            scan_plan = f'fly2d({self.det}, {self.mot1_s}, {self.mot1_e}, {self.mot1_steps},' \
+                        f'{self.mot2_s},{self.mot2_e},{self.mot2_steps},{self.dwell_t:.3f})'
+
+        self.label_scanMacro.setText(scan_plan)
+        self.ple_info.appendPlainText(scan_plan)
 
     def initFlyScan(self):
         self.getScanValues()
@@ -334,12 +339,12 @@ class Ui(QtWidgets.QMainWindow):
     #xanes
     def generate_epoints(self):
 
-        pre = np.linspace(self.dsb_pre_s.value(), self.dsb_pre_e.value(), self.sb_pre_p.value())
-        XANES1 = np.linspace(self.dsb_ed1_s.value(), self.dsb_ed1_e.value(), self.sb_ed1_p.value())
-        XANES2 = np.linspace(self.dsb_ed2_s.value(), self.dsb_ed2_e.value(), self.sb_ed2_p.value())
-        post = np.linspace(self.dsb_post_s.value(), self.dsb_post_e.value(), self.sb_post_p.value())
+        pre = (self.dsb_pre_s.value(), self.dsb_pre_e.value(), self.sb_pre_p.value())
+        XANES1 = (self.dsb_ed1_s.value(), self.dsb_ed1_e.value(), self.sb_ed1_p.value())
+        XANES2 = (self.dsb_ed2_s.value(), self.dsb_ed2_e.value(), self.sb_ed2_p.value())
+        post = (self.dsb_post_s.value(), self.dsb_post_e.value(), self.sb_post_p.value())
 
-        self.energies = np.concatenate([pre, XANES1, XANES2, post])
+        self.energies = generateEPoints(ePointsGen=[pre,XANES1,XANES2,post])
         self.ple_info.setPlainText(str(self.energies))
 
     def importEPoints(self):
@@ -363,7 +368,7 @@ class Ui(QtWidgets.QMainWindow):
 
     def importXanesParams(self):
 
-        file_name = QFileDialog().getOpenFileName(self, "Save Parameter File", ' ',
+        file_name = QFileDialog().getOpenFileName(self, "Load Parameter File", ' ',
                                                                  'json file(*json)')
         if file_name:
             with open(file_name[0], 'r') as fp:
@@ -429,6 +434,11 @@ class Ui(QtWidgets.QMainWindow):
             pass
 
     def generateEList(self):
+        ZnXANES = {'high_e': 9.7, 'low_e': 9.6,
+                   'high_e_ugap': 6480, 'low_e_ugap': 6430,
+                   'high_e_crl': 7, 'low_e_crl': 2,
+                   'high_e_zpz1': 50.92, 'zpz1_slope': -5.9,
+                   'energyFrame': self.energies}
 
         if not len(self.energies) == 0:
 

@@ -128,15 +128,18 @@ class xrf_3ID(QtWidgets.QMainWindow):
         self.pb_ref.clicked.connect(self.get_ref_file)
         self.batchJob = {}
 
-        self.pb_start.clicked.connect(lambda: self.threadMaker(self.create_xanes_macro))
-        self.pb_xrf_start.clicked.connect(lambda: self.threadMaker(self.create_pyxrf_batch_macro))
-        self.pb_live.clicked.connect(lambda: self.threadMaker(self.start_auto))
+        self.pb_start.clicked.connect(self.runSingleXANESJob)
+        self.pb_xrf_start.clicked.connect(self.create_pyxrf_batch_macro)
+        self.pb_live.clicked.connect(self.start_auto)
         self.pb_xanes_calib.clicked.connect(self.getCalibrationData)
         self.pb_plot_calib.clicked.connect(self.plotCalibration)
         self.pb_save_calib.clicked.connect(self.saveCalibration)
 
         #batchfiles
         self.pb_addTobBatch.clicked.connect(self.addToXANESBatchJob)
+        self.pb_runBatch.clicked.connect(self.runBatchFile)
+        self.pb_showBatch.clicked.connect(lambda: self.pte_status.appendPlainText(str(self.batchJob)))
+        self.pb_clear_batch.clicked.connect(lambda: self.batchJob.clear())
 
         self.pb_open_pyxrf.clicked.connect(self.open_pyxrf)
         self.pb_close_plots.clicked.connect(self.close_all_plots)
@@ -215,7 +218,7 @@ class xrf_3ID(QtWidgets.QMainWindow):
         build_xanes_map_param["pre_edge"] = self.ch_b_baseline.isChecked()
         build_xanes_map_param["align"] = self.cb_align.isChecked()
 
-        self.pte_status.appendPlainText(str(build_xanes_map_param))
+        #self.pte_status.appendPlainText(str(build_xanes_map_param))
 
         return build_xanes_map_param
 
@@ -224,40 +227,40 @@ class xrf_3ID(QtWidgets.QMainWindow):
         self.pte_status.appendPlainText(str(self.batchJob))
 
     def runBatchFile(self):
-        pass
+        if self.batchJob:
+            for value in self.batchJob.values():
+                plt.close('all')
+                self.create_xanes_macro(value)
 
-    def create_xanes_macro(self):
+    def create_xanes_macro(self,param_dict):
 
-        gc.collect()
+        build_xanes_map(param_dict["first_sid"], param_dict["last_sid"], wd=param_dict["cwd"],
+                        xrf_subdir=param_dict["cwd"], xrf_fitting_param_fln=param_dict["param"],
+                        scaler_name=param_dict["norm"], sequence=param_dict["work_flow"],
+                        ref_file_name=param_dict["ref"], fitting_method=param_dict["fit_method"],
+                        emission_line=param_dict["elem"], emission_line_alignment=param_dict["align_elem"],
+                        incident_energy_shift_keV=(param_dict["e_shift"] * 0.001),
+                        subtract_pre_edge_baseline = param_dict["pre_edge"],
+                        alignment_enable = param_dict["align"], output_save_all=param_dict["save_all"],
+                        use_incident_energy_from_param_file=True )
 
-        '''
-        build_xanes_map(first_sid, last_sid, wd = cwd,xrf_subdir = cwd, xrf_fitting_param_fln=param,
-                        scaler_name=norm,sequence=work_flow,
-                        ref_file_name=ref, fitting_method=fit_method,
-                        emission_line=elem, emission_line_alignment=align_elem,
-                        incident_energy_shift_keV=(e_shift*0.001), subtract_pre_edge_baseline = pre_edge,
-                        alignment_enable = align, output_save_all = save_all, use_incident_energy_from_param_file = True)
-		'''
-
-        build_xanes_map(first_sid, last_sid, wd=cwd, xrf_subdir=cwd, xrf_fitting_param_fln=param,
-                        scaler_name=norm, sequence=work_flow,
-                        ref_file_name=ref, fitting_method=fit_method,
-                        emission_line=elem, emission_line_alignment=align_elem,
-                        incident_energy_shift_keV=(e_shift * 0.001), subtract_pre_edge_baseline=pre_edge,
-                        alignment_enable=align, output_save_all=save_all, use_incident_energy_from_param_file=True)
+    def runSingleXANESJob(self):
+        params = self.createParamDictXANES()
+        self.create_xanes_macro(params)
 
     def getCalibrationData(self):
 
         cwd = self.le_wd.text()
         last_sid = int(self.le_lastid.text())
         first_sid = int(self.le_startid.text())
-        make_hdf(first_sid, last_sid, wd=cwd, file_overwrite_existing=True)
-        worker2 = Worker(getCalibSpectrum, path_ = cwd)
-        worker2.signals.result.connect(self.print_output)
-        list(map(worker2.signals.finished.connect, [self.thread_complete, self.plotCalibration]))
-        #self.calib_spec = getCalibSpectrum(path_= cwd)
+        make_hdf(first_sid, last_sid, wd=cwd, file_overwrite_existing=self.rb_h5Overwrite.isChecked())
+        #worker2 = Worker(getCalibSpectrum, path_ = cwd)
+        #worker2.signals.result.connect(self.print_output)
+        #list(map(worker2.signals.finished.connect, [self.thread_complete, self.plotCalibration]))
+        self.calib_spec = getCalibSpectrum(path_= cwd)
 
         self.pte_status.appendPlainText(str("calibration spec available"))
+        self.plotCalibration()
 
     def plotCalibration(self):
         if self.rb_calib_derivative.isChecked():
