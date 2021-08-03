@@ -20,12 +20,12 @@ from PyQt5.QtCore import QObject, QTimer, QThread, pyqtSignal, pyqtSlot, QRunnab
 from pdf_log import *
 from xanes2d import *
 from xanesFunctions import *
-
+ui_path = os.path.dirname(os.path.abspath(__file__))
 
 class Ui(QtWidgets.QMainWindow):
     def __init__(self):
         super(Ui, self).__init__()
-        uic.loadUi('/home/xf03id/user_macros/HXN_GUI/Scan/hxn_gui_admin2.ui', self)
+        uic.loadUi(os.path.join(ui_path,'hxn_gui_admin2.ui'), self)
         self.initParams()
         self.ImageCorrelationPage()
         self.webbrowserSetUpHxnWS1()
@@ -64,8 +64,9 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_plot_line_center.clicked.connect(self.plot_line_center)
 
         # xanes parameters
-        self.pb_gen_elist.clicked.connect(self.generateEList)
+        self.pb_gen_elist.clicked.connect(self.generateDataFrame)
         self.pb_set_epoints.clicked.connect(self.generate_epoints)
+        self.pb_print_xanes_param.clicked.connect(lambda: self.ple_info.setPlainText(str(self.xanesParamsDict)))
         # self.pb_start_xanes.clicked.connect(self.zpXANES)
 
         # scans and motor motion
@@ -77,11 +78,11 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_move_dth_pos.clicked.connect(self.move_dsth)
         self.pb_move_zpz_pos.clicked.connect(self.move_zpz1)
 
-        self.pb_move_smarx_neg.clicked.connect(self.move_smarx(neg_=True))
-        self.pb_move_smary_neg.clicked.connect(self.move_smary(neg_=True))
-        self.pb_move_smarz_neg.clicked.connect(self.move_smarz(neg_=True))
-        self.pb_move_dth_neg.clicked.connect(self.move_dsth(neg_=True))
-        self.pb_move_zpz_neg.clicked.connect(self.move_zpz1(neg_=True))
+        self.pb_move_smarx_neg.clicked.connect(lambda: self.move_smarx(neg_=True))
+        self.pb_move_smary_neg.clicked.connect(lambda: self.move_smary(neg_=True))
+        self.pb_move_smarz_neg.clicked.connect(lambda: self.move_smarz(neg_=True))
+        self.pb_move_dth_pos_neg.clicked.connect(lambda: self.move_dsth(neg_=True))
+        self.pb_move_zpz_neg.clicked.connect(lambda: self.move_zpz1(neg_=True))
 
         # Detector/Camera Motions
         self.pb_merlinOUT.clicked.connect(self.merlinOUT)
@@ -433,28 +434,16 @@ class Ui(QtWidgets.QMainWindow):
         else:
             pass
 
-    def generateEList(self):
-        ZnXANES = {'high_e': 9.7, 'low_e': 9.6,
-                   'high_e_ugap': 6480, 'low_e_ugap': 6430,
-                   'high_e_crl': 7, 'low_e_crl': 2,
-                   'high_e_zpz1': 50.92, 'zpz1_slope': -5.9,
-                   'energyFrame': self.energies}
+    def generateDataFrame(self):
+        self.xanesParamsDict = {'high_e': self.dsb_monoe_h.value(), 'low_e': self.dsb_monoe_l.value(),
+                   'high_e_ugap': self.dsb_ugap_h.value(), 'low_e_ugap': self.dsb_ugap_l.value(),
+                   'high_e_crl': self.dsb_crl_h.value(), 'low_e_crl': self.dsb_crl_l.value(),
+                   'high_e_zpz1': self.dsb_zpz_h.value(), 'zpz1_slope': self.dsb_zpz_slope.value(),
+                   'energyList': list(self.energies)}
 
         if not len(self.energies) == 0:
-
+            self.e_list = generateEList(XANESParam=self.xanesParamsDict)
             # print(energies)
-            dE = (self.dsb_monoe_h.value() - self.dsb_monoe_l.value())
-
-            ugap_slope = (self.dsb_ugap_h.value() - self.dsb_ugap_l.value()) / dE
-            ugap_list = self.dsb_ugap_h.value() + (self.energies - self.dsb_monoe_h.value()) * ugap_slope
-
-            crl_slope = (self.dsb_crl_h.value() - self.dsb_crl_l.value()) / dE
-            crl_list = self.dsb_crl_h.value() + (self.energies - self.dsb_monoe_h.value()) * crl_slope
-
-            zpz_slope = (self.dsb_zpz_h.value() - self.dsb_zpz_l.value()) / dE
-            zpz_list = self.dsb_zpz_h.value() + (self.energies - self.dsb_monoe_h.value()) * zpz_slope
-
-            self.e_list = np.column_stack((self.energies, ugap_list, zpz_list, crl_list))
             self.ple_info.setPlainText(str(self.e_list))
 
         else:
