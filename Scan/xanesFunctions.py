@@ -5,6 +5,7 @@
 import numpy as np
 from datetime import datetime
 import pandas as pd
+import os
 
 ZnXANES= {'high_e':9.7, 'low_e':9.6, 
           'high_e_ugap':6480, 'low_e_ugap':6430,
@@ -93,8 +94,8 @@ def move_energy(e_,ugap_,zpz_,crl_th_, ignoreCRL= False, ignoreZPZ = False):
     
 
 def zp_list_xanes2d(e_list,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
-                    xcen = 0, ycen = 0, alignElem = 'Fe', alignX = (-2,2,100,0.05, 0.7),
-                    alignY = (-2,2,100,0.05, 0.7), pdfElem = ('Fe','Zn'),
+                    xcen = 0, ycen = 0, alignX = (True,-2,2,100,0.05,'Fe', 0.7),
+                    alignY = (True,-2,2,100,0.05,'Fe', 0.7), pdfElem = ('Fe','Zn'),
                     doScan = True, moveOptics = True, doAlignScan = True, 
                     pdfLog = True, foilCalibScan = False, peakBeam = True,
                     saveLogFolder = '/home/xf03id/Downloads'):
@@ -159,25 +160,16 @@ def zp_list_xanes2d(e_list,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
         #do the alignemnt scan on the xanes elem after it excited , 
         #otherwise skip or use another element
 
-        if e_list['energy'][i]<0: # for special scans if no align elem available
-            
-            '''
-            yield from fly1d(dets,zpssx,-1,1,100,0.1)
-            xcen = return_line_center(-1,'Cl',0.7)
-            yield from bps.mov(zpssx, xcen)
-            yield from fly1d(dets,zpssy,-1,1 ,100,0.1)
-            ycen = return_line_center(-1,'Cl',0.7)
-            yield from bps.mov(zpssy, ycen)
-            '''
-            pass
+        if doAlignScan and e_list['energy'][i]<0:
+            if alignX[0]:
+                yield from fly1d(dets,zpssx,alignX[1],alignX[2],alignX[3],alignX[4])
+                xcen = return_line_center(-1,alignX[5],alignX[6])
+                yield from bps.mov(zpssx, xcen)
 
-        elif doAlignScan:
-            yield from fly1d(dets,zpssx,alignX[0],alignX[1],alignX[2],alignX[3])
-            xcen = return_line_center(-1,alignElem,alignX[4])
-            yield from bps.mov(zpssx, xcen)
-            yield from fly1d(dets,zpssy,alignY[0],alignY[1],alignY[2],alignY[3])
-            ycen = return_line_center(-1,alignElem,alignY[4])
-            yield from bps.mov(zpssy, ycen)
+            if alignY[0]:
+                yield from fly1d(dets,zpssy,alignY[1],alignY[2],alignY[3],alignY[4])
+                ycen = return_line_center(-1,alignY[5],alignY[6])
+                yield from bps.mov(zpssy, ycen)
 
 
         print(f'Current scan: {i+1}/{len(e_list)}')

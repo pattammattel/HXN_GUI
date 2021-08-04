@@ -15,7 +15,7 @@ from scipy.ndimage import rotate
 
 from PyQt5 import QtWidgets, uic, QtCore, QtGui, QtTest
 from PyQt5.QtWidgets import QMessageBox, QFileDialog
-from PyQt5.QtCore import QObject, QTimer, QThread, pyqtSignal, pyqtSlot, QRunnable, QThreadPool
+from PyQt5.QtCore import QObject, QTimer, QThread, pyqtSignal, pyqtSlot, QRunnable, QThreadPool, QDate
 
 from pdf_log import *
 from xanes2d import *
@@ -68,6 +68,7 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_set_epoints.clicked.connect(self.generate_epoints)
         self.pb_print_xanes_param.clicked.connect(lambda: self.ple_info.setPlainText(str(self.xanesParamsDict)))
         # self.pb_start_xanes.clicked.connect(self.zpXANES)
+        self.pb_xanes_rsr_fldr.clicked.connect(self.getXanesUserFolder)
 
         # scans and motor motion
         self.start.clicked.connect(self.initFlyScan)
@@ -111,12 +112,16 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_66.clicked.connect(self.fill_common_scan_params)
         self.pb_22.clicked.connect(self.fill_common_scan_params)
 
+        #copy scan plan
+        self.pb_scan_copy.clicked.connect(self.copyScanPlan)
+
         # elog
         self.pb_pdf_wd.clicked.connect(self.select_pdf_wd)
         self.pb_pdf_image.clicked.connect(self.select_pdf_image)
         self.pb_save_pdf.clicked.connect(self.force_save_pdf)
         self.pb_createpdf.clicked.connect(self.generate_pdf)
         self.pb_fig_to_pdf.clicked.connect(self.InsertFigToPDF)
+        self.dateEdit_elog.setDate(QDate.currentDate())
 
         # admin control
         self.pb_apply_user_settings.clicked.connect(self.setUserLevel)
@@ -161,6 +166,13 @@ class Ui(QtWidgets.QMainWindow):
 
         self.dwell_t = self.dwell.value()
 
+        self.motor1 = self.cb_motor1.currentText()
+        self.motor2 = self.cb_motor2.currentText()
+
+        self.motor_list = {'zpssx': zpssx, 'zpssy': zpssy, 'zpssz': zpssz}
+        self.det_list = {'dets1': dets1, 'dets2': dets2, 'dets3': dets3,
+                         'dets4': dets4, 'dets_fs': dets_fs}
+
     def initParams(self):
         self.getScanValues()
 
@@ -172,28 +184,26 @@ class Ui(QtWidgets.QMainWindow):
         if self.rb_1d.isChecked():
             self.label_scan_info_calc.setText(f'X: {(cal_res_x * 1000):.2f} nm, Y: {(cal_res_y * 1000):.2f} nm \n'
                                               f'{tot_t_1d:.2f} minutes + overhead')
-            scan_plan = f'<fly1d({self.det}, {self.mot1_s},{self.mot1_e}, {self.mot1_steps}, {self.dwell_t:.3f})'
+            scan_plan = f'<fly1d({self.det},{self.motor1}, {self.mot1_s},{self.mot1_e}, ' \
+                        f'{self.mot1_steps}, {self.dwell_t:.3f})'
 
 
 
         else:
             self.label_scan_info_calc.setText(f'X: {(cal_res_x * 1000):.2f} nm, Y: {(cal_res_y * 1000):.2f} nm \n'
                                               f'{tot_t_2d:.2f} minutes + overhead')
-            scan_plan = f'fly2d({self.det}, {self.mot1_s}, {self.mot1_e}, {self.mot1_steps},' \
-                        f'{self.mot2_s},{self.mot2_e},{self.mot2_steps},{self.dwell_t:.3f})'
+            scan_plan = f'<fly2d({self.det}, {self.motor1},{self.mot1_s}, {self.mot1_e}, {self.mot1_steps},' \
+                        f'{self.motor2},{self.mot2_s},{self.mot2_e},{self.mot2_steps},{self.dwell_t:.3f})'
 
-        self.label_scanMacro.setText(scan_plan)
-        self.ple_info.appendPlainText(scan_plan)
+        self.text_scan_plan.setText(scan_plan)
+
+    def copyScanPlan(self):
+        self.text_scan_plan.selectAll()
+        self.text_scan_plan.copy()
+
 
     def initFlyScan(self):
         self.getScanValues()
-
-        self.motor1 = self.cb_motor1.currentText()
-        self.motor2 = self.cb_motor2.currentText()
-
-        self.motor_list = {'zpssx': zpssx, 'zpssy': zpssy, 'zpssz': zpssz}
-        self.det_list = {'dets1': dets1, 'dets2': dets2, 'dets3': dets3,
-                         'dets4': dets4, 'dets_fs': dets_fs}
 
         if self.rb_1d.isChecked():
             RE(fly1d(self.det_list[self.det], self.motor_list[self.motor1],
@@ -338,6 +348,10 @@ class Ui(QtWidgets.QMainWindow):
         plt.close('all')
 
     #xanes
+    def getXanesUserFolder(self):
+        self.xanes_folder = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
+        self.xanes_user_folder.setText(self.xanes_folder)
+
     def generate_epoints(self):
 
         pre = (self.dsb_pre_s.value(), self.dsb_pre_e.value(), self.sb_pre_p.value())
@@ -449,12 +463,25 @@ class Ui(QtWidgets.QMainWindow):
         else:
             self.statusbar.showMessage('No energy list found; set or load an e list first')
 
-    def zpXANES(self):
-        self.getScanValues()
-        RE(zp_list_xanes2d(self.e_list, self.det_list[self.det], self.motor_list[self.motor1],
-                           self.mot1_s, self.mot1_e, self.mot1_steps, self.motor_list[self.motor2],
-                           self.mot2_s, self.mot2_e, self.mot2_steps, self.dwell_t))
+    def runZPXANES(self):
+        doXAlign, doYAlign = self.cb_x_align.isChecked(),self.cb_y_align.isChecked()
+        x_align_s, x_align_e = self.x_align_start.value(), self.x_align_end.value()
+        x_align_stp, x_align_dw = self.x_align_steps.value(), self.x_align_dwell.value()
+        align_x_thr, x_align_elem = self.align_x_threshold.value(), self.x_align_elem.text()
 
+        y_align_s, y_align_e = self.y_align_start.value(), self.y_align_end.value()
+        y_align_stp, y_align_dw = self.y_align_steps.value(), self.y_align_dwell.value()
+        align_y_thr, y_align_elem = self.align_y_threshold.value(), self.y_align_elem.text()
+
+        elemPlot = tuple(self.plot_elem_xanes.text().split(','))
+
+        RE(zp_list_xanes2d(self.e_list, self.det_list[self.det],
+                           self.motor_list[self.motor1], self.mot1_s, self.mot1_e, self.mot1_steps,
+                           self.motor_list[self.motor2],  self.mot2_s, self.mot2_e, self.mot2_steps, self.dwell_t,
+                           xcen = self.dsb_xalign_cen_xanes.value(), ycen= self.dsb_yalign_cen_xanes.value(),
+                           alignX=(doXAlign,x_align_s, x_align_e, x_align_stp, x_align_dw, x_align_elem, align_x_thr),
+                           alignY=(doXAlign,y_align_s, y_align_e, y_align_stp, y_align_dw, y_align_elem, align_y_thr),
+                           pdfElem=elemPlot ,saveLogFolder=self.xanes_folder))
     #tomo
     def zpTomoStepResCalc(self):
         pass
@@ -478,8 +505,6 @@ class Ui(QtWidgets.QMainWindow):
         yAlignDwell = None
         yAlignElem = None
         yAlignThreshold = None
-
-
 
     #special scans
     def zpMosaic(self):
