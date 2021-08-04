@@ -20,6 +20,7 @@ from PyQt5.QtCore import QObject, QTimer, QThread, pyqtSignal, pyqtSlot, QRunnab
 from pdf_log import *
 from xanes2d import *
 from xanesFunctions import *
+from HXNSampleExchange import *
 ui_path = os.path.dirname(os.path.abspath(__file__))
 
 class Ui(QtWidgets.QMainWindow):
@@ -93,6 +94,11 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_cam6IN.clicked.connect(self.cam6IN)
         self.pb_cam6OUT.clicked.connect(self.cam6OUT)
         self.pb_cam11IN.clicked.connect(self.cam11IN)
+
+        # sample exchange
+        self.pb_start_pump.clicked.connect (lambda:self.qMessageExcecute(StartPumpingProtocol()))
+        self.pb_auto_he_fill.clicked.connect(lambda: self.qMessageExcecute(StartAutoHeBackFill()))
+        self.pb_vent.clicked.connect(lambda: self.qMessageExcecute(ventChamber()))
 
         # sample position
         self.pb_save_pos.clicked.connect(self.generatePositionDict)
@@ -200,7 +206,6 @@ class Ui(QtWidgets.QMainWindow):
     def copyScanPlan(self):
         self.text_scan_plan.selectAll()
         self.text_scan_plan.copy()
-
 
     def initFlyScan(self):
         self.getScanValues()
@@ -551,6 +556,19 @@ class Ui(QtWidgets.QMainWindow):
     def abort_scan(self):
         signal.signal(signal.SIGINT, signal.SIG_DFL)
         RE.abort()
+
+    #Sample Chamber
+
+    def qMessageExcecute(self,funct):
+        choice = QMessageBox.question(self, 'Sample Chamber Operation Warning',
+                                      "Make sure this action is safe. \n Proceed?", QMessageBox.Yes |
+                                      QMessageBox.No, QMessageBox.No)
+
+        if choice == QMessageBox.Yes:
+            RE(funct)
+
+        else:
+            pass
 
     # PDF Log
 
