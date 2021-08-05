@@ -68,7 +68,8 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_gen_elist.clicked.connect(self.generateDataFrame)
         self.pb_set_epoints.clicked.connect(self.generate_epoints)
         self.pb_print_xanes_param.clicked.connect(lambda: self.ple_info.setPlainText(str(self.xanesParamsDict)))
-        # self.pb_start_xanes.clicked.connect(self.zpXANES)
+        self.pb_display_xanes_plan.clicked.connect(self.displayXANESPlan)
+        #self.pb_Start_Xanes.clicked.connect(self.runZPXANES)
         self.pb_xanes_rsr_fldr.clicked.connect(self.getXanesUserFolder)
 
         # scans and motor motion
@@ -355,7 +356,7 @@ class Ui(QtWidgets.QMainWindow):
     #xanes
     def getXanesUserFolder(self):
         self.xanes_folder = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
-        self.xanes_user_folder.setText(self.xanes_folder)
+        self.le_xanes_user_folder.setText(self.xanes_folder)
 
     def generate_epoints(self):
 
@@ -468,25 +469,57 @@ class Ui(QtWidgets.QMainWindow):
         else:
             self.statusbar.showMessage('No energy list found; set or load an e list first')
 
+    def initXANESParams(self):
+        self.getScanValues()
+
+        self.doXAlign, self.doYAlign = self.cb_x_align.isChecked(),self.cb_y_align.isChecked()
+        self.x_align_s, self.x_align_e = self.x_align_start.value(), self.x_align_end.value()
+        self.x_align_stp, self.x_align_dw = self.x_align_steps.value(), self.x_align_dwell.value()
+        self.align_x_thr, self.x_align_elem = self.align_x_threshold.value(), self.le_x_align_elem.text()
+
+        self.y_align_s, self.y_align_e = self.y_align_start.value(), self.y_align_end.value()
+        self.y_align_stp, self.y_align_dw = self.y_align_steps.value(), self.y_align_dwell.value()
+        self.align_y_thr, self.y_align_elem = self.align_y_threshold.value(), self.le_y_align_elem.text()
+
+        self.elemPlot = tuple(self.plot_elem_xanes.text().split(','))
+        self.xanes_folder = self.le_xanes_user_folder.text()
+
+    def displayXANESPlan(self):
+        self.initXANESParams()
+
+        scan_plan = f"<zp_list_xanes2d(e_list, {self.det},{self.motor1},{self.mot1_s}, {self.mot1_e}, {self.mot1_steps}," \
+                    f"{self.motor2},  {self.mot2_s}, {self.mot2_e}, {self.mot2_steps}, {self.dwell_t}," \
+                    f"xcen = {self.dsb_xlign_cen_xanes.value()}, ycen= {self.dsb_yalign_cen_xanes.value()}," \
+                    f"alignX={(self.doXAlign,self.x_align_s, self.x_align_e, self.x_align_stp, self.x_align_dw,self.x_align_elem, self.align_x_thr)}," \
+                    f"alignY={(self.doYAlign,self.y_align_s, self.y_align_e, self.y_align_stp,self.y_align_dw, self.y_align_elem, self.align_y_thr)}," \
+                    f"Elem={self.elemPlot},saveLogFolder={self.xanes_folder})"
+
+        self.te_xanes_plan.setText(str(scan_plan))
+
     def runZPXANES(self):
-        doXAlign, doYAlign = self.cb_x_align.isChecked(),self.cb_y_align.isChecked()
-        x_align_s, x_align_e = self.x_align_start.value(), self.x_align_end.value()
-        x_align_stp, x_align_dw = self.x_align_steps.value(), self.x_align_dwell.value()
-        align_x_thr, x_align_elem = self.align_x_threshold.value(), self.x_align_elem.text()
+        self.initXANESParams()
 
-        y_align_s, y_align_e = self.y_align_start.value(), self.y_align_end.value()
-        y_align_stp, y_align_dw = self.y_align_steps.value(), self.y_align_dwell.value()
-        align_y_thr, y_align_elem = self.align_y_threshold.value(), self.y_align_elem.text()
+        dU = ugap.position - self.e_list['ugap'][0]
+        dE = e.position - self.e_list['energy'][0]
 
-        elemPlot = tuple(self.plot_elem_xanes.text().split(','))
+        if dU < 500 and dE < 0.2:
+            '''
+            RE(zp_list_xanes2d(self.e_list, self.det_list[self.det],
+                               self.motor_list[self.motor1], self.mot1_s, self.mot1_e, self.mot1_steps,
+                               self.motor_list[self.motor2],  self.mot2_s, self.mot2_e, self.mot2_steps, self.dwell_t,
+                               xcen = self.dsb_xalign_cen_xanes.value(), ycen= self.dsb_yalign_cen_xanes.value(),
+                               alignX=(self.doXAlign,self.x_align_s, self.x_align_e, self.x_align_stp, self.x_align_dw,
+                                       self.x_align_elem, self.align_x_thr),
+                               alignY=(self.doYAlign,self.y_align_s, self.y_align_e, self.y_align_stp,
+                                       self.y_align_dw, self.y_align_elem, self.align_y_thr),
+                               pdfElem=self.elemPlot ,saveLogFolder=self.xanes_folder))
+            '''
+            print (" Test Passed")
+        else:
+            self.ple_info.appendPlainText(f' Either ugap or energy target is not close to current;'
+                                          f' This is unsafe; Please recheck and starct scan}')
+            pass
 
-        RE(zp_list_xanes2d(self.e_list, self.det_list[self.det],
-                           self.motor_list[self.motor1], self.mot1_s, self.mot1_e, self.mot1_steps,
-                           self.motor_list[self.motor2],  self.mot2_s, self.mot2_e, self.mot2_steps, self.dwell_t,
-                           xcen = self.dsb_xalign_cen_xanes.value(), ycen= self.dsb_yalign_cen_xanes.value(),
-                           alignX=(doXAlign,x_align_s, x_align_e, x_align_stp, x_align_dw, x_align_elem, align_x_thr),
-                           alignY=(doXAlign,y_align_s, y_align_e, y_align_stp, y_align_dw, y_align_elem, align_y_thr),
-                           pdfElem=elemPlot ,saveLogFolder=self.xanes_folder))
     #tomo
     def zpTomoStepResCalc(self):
         pass

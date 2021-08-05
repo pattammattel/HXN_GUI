@@ -134,7 +134,7 @@ QPushButton:pressed{
        <enum>QTabWidget::North</enum>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>0</number>
       </property>
       <property name="documentMode">
        <bool>true</bool>
@@ -667,41 +667,6 @@ QPushButton:pressed{
                    </property>
                   </widget>
                  </item>
-                 <item>
-                  <widget class="QRadioButton" name="rb_xanes_scan">
-                   <property name="enabled">
-                    <bool>false</bool>
-                   </property>
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="styleSheet">
-                    <string notr="true"/>
-                   </property>
-                   <property name="text">
-                    <string>XANES</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QRadioButton" name="rb_tomo">
-                   <property name="enabled">
-                    <bool>false</bool>
-                   </property>
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="text">
-                    <string>Tomo</string>
-                   </property>
-                  </widget>
-                 </item>
                 </layout>
                </widget>
               </item>
@@ -1196,7 +1161,7 @@ font: 15pt &quot;Modern No. 20&quot;;
            <enum>QTabWidget::North</enum>
           </property>
           <property name="currentIndex">
-           <number>2</number>
+           <number>0</number>
           </property>
           <property name="documentMode">
            <bool>true</bool>
@@ -1216,8 +1181,8 @@ font: 15pt &quot;Modern No. 20&quot;;
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>1190</width>
-                 <height>321</height>
+                 <width>1409</width>
+                 <height>421</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1423,6 +1388,73 @@ font: 15pt &quot;Modern No. 20&quot;;
                       <string>Detector Controls</string>
                      </property>
                      <layout class="QGridLayout" name="gridLayout_10">
+                      <item row="2" column="0">
+                       <layout class="QVBoxLayout" name="verticalLayout_8">
+                        <item>
+                         <layout class="QHBoxLayout" name="horizontalLayout_27">
+                          <item>
+                           <widget class="QPushButton" name="pb_merlinOUT">
+                            <property name="sizePolicy">
+                             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                              <horstretch>0</horstretch>
+                              <verstretch>0</verstretch>
+                             </sizepolicy>
+                            </property>
+                            <property name="text">
+                             <string>Merlin OUT</string>
+                            </property>
+                           </widget>
+                          </item>
+                          <item>
+                           <widget class="QPushButton" name="pb_merlinIN">
+                            <property name="sizePolicy">
+                             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                              <horstretch>0</horstretch>
+                              <verstretch>0</verstretch>
+                             </sizepolicy>
+                            </property>
+                            <property name="text">
+                             <string>Merlin IN</string>
+                            </property>
+                           </widget>
+                          </item>
+                         </layout>
+                        </item>
+                        <item>
+                         <layout class="QHBoxLayout" name="horizontalLayout_28">
+                          <item>
+                           <widget class="QPushButton" name="pb_cam11IN">
+                            <property name="sizePolicy">
+                             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                              <horstretch>0</horstretch>
+                              <verstretch>0</verstretch>
+                             </sizepolicy>
+                            </property>
+                            <property name="text">
+                             <string>CAM 11 IN</string>
+                            </property>
+                           </widget>
+                          </item>
+                          <item>
+                           <widget class="QPushButton" name="pb_telescope">
+                            <property name="enabled">
+                             <bool>true</bool>
+                            </property>
+                            <property name="sizePolicy">
+                             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                              <horstretch>0</horstretch>
+                              <verstretch>0</verstretch>
+                             </sizepolicy>
+                            </property>
+                            <property name="text">
+                             <string>Telescope IN</string>
+                            </property>
+                           </widget>
+                          </item>
+                         </layout>
+                        </item>
+                       </layout>
+                      </item>
                       <item row="0" column="0">
                        <layout class="QGridLayout" name="gridLayout_7">
                         <item row="0" column="0">
@@ -1493,85 +1525,18 @@ font: 15pt &quot;Modern No. 20&quot;;
                         </item>
                        </layout>
                       </item>
-                      <item row="2" column="0">
-                       <layout class="QVBoxLayout" name="verticalLayout_8">
-                        <item>
-                         <layout class="QHBoxLayout" name="horizontalLayout_27">
-                          <item>
-                           <widget class="QPushButton" name="pb_merlinOUT">
-                            <property name="sizePolicy">
-                             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                             </sizepolicy>
-                            </property>
-                            <property name="text">
-                             <string>Merlin OUT</string>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QPushButton" name="pb_merlinIN">
-                            <property name="sizePolicy">
-                             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                             </sizepolicy>
-                            </property>
-                            <property name="text">
-                             <string>Merlin IN</string>
-                            </property>
-                           </widget>
-                          </item>
-                         </layout>
-                        </item>
-                        <item>
-                         <layout class="QHBoxLayout" name="horizontalLayout_28">
-                          <item>
-                           <widget class="QPushButton" name="pb_cam11IN">
-                            <property name="sizePolicy">
-                             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                             </sizepolicy>
-                            </property>
-                            <property name="text">
-                             <string>CAM 11 IN</string>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QPushButton" name="pb_telescope">
-                            <property name="enabled">
-                             <bool>true</bool>
-                            </property>
-                            <property name="sizePolicy">
-                             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                             </sizepolicy>
-                            </property>
-                            <property name="text">
-                             <string>Telescope IN</string>
-                            </property>
-                           </widget>
-                          </item>
-                         </layout>
-                        </item>
-                       </layout>
-                      </item>
-                      <item row="3" column="0">
-                       <spacer name="verticalSpacer_4">
-                        <property name="orientation">
-                         <enum>Qt::Vertical</enum>
+                      <item row="1" column="0">
+                       <widget class="QLabel" name="label_57">
+                        <property name="sizePolicy">
+                         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                          <horstretch>0</horstretch>
+                          <verstretch>0</verstretch>
+                         </sizepolicy>
                         </property>
-                        <property name="sizeHint" stdset="0">
-                         <size>
-                          <width>20</width>
-                          <height>40</height>
-                         </size>
+                        <property name="text">
+                         <string/>
                         </property>
-                       </spacer>
+                       </widget>
                       </item>
                      </layout>
                     </widget>
@@ -3350,7 +3315,7 @@ font: 15pt &quot;Modern No. 20&quot;;
                    </widget>
                   </item>
                   <item>
-                   <widget class="QLineEdit" name="xanes_user_folder">
+                   <widget class="QLineEdit" name="le_xanes_user_folder">
                     <property name="text">
                      <string>/home/xf03id/Downloads</string>
                     </property>
@@ -3407,15 +3372,15 @@ font: 15pt &quot;Modern No. 20&quot;;
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>1234</width>
-                 <height>116</height>
+                 <width>1409</width>
+                 <height>338</height>
                 </rect>
                </property>
                <attribute name="label">
-                <string>Add Alignment Scan</string>
+                <string>Alignment and Start XANES</string>
                </attribute>
                <layout class="QGridLayout" name="gridLayout_42">
-                <item row="1" column="0">
+                <item row="0" column="0">
                  <layout class="QHBoxLayout" name="horizontalLayout_24">
                   <item>
                    <layout class="QVBoxLayout" name="verticalLayout_33">
@@ -3786,7 +3751,7 @@ font: 15pt &quot;Modern No. 20&quot;;
                          </widget>
                         </item>
                         <item>
-                         <widget class="QLineEdit" name="x_align_elem">
+                         <widget class="QLineEdit" name="le_x_align_elem">
                           <property name="sizePolicy">
                            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                             <horstretch>0</horstretch>
@@ -3856,7 +3821,7 @@ font: 15pt &quot;Modern No. 20&quot;;
                          </widget>
                         </item>
                         <item>
-                         <widget class="QLineEdit" name="y_align_elem">
+                         <widget class="QLineEdit" name="le_y_align_elem">
                           <property name="sizePolicy">
                            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                             <horstretch>0</horstretch>
@@ -3912,7 +3877,7 @@ font: 15pt &quot;Modern No. 20&quot;;
                   </item>
                  </layout>
                 </item>
-                <item row="2" column="0">
+                <item row="1" column="0">
                  <spacer name="verticalSpacer_11">
                   <property name="orientation">
                    <enum>Qt::Vertical</enum>
@@ -3927,6 +3892,65 @@ font: 15pt &quot;Modern No. 20&quot;;
                    </size>
                   </property>
                  </spacer>
+                </item>
+                <item row="2" column="0">
+                 <widget class="QGroupBox" name="groupBox_20">
+                  <property name="title">
+                   <string>nanoXANES</string>
+                  </property>
+                  <layout class="QGridLayout" name="gridLayout_50">
+                   <item row="3" column="0">
+                    <widget class="QPushButton" name="pb_Start_Xanes">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="styleSheet">
+                      <string notr="true">font: 15pt &quot;MS Shell Dlg 2&quot;;</string>
+                     </property>
+                     <property name="text">
+                      <string>Start XANES Scan</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="0" column="3">
+                    <widget class="QPushButton" name="pb_display_xanes_plan">
+                     <property name="text">
+                      <string>Display Plan</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="0" column="0" colspan="3">
+                    <widget class="QLabel" name="label_56">
+                     <property name="styleSheet">
+                      <string notr="true">color: rgb(255, 85, 0);</string>
+                     </property>
+                     <property name="text">
+                      <string>Info: Set 2D scan paramers on the fly scan window (no 1D scan allowed)</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="0" column="4">
+                    <widget class="QPushButton" name="pushButton">
+                     <property name="text">
+                      <string>Copy</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="3" column="1" colspan="4">
+                    <widget class="QTextEdit" name="te_xanes_plan">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </widget>
                 </item>
                </layout>
               </widget>
