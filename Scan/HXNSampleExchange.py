@@ -19,7 +19,7 @@ def waitWithProgessBar(time_in_minues):
 def StartPumpingProtocol():
 
         #pumping PVs
-    yield from bps.sleep(1)
+
     slowVentClose = 'XF:03IDC-VA{ES:1-SlowVtVlv:Stg2}Cmd:Cls-Cmd'
     fastVentClose = 'XF:03IDC-VA{ES:1-FastVtVlv:Stg3}Cmd:Cls-Cmd'
 
@@ -78,7 +78,7 @@ def StartPumpingProtocol():
     else: print("Closing the vents failed; Try Manually closing them")
     
 def StartAutoHeBackFill():
-    yield from bps.sleep(1)
+
     #pump valve status
 
     pumpBSlowStats = 'XF:03IDC-VA{ES:1-SlowFrVlv:B}Sts:Cls-Sts'
@@ -114,7 +114,7 @@ def ventChamber():
     fastVentOpen = 'XF:03IDC-VA{ES:1-FastVtVlv:Stg3}Cmd:Opn-Cmd'
     
     #make sure fluorescence detector is out while relasing the vaccuum
-    yield from bps.mov(fdet1.x, -107)
+    caput('XF:03IDC-ES{Det:Vort-Ax:X}Mtr.VAL',-107)
     
     triggerPV(slowVentOpen)
     waitWithProgessBar(10)

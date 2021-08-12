@@ -106,7 +106,11 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_roiList_import.clicked.connect(self.importROIDict)
         self.pb_roiList_export.clicked.connect(self.exportROIDict)
         self.pb_roiList_clear.clicked.connect(self.clearROIList)
-        self.sampleROI_List.itemClicked.connect(self.showROIPos)
+        #self.sampleROI_List.itemClicked.connect(self.showROIPos)
+        self.sampleROI_List.itemClicked.connect(lambda: self.ple_info.appendPlainText(
+            (str(self.roiDict[self.sampleROI_List.currentItem().text()]))))
+
+        self.pb_move_pos.clicked.connect(self.gotoROIPosition)
         self.pb_recover_scan_pos.clicked.connect(self.gotoPosSID)
         self.pb_show_scan_pos.clicked.connect(self.viewScanPosSID)
         self.pb_print_scan_meta.clicked.connect(self.viewScanMetaData)
@@ -516,8 +520,8 @@ class Ui(QtWidgets.QMainWindow):
             '''
             print (" Test Passed")
         else:
-            self.ple_info.appendPlainText(f' Either ugap or energy target is not close to current;'
-                                          f' This is unsafe; Please recheck and starct scan}')
+            self.ple_info.appendPlainText("Either ugap or energy target is not close to current; "
+                                          "This is unsafe; Please check again")
             pass
 
     #tomo
@@ -651,6 +655,8 @@ class Ui(QtWidgets.QMainWindow):
         roi_name = 'ROI' + str(self.sampleROI_List.count())
         self.roiDict[roi_name] = roi
         self.sampleROI_List.addItem(roi_name)
+
+        #make the item editable
         item = self.sampleROI_List.item(self.sampleROI_List.count()-1)
         item.setFlags(item.flags() | QtCore.Qt.ItemIsEditable)
 
@@ -660,7 +666,6 @@ class Ui(QtWidgets.QMainWindow):
             label = self.sampleROI_List.item(idx).text()
             label_[label] = idx
         self.roiDict['user_labels'] = label_
-        print(self.roiDict)
 
     def exportROIDict(self):
         self.applyDictWithLabel()
@@ -702,7 +707,7 @@ class Ui(QtWidgets.QMainWindow):
 
     def gotoROIPosition(self):
         roi_num = self.sampleROI_List.currentRow()
-        param_file = self.roiDict[roi_num]
+        param_file = self.roiDict[f'ROI{roi_num}']
         for key, value in param_file.items():
             if not key == zp.zpz1:
                 RE(bps.mov(key, value))
@@ -712,7 +717,7 @@ class Ui(QtWidgets.QMainWindow):
 
     def showROIPosition(self, item):
         item_num = self.sampleROI_List.row(item)
-        param_file = self.roiDict[item_num]
+        param_file = self.roiDict[f'ROI{item_num}']
         self.ple_info.appendPlainText(('*' * 20))
         for key, value in param_file.items():
             self.ple_info.appendPlainText(f'{key.name}:{value:.4f}')
@@ -722,7 +727,7 @@ class Ui(QtWidgets.QMainWindow):
 
     def gotoPosSID(self):
         sd = self.le_sid_position.text()
-        recover_zp_scan_pos(int(sid), 1, 1)
+        RE(recover_zp_scan_pos(int(sd), 1, 1))
         self.ple_info.appendPlainText(f'Positions recovered from {sid}')
 
     def viewScanPosSID(self):
