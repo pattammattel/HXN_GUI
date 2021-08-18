@@ -12,6 +12,7 @@ import webbrowser
 import pyqtgraph as pg
 import json
 from scipy.ndimage import rotate
+import matplotlib
 
 from PyQt5 import QtWidgets, uic, QtCore, QtGui, QtTest
 from PyQt5.QtWidgets import QMessageBox, QFileDialog
