@@ -7,7 +7,7 @@ import time
 import pyqtgraph as pg
 
 from PyQt5.QtCore import QObject, QTimer, QThread, pyqtSignal, pyqtSlot, QRunnable, QThreadPool
-from PyQt5 import QtWidgets, uic
+from PyQt5 import QtWidgets, uic, QtTest
 from PyQt5.QtWidgets import QMessageBox, QFileDialog
 from pyxrf.api import *
 from epics import caget
@@ -253,23 +253,36 @@ class xrf_3ID(QtWidgets.QMainWindow):
         cwd = self.le_wd.text()
         last_sid = int(self.le_lastid.text())
         first_sid = int(self.le_startid.text())
-        make_hdf(first_sid, last_sid, wd=cwd, file_overwrite_existing=self.rb_h5Overwrite.isChecked())
+        if self.rb_loadh5.isChecked():
+            make_hdf(first_sid, last_sid, wd=cwd, file_overwrite_existing=self.rb_h5Overwrite.isChecked())
+        else:
+            QtTest.QTest.qWait(0.1)
+            self.pte_status.appendPlainText("Loading h5 From DataBroker is skipped ")
         #worker2 = Worker(getCalibSpectrum, path_ = cwd)
         #worker2.signals.result.connect(self.print_output)
         #list(map(worker2.signals.finished.connect, [self.thread_complete, self.plotCalibration]))
         self.calib_spec = getCalibSpectrum(path_= cwd)
-
+        QtTest.QTest.qWait(0.1)
         self.pte_status.appendPlainText(str("calibration spec available"))
+        #np.savetxt(os.path.join(self.le_wd.text(), "calibration_spec.txt"), self.calib_spec)
         self.plotCalibration()
 
     def plotCalibration(self):
         if self.rb_calib_derivative.isChecked():
-            pg.plot(self.calib_spec[:, 0], np.gradient(self.calib_spec[:, 1]))
+            pg.plot(self.calib_spec[:, 0], np.gradient(self.calib_spec[:, 1]),
+                    pen = pg.mkPen(pg.mkColor(0,0,255,255), width=3),
+                    symbol='o',symbolSize = 6,symbolBrush = 'r', title = "Calibration Spectrum")
         else:
-            pg.plot(self.calib_spec[:, 0], self.calib_spec[:, 1])
+            pg.plot(self.calib_spec[:, 0], self.calib_spec[:, 1],
+                    pen = pg.mkPen(pg.mkColor(0,0,255,255), width=3),
+                    symbol='o',symbolSize = 6,symbolBrush = 'r', title = "Calibration Spectrum")
 
     def saveCalibration(self):
-        np.savetxt(os.path.join(self.le_wd.text(),"calibration_spec.txt"), self.calib_spec)
+        file_name = QFileDialog().getSaveFileName(self, "Save Calibration", '', 'txt file (*.txt)')
+        if file_name[0]:
+            np.savetxt(file_name[0], self.calib_spec, fmt = '%.5f')
+        else:
+            pass
 
     def start_auto(self):
         self.pte_status.clear()

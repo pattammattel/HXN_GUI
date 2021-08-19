@@ -16,7 +16,52 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <property name="styleSheet">
-    <string notr="true">font: 12pt &quot;Segoe UI&quot;;</string>
+    <string notr="true">QWidget{
+	color: rgb(5, 5, 5);
+	font: 12pt &quot;Arial&quot;;
+}
+
+QRadioButton::indicator {
+    border: 3px solid rgb(52, 59, 72);
+	width: 15px;
+	height: 15px;
+	border-radius: 10px;
+    background: rgb(255, 255, 255);
+}
+QRadioButton::indicator:hover {
+    border: 3px solid rgb(58, 66, 81);
+}
+QRadioButton::indicator:checked {
+    background: 3px solid rgb(0,255, 0);
+	border: 3px solid rgb(0,0, 0);	
+}
+
+QCheckBox::indicator {
+    border: 3px solid rgb(52, 59, 72);
+	width: 15px;
+	height: 15px;
+	border-radius: 10px;
+    background: rgb(255, 255,255);
+}
+QCheckBox::indicator:hover {
+    border: 3px solid rgb(58, 66, 81);
+}
+QCheckBox::indicator:checked {
+    background: 3px solid rgb(0,255, 0);
+	border: 3px solid rgb(0, 0,0);
+}
+
+QPushButton {	
+	background-color: rgb(224, 255, 233);
+	padding: 4px;
+}
+QPushButton:hover {
+	background-color: rgb(211, 100, 211);
+}
+QPushButton:pressed {	
+	background-color: rgb(189, 147, 249);
+	color: rgb(255, 255, 255);
+}</string>
    </property>
    <layout class="QGridLayout" name="gridLayout_14">
     <item row="3" column="0">
@@ -25,10 +70,10 @@
        <bool>false</bool>
       </property>
       <property name="styleSheet">
-       <string notr="true">font: 11pt &quot;MS Shell Dlg 2&quot;;</string>
+       <string notr="true"/>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>0</number>
       </property>
       <property name="documentMode">
        <bool>true</bool>
@@ -43,7 +88,37 @@
           <property name="title">
            <string>Live XRF Processing</string>
           </property>
-          <layout class="QGridLayout" name="gridLayout_10">
+          <layout class="QGridLayout" name="gridLayout_9">
+           <item row="0" column="0">
+            <spacer name="horizontalSpacer_4">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item row="0" column="1">
+            <widget class="QPushButton" name="pb_live">
+             <property name="styleSheet">
+              <string notr="true"/>
+             </property>
+             <property name="text">
+              <string>     Start Live    </string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="2">
+            <widget class="QLabel" name="label_13">
+             <property name="text">
+              <string>Buffer time</string>
+             </property>
+            </widget>
+           </item>
            <item row="0" column="3">
             <widget class="QSpinBox" name="sb_buffer_time">
              <property name="suffix">
@@ -63,44 +138,8 @@
              </property>
             </widget>
            </item>
-           <item row="0" column="6">
+           <item row="0" column="4">
             <spacer name="horizontalSpacer_6">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>40</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-           <item row="0" column="2">
-            <widget class="QLabel" name="label_13">
-             <property name="text">
-              <string>Buffer time</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <layout class="QGridLayout" name="gridLayout_9">
-             <item row="0" column="0">
-              <widget class="QPushButton" name="pb_live">
-               <property name="styleSheet">
-                <string notr="true">background-color: rgb(255, 93, 29);
-font: 75 12pt &quot;MS Shell Dlg 2&quot;;
-</string>
-               </property>
-               <property name="text">
-                <string>Start Live</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item row="0" column="0">
-            <spacer name="horizontalSpacer_4">
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
              </property>
@@ -143,10 +182,10 @@ font: 75 12pt &quot;MS Shell Dlg 2&quot;;
              </sizepolicy>
             </property>
             <property name="styleSheet">
-             <string notr="true">background-color: rgb(255, 221, 98);</string>
+             <string notr="true"/>
             </property>
             <property name="text">
-             <string>Open PyXRF GUI</string>
+             <string>      Open PyXRF GUI      </string>
             </property>
            </widget>
           </item>
@@ -196,10 +235,10 @@ font: 75 12pt &quot;MS Shell Dlg 2&quot;;
              <item row="0" column="2" colspan="2">
               <widget class="QPushButton" name="pb_xrf_start">
                <property name="styleSheet">
-                <string notr="true">background-color: rgb(85, 255, 127);</string>
+                <string notr="true"/>
                </property>
                <property name="text">
-                <string>Start Batch Processing</string>
+                <string>  Start Batch Processing  </string>
                </property>
               </widget>
              </item>
@@ -432,8 +471,7 @@ font: 75 12pt &quot;MS Shell Dlg 2&quot;;
           <item row="1" column="3" colspan="2">
            <widget class="QPushButton" name="pb_start">
             <property name="styleSheet">
-             <string notr="true">font: 12pt &quot;MS Shell Dlg 2&quot;;
-background-color: rgb(170, 255, 255);</string>
+             <string notr="true"/>
             </property>
             <property name="text">
              <string>Go</string>
@@ -443,9 +481,7 @@ background-color: rgb(170, 255, 255);</string>
           <item row="1" column="5" colspan="2">
            <widget class="QPushButton" name="pb_close_plots">
             <property name="styleSheet">
-             <string notr="true">background-color: rgb(255, 77, 46);
-color: rgb(0, 0, 0);
-font: 75 10pt &quot;MS Shell Dlg 2&quot;;</string>
+             <string notr="true"/>
             </property>
             <property name="text">
              <string>Close All Plots</string>
@@ -522,7 +558,7 @@ font: 75 10pt &quot;MS Shell Dlg 2&quot;;</string>
            <item row="1" column="1">
             <widget class="QPushButton" name="pb_clear_batch">
              <property name="styleSheet">
-              <string notr="true">background-color: rgb(255, 103, 131);</string>
+              <string notr="true"/>
              </property>
              <property name="text">
               <string>Clear Batch File</string>
@@ -565,6 +601,40 @@ font: 75 10pt &quot;MS Shell Dlg 2&quot;;</string>
         <string>XANES_Calibration</string>
        </attribute>
        <layout class="QGridLayout" name="gridLayout_22">
+        <item row="4" column="0">
+         <spacer name="verticalSpacer_4">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>190</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="0" column="1">
+         <layout class="QGridLayout" name="gridLayout_19">
+          <item row="0" column="1">
+           <widget class="QLineEdit" name="le_sclr4_calib">
+            <property name="text">
+             <string>sclr1_ch4</string>
+            </property>
+            <property name="placeholderText">
+             <string>Fe_K</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_12">
+            <property name="text">
+             <string>IC3</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
         <item row="0" column="0">
          <layout class="QGridLayout" name="gridLayout_18">
           <item row="0" column="0">
@@ -586,71 +656,40 @@ font: 75 10pt &quot;MS Shell Dlg 2&quot;;</string>
           </item>
          </layout>
         </item>
-        <item row="0" column="1">
-         <layout class="QGridLayout" name="gridLayout_19">
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_12">
-            <property name="text">
-             <string>IC3</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QLineEdit" name="le_sclr4_calib">
-            <property name="text">
-             <string>sclr1_ch4</string>
-            </property>
-            <property name="placeholderText">
-             <string>Fe_K</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item row="0" column="2">
-         <spacer name="horizontalSpacer_7">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item row="0" column="3">
-         <widget class="QPushButton" name="pb_xanes_calib">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">background-color: rgb(189, 255, 222);</string>
-          </property>
-          <property name="text">
-           <string>Get Spectrum</string>
-          </property>
-         </widget>
-        </item>
         <item row="0" column="4">
          <widget class="QRadioButton" name="rb_h5Overwrite">
           <property name="text">
            <string>Overwrite h5s</string>
           </property>
+          <property name="autoExclusive">
+           <bool>false</bool>
+          </property>
          </widget>
         </item>
-        <item row="1" column="0" colspan="2">
+        <item row="2" column="0" colspan="2">
          <layout class="QGridLayout" name="gridLayout_21">
           <item row="0" column="0">
            <layout class="QGridLayout" name="gridLayout_20">
             <item row="0" column="0">
              <widget class="QPushButton" name="pb_plot_calib">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
               <property name="text">
-               <string>Plot</string>
+               <string>    Plot    </string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QRadioButton" name="rb_calib_derivative">
+              <property name="text">
+               <string>Derivative</string>
+              </property>
+              <property name="autoExclusive">
+               <bool>false</bool>
               </property>
              </widget>
             </item>
@@ -667,13 +706,6 @@ font: 75 10pt &quot;MS Shell Dlg 2&quot;;</string>
               </property>
              </spacer>
             </item>
-            <item row="0" column="1">
-             <widget class="QRadioButton" name="rb_calib_derivative">
-              <property name="text">
-               <string>Derivative</string>
-              </property>
-             </widget>
-            </item>
             <item row="0" column="2">
              <widget class="QPushButton" name="pb_save_calib">
               <property name="sizePolicy">
@@ -682,8 +714,11 @@ font: 75 10pt &quot;MS Shell Dlg 2&quot;;</string>
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
+              <property name="toolTip">
+               <string>Saves the calibration data as txt file</string>
+              </property>
               <property name="text">
-               <string>Save  as txt</string>
+               <string>    Save     </string>
               </property>
              </widget>
             </item>
@@ -691,15 +726,41 @@ font: 75 10pt &quot;MS Shell Dlg 2&quot;;</string>
           </item>
          </layout>
         </item>
-        <item row="2" column="0">
-         <spacer name="verticalSpacer_4">
+        <item row="2" column="4">
+         <widget class="QRadioButton" name="rb_loadh5">
+          <property name="text">
+           <string>Load h5</string>
+          </property>
+          <property name="autoExclusive">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2">
+         <widget class="QPushButton" name="pb_xanes_calib">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="styleSheet">
+           <string notr="true"/>
+          </property>
+          <property name="text">
+           <string>Start</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="2">
+         <spacer name="horizontalSpacer_7">
           <property name="orientation">
-           <enum>Qt::Vertical</enum>
+           <enum>Qt::Horizontal</enum>
           </property>
           <property name="sizeHint" stdset="0">
            <size>
-            <width>20</width>
-            <height>190</height>
+            <width>40</width>
+            <height>20</height>
            </size>
           </property>
          </spacer>
@@ -791,7 +852,7 @@ font: 75 10pt &quot;MS Shell Dlg 2&quot;;</string>
        <bool>false</bool>
       </property>
       <property name="styleSheet">
-       <string notr="true">font: 8pt &quot;Consolas&quot;;</string>
+       <string notr="true"/>
       </property>
       <property name="placeholderText">
        <string>updates...</string>
