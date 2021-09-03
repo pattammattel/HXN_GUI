@@ -126,6 +126,7 @@ class Ui(QtWidgets.QMainWindow):
 
         #copy scan plan
         self.pb_scan_copy.clicked.connect(self.copyScanPlan)
+        self.pb_batchscan_copy.clicked.connect(self.copyForBatch)
 
         # elog
         self.pb_pdf_wd.clicked.connect(self.select_pdf_wd)
@@ -208,6 +209,11 @@ class Ui(QtWidgets.QMainWindow):
                         f'{self.motor2},{self.mot2_s},{self.mot2_e},{self.mot2_steps},{self.dwell_t:.3f})'
 
         self.text_scan_plan.setText(scan_plan)
+
+    def copyForBatch(self):
+        self.text_scan_plan.setText('yield from'+self.text_scan_plan.text()[1:])
+        self.text_scan_plan.selectAll()
+        self.text_scan_plan.copy()
 
     def copyScanPlan(self):
         self.text_scan_plan.selectAll()
@@ -596,7 +602,66 @@ class Ui(QtWidgets.QMainWindow):
         RE.abort()
 
     #Sample Chamber
+    def StartPumpingProtocol():
 
+    # pumping PVs
+
+    slowVentClose = 'XF:03IDC-VA{ES:1-SlowVtVlv:Stg2}Cmd:Cls-Cmd'
+    fastVentClose = 'XF:03IDC-VA{ES:1-FastVtVlv:Stg3}Cmd:Cls-Cmd'
+
+    slowVentStatus = 'XF:03IDC-VA{ES:1-SlowVtVlv:Stg2}Sts:Cls-Sts'
+    fastVentStatus = 'XF:03IDC-VA{ES:1-FastVtVlv:Stg3}Sts:Cls-Sts'
+
+    pumpAON = 'XF:03IDC-VA{ES:1-FrPmp:A}Cmd:Start-Cmd'
+    pumpBON = 'XF:03IDC-VA{ES:1-FrPmp:B}Cmd:Start-Cmd'
+
+    pumpASlowOpen = 'XF:03IDC-VA{ES:1-SlowFrVlv:A}Cmd:Opn-Cmd'
+    pumpAFastOpen = 'XF:03IDC-VA{ES:1-FastFrVlv:A}Cmd:Opn-Cmd'
+
+    pumpBSlowOpen = 'XF:03IDC-VA{ES:1-SlowFrVlv:B}Cmd:Opn-Cmd'
+    pumpBFastOpen = 'XF:03IDC-VA{ES:1-FastFrVlv:B}Cmd:Opn-Cmd'
+
+    pumpAOFF = 'XF:03IDC-VA{ES:1-FrPmp:A}Cmd:Stop-Cmd'
+    pumpBOFF = 'XF:03IDC-VA{ES:1-FrPmp:B}Cmd:Stop-Cmd'
+
+    pumpASlowClose = 'XF:03IDC-VA{ES:1-SlowFrVlv:A}Cmd:Cls-Cmd'
+    pumpAFastClose = 'XF:03IDC-VA{ES:1-FastFrVlv:A}Cmd:Cls-Cmd'
+
+    pumpBSlowClose = 'XF:03IDC-VA{ES:1-SlowFrVlv:B}Cmd:Cls-Cmd'
+    pumpBFastClose = 'XF:03IDC-VA{ES:1-FastFrVlv:B}Cmd:Cls-Cmd'
+
+    # make sure vents are closed
+
+    [triggerPV(pv) for pv in [fastVentClose, slowVentClose]]
+
+    # turn on pumps
+    # make sure vents are closed
+    if caget(fastVentStatus) == 1 and caget(slowVentStatus) == 1:
+
+        [triggerPV(pv) for pv in [pumpAON, pumpASlowOpen, pumpBON, pumpBSlowOpen]]
+
+        # wait for vaccum to reach below 300 for fast open
+        waitWithProgessBar(12)
+
+        print("FAST Open triggered")
+        [triggerPV(pv) for pv in [pumpBFastOpen, pumpAFastOpen]]
+
+        # wait for vaccum to reach ~1
+        waitWithProgessBar(18)
+
+        # close pump valves
+        [triggerPV(pv) for pv in [pumpBFastClose, pumpAFastClose,
+                                  pumpBSlowClose, pumpASlowClose]]
+
+        # tun off the pumps
+        [triggerPV(pv) for pv in [pumpAOFF, pumpBOFF]]
+
+        # Done!
+
+        print("Pumping completed Successfully, Ready for He Backfill")
+
+    else:
+        print("Closing the vents failed; Try Manually closing them")
     def qMessageExcecute(self,funct):
         choice = QMessageBox.question(self, 'Sample Chamber Operation Warning',
                                       "Make sure this action is safe. \n Proceed?", QMessageBox.Yes |

@@ -55,40 +55,7 @@
 </string>
    </property>
    <layout class="QGridLayout" name="gridLayout_21">
-    <item row="0" column="0">
-     <widget class="QLabel" name="label_14">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="styleSheet">
-       <string notr="true">font: 30pt &quot;MS Shell Dlg 2&quot;;
-background-color: rgb(255, 225, 172);
-border-style: outset;
-border-width: 2px;
-border-radius: 10px</string>
-      </property>
-      <property name="text">
-       <string>HXN 3-ID</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="0">
-     <widget class="QPlainTextEdit" name="ple_info">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="0">
+    <item row="1" column="0" colspan="2">
      <widget class="QTabWidget" name="HXN_GUI_tabs">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -352,6 +319,22 @@ QPushButton:pressed{
              </item>
             </layout>
            </item>
+           <item row="0" column="1" colspan="2">
+            <widget class="QTextEdit" name="text_scan_plan">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">font: 8pt &quot;Consolas&quot;;</string>
+             </property>
+             <property name="readOnly">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
            <item row="1" column="0">
             <layout class="QHBoxLayout" name="horizontalLayout_10">
              <item>
@@ -401,38 +384,31 @@ QPushButton:pressed{
              </item>
             </layout>
            </item>
-           <item row="0" column="1" rowspan="2">
-            <layout class="QVBoxLayout" name="verticalLayout_23">
-             <item>
-              <widget class="QTextEdit" name="text_scan_plan">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="styleSheet">
-                <string notr="true">font: 8pt &quot;Consolas&quot;;</string>
-               </property>
-               <property name="readOnly">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="pb_scan_copy">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string>      Copy Scan Plan      </string>
-               </property>
-              </widget>
-             </item>
-            </layout>
+           <item row="1" column="1">
+            <widget class="QPushButton" name="pb_scan_copy">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>               Copy Scan Plan              </string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="2">
+            <widget class="QPushButton" name="pb_batchscan_copy">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>              Copy Plan For Batch                 </string>
+             </property>
+            </widget>
            </item>
           </layout>
          </widget>
@@ -1159,8 +1135,8 @@ QPushButton:pressed{
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>1284</width>
-                 <height>494</height>
+                 <width>1388</width>
+                 <height>512</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -2302,8 +2278,8 @@ QPushButton:pressed{
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>1284</width>
-                 <height>458</height>
+                 <width>1388</width>
+                 <height>461</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -3261,8 +3237,8 @@ QPushButton:pressed{
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>1047</width>
-                 <height>271</height>
+                 <width>1234</width>
+                 <height>299</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -4788,8 +4764,8 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>1306</width>
-             <height>387</height>
+             <width>1431</width>
+             <height>343</height>
             </rect>
            </property>
            <attribute name="label">
@@ -5080,8 +5056,8 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>372</width>
-             <height>254</height>
+             <width>436</width>
+             <height>296</height>
             </rect>
            </property>
            <attribute name="label">
@@ -5449,8 +5425,8 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>616</width>
-             <height>220</height>
+             <width>726</width>
+             <height>255</height>
             </rect>
            </property>
            <attribute name="label">
@@ -5972,14 +5948,14 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
                <item row="0" column="1">
                 <layout class="QVBoxLayout" name="verticalLayout_2">
                  <item>
-                  <widget class="QProgressBar" name="progressBar">
+                  <widget class="QProgressBar" name="prb_pump_slow">
                    <property name="value">
                     <number>24</number>
                    </property>
                   </widget>
                  </item>
                  <item>
-                  <widget class="QProgressBar" name="progressBar_2">
+                  <widget class="QProgressBar" name="prb_pump_fast">
                    <property name="value">
                     <number>24</number>
                    </property>
@@ -6059,14 +6035,14 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
                <item row="0" column="1">
                 <layout class="QVBoxLayout" name="verticalLayout_26">
                  <item>
-                  <widget class="QProgressBar" name="progressBar_4">
+                  <widget class="QProgressBar" name="prb_vent_slow">
                    <property name="value">
                     <number>24</number>
                    </property>
                   </widget>
                  </item>
                  <item>
-                  <widget class="QProgressBar" name="progressBar_5">
+                  <widget class="QProgressBar" name="prb_vent_fast">
                    <property name="value">
                     <number>24</number>
                    </property>
@@ -6097,7 +6073,7 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
               </widget>
              </item>
              <item row="1" column="0">
-              <widget class="QProgressBar" name="progressBar_3">
+              <widget class="QProgressBar" name="prb_he_backfill">
                <property name="value">
                 <number>24</number>
                </property>
@@ -6855,6 +6831,39 @@ color: rgb(255, 0, 0);</string>
       </widget>
      </widget>
     </item>
+    <item row="2" column="0" colspan="2">
+     <widget class="QPlainTextEdit" name="ple_info">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="0">
+     <widget class="QLabel" name="label_14">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">font: 30pt &quot;MS Shell Dlg 2&quot;;
+background-color: rgb(255, 225, 172);
+border-style: outset;
+border-width: 2px;
+border-radius: 10px</string>
+      </property>
+      <property name="text">
+       <string>HXN 3-ID</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -6863,7 +6872,7 @@ color: rgb(255, 0, 0);</string>
      <x>0</x>
      <y>0</y>
      <width>1475</width>
-     <height>27</height>
+     <height>34</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuOptions">
