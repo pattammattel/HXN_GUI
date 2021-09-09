@@ -213,7 +213,7 @@ class Ui(QtWidgets.QMainWindow):
         self.text_scan_plan.setText(scan_plan)
 
     def copyForBatch(self):
-        self.text_scan_plan.setText('yield from'+self.text_scan_plan.plainText()[1:])
+        self.text_scan_plan.setText('yield from'+self.text_scan_plan.toPlainText()[1:])
         self.text_scan_plan.selectAll()
         self.text_scan_plan.copy()
 
