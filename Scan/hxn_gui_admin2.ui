@@ -101,7 +101,7 @@ QPushButton:pressed{
        <enum>QTabWidget::North</enum>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>2</number>
       </property>
       <property name="documentMode">
        <bool>true</bool>
@@ -2278,7 +2278,7 @@ QPushButton:pressed{
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>1388</width>
+                 <width>1192</width>
                  <height>461</height>
                 </rect>
                </property>
@@ -5950,14 +5950,14 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
                  <item>
                   <widget class="QProgressBar" name="prb_pump_slow">
                    <property name="value">
-                    <number>24</number>
+                    <number>0</number>
                    </property>
                   </widget>
                  </item>
                  <item>
                   <widget class="QProgressBar" name="prb_pump_fast">
                    <property name="value">
-                    <number>24</number>
+                    <number>0</number>
                    </property>
                   </widget>
                  </item>
@@ -6037,14 +6037,14 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
                  <item>
                   <widget class="QProgressBar" name="prb_vent_slow">
                    <property name="value">
-                    <number>24</number>
+                    <number>0</number>
                    </property>
                   </widget>
                  </item>
                  <item>
                   <widget class="QProgressBar" name="prb_vent_fast">
                    <property name="value">
-                    <number>24</number>
+                    <number>0</number>
                    </property>
                   </widget>
                  </item>
@@ -6075,7 +6075,7 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
              <item row="1" column="0">
               <widget class="QProgressBar" name="prb_he_backfill">
                <property name="value">
-                <number>24</number>
+                <number>0</number>
                </property>
               </widget>
              </item>

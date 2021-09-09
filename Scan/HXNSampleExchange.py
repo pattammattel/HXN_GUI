@@ -8,15 +8,17 @@ def triggerPV(PV_name):
     caput(PV_name,1)
     time.sleep(2)
     
-def waitWithProgessBar(time_in_minues):
+def waitWithProgessBar(time_in_minues, pBarName):
     
     print(f"Timer started for {time_in_minues} minutes")
-    
+
+    timeNow = 0
     for _ in tqdm.trange(time_in_minues*60):
         time.sleep(1)
-    
+        perTime = (timeNow+1)*100/(time_in_minues*60)
+        pBarName.setValue(perTime)
 
-def StartPumpingProtocol():
+def StartPumpingProtocol(pBarName):
 
         #pumping PVs
 
@@ -52,17 +54,18 @@ def StartPumpingProtocol():
     #turn on pumps 
     #make sure vents are closed
     if caget(fastVentStatus)==1 and caget(slowVentStatus)==1:
-        
+
+        #turn pumps on and open slow valves
         [triggerPV(pv) for pv in [pumpAON,pumpASlowOpen,pumpBON,pumpBSlowOpen]]
         
         #wait for vaccum to reach below 300 for fast open
-        waitWithProgessBar(12)
+        waitWithProgessBar(12,pBarName[0])
             
         print("FAST Open triggered")
         [triggerPV(pv) for pv in [pumpBFastOpen,pumpAFastOpen]]
 
         #wait for vaccum to reach ~1  
-        waitWithProgessBar(18)
+        waitWithProgessBar(18,pBarName[1])
         
         #close pump valves
         [triggerPV(pv) for pv in [pumpBFastClose,pumpAFastClose,
@@ -77,7 +80,7 @@ def StartPumpingProtocol():
         
     else: print("Closing the vents failed; Try Manually closing them")
     
-def StartAutoHeBackFill():
+def StartAutoHeBackFill(pBarName):
 
     #pump valve status
 
@@ -102,13 +105,13 @@ def StartAutoHeBackFill():
     #only execute if pump vales are closed
     if readyForHe:    
         triggerPV(startAutoHeBackfill)
-        waitWithProgessBar(15)
+        waitWithProgessBar(15,pBarName)
         print("He backfilled; Please close the cyclinder")
         
     else: print("One or more valves is not closed; try again")
             
     
-def ventChamber():
+def ventChamber(pBarName):
     
     slowVentOpen = 'XF:03IDC-VA{ES:1-SlowVtVlv:Stg2}Cmd:Opn-Cmd'
     fastVentOpen = 'XF:03IDC-VA{ES:1-FastVtVlv:Stg3}Cmd:Opn-Cmd'
@@ -117,10 +120,10 @@ def ventChamber():
     caput('XF:03IDC-ES{Det:Vort-Ax:X}Mtr.VAL',-107)
     
     triggerPV(slowVentOpen)
-    waitWithProgessBar(10)
+    waitWithProgessBar(10,pBarName[0])
     
     triggerPV(fastVentOpen)
-    waitWithProgessBar(2)
+    waitWithProgessBar(2,pBarName[1])
     
     
         
