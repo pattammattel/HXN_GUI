@@ -101,7 +101,7 @@ QPushButton:pressed{
        <enum>QTabWidget::North</enum>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>0</number>
       </property>
       <property name="documentMode">
        <bool>true</bool>
@@ -2278,7 +2278,7 @@ QPushButton:pressed{
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>1192</width>
+                 <width>1388</width>
                  <height>461</height>
                 </rect>
                </property>
@@ -5056,8 +5056,8 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>436</width>
-             <height>296</height>
+             <width>1431</width>
+             <height>378</height>
             </rect>
            </property>
            <attribute name="label">
@@ -5425,8 +5425,8 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>726</width>
-             <height>255</height>
+             <width>1431</width>
+             <height>373</height>
             </rect>
            </property>
            <attribute name="label">
@@ -5875,13 +5875,29 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>100</width>
-             <height>30</height>
+             <width>1431</width>
+             <height>343</height>
             </rect>
            </property>
            <attribute name="label">
             <string>Step Scans</string>
            </attribute>
+           <widget class="QLabel" name="label_42">
+            <property name="geometry">
+             <rect>
+              <x>420</x>
+              <y>220</y>
+              <width>301</width>
+              <height>111</height>
+             </rect>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">font: 24pt &quot;MS Shell Dlg 2&quot;;</string>
+            </property>
+            <property name="text">
+             <string>Work in Progess </string>
+            </property>
+           </widget>
           </widget>
          </widget>
         </item>
@@ -5966,13 +5982,6 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
               </layout>
              </item>
             </layout>
-           </item>
-           <item row="1" column="1">
-            <widget class="QLabel" name="label_42">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
            </item>
            <item row="2" column="1">
             <widget class="QLabel" name="label_55">
