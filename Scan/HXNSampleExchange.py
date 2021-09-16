@@ -3,6 +3,7 @@
 
 import time, tqdm
 from epics import caget, caput
+from PyQt5 import QtWidgets, uic, QtCore, QtGui, QtTest
 
 def triggerPV(PV_name):
     caput(PV_name,1)
@@ -13,10 +14,12 @@ def waitWithProgessBar(time_in_minues, pBarName):
     print(f"Timer started for {time_in_minues} minutes")
 
     timeNow = 0
-    for _ in tqdm.trange(time_in_minues*60):
-        time.sleep(1)
-        perTime = (timeNow+1)*100/(time_in_minues*60)
-        pBarName.setValue(perTime)
+    perTime = 0
+    for _ in range(time_in_minues*60):
+        QtTest.QTest.qWait(500)
+        perTime += (timeNow+1)*100/(time_in_minues*60)
+        pBarName.setValue(int(round(perTime)))
+        QtTest.QTest.qWait(500)
 
 def StartPumpingProtocol(pBarName):
 
@@ -120,7 +123,7 @@ def ventChamber(pBarName):
     caput('XF:03IDC-ES{Det:Vort-Ax:X}Mtr.VAL',-107)
     
     triggerPV(slowVentOpen)
-    waitWithProgessBar(10,pBarName[0])
+    waitWithProgessBar(8,pBarName[0])
     
     triggerPV(fastVentOpen)
     waitWithProgessBar(2,pBarName[1])

@@ -98,11 +98,9 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_cam11IN.clicked.connect(self.cam11IN)
 
         # sample exchange
-        self.pb_start_pump.clicked.connect (lambda:self.qMessageExcecute(StartPumpingProtocol(
-            [self.prb_pump_slow,self.prb_pump_fast])))
-        self.pb_auto_he_fill.clicked.connect(lambda: self.qMessageExcecute(StartAutoHeBackFill(self.prb_he_backfill)))
-        self.pb_vent.clicked.connect(lambda: self.qMessageExcecute(
-            ventChamber([self.prb_vent_slow,self.prb_vent_fast])))
+        self.pb_start_pump.clicked.connect (lambda:StartPumpingProtocol([self.prb_pump_slow,self.prb_pump_fast]))
+        self.pb_auto_he_fill.clicked.connect(lambda: StartAutoHeBackFill(self.prb_he_backfill))
+        self.pb_vent.clicked.connect(lambda:ventChamber([self.prb_vent_slow,self.prb_vent_fast]))
 
         # sample position
         self.pb_save_pos.clicked.connect(self.generatePositionDict)
@@ -199,7 +197,7 @@ class Ui(QtWidgets.QMainWindow):
         if self.rb_1d.isChecked():
             self.label_scan_info_calc.setText(f'X: {(cal_res_x * 1000):.2f} nm, Y: {(cal_res_y * 1000):.2f} nm \n'
                                               f'{tot_t_1d:.2f} minutes + overhead')
-            self.scan_plan = f'<fly1d({self.det},{self.motor1}, {self.mot1_s},{self.mot1_e}, ' \
+            self.scan_plan = f'fly1d({self.det},{self.motor1}, {self.mot1_s},{self.mot1_e}, ' \
                         f'{self.mot1_steps}, {self.dwell_t:.3f})'
 
 
@@ -207,18 +205,18 @@ class Ui(QtWidgets.QMainWindow):
         else:
             self.label_scan_info_calc.setText(f'X: {(cal_res_x * 1000):.2f} nm, Y: {(cal_res_y * 1000):.2f} nm \n'
                                               f'{tot_t_2d:.2f} minutes + overhead')
-            self.scan_plan = f'<fly2d({self.det}, {self.motor1},{self.mot1_s}, {self.mot1_e}, {self.mot1_steps},' \
+            self.scan_plan = f'fly2d({self.det}, {self.motor1},{self.mot1_s}, {self.mot1_e}, {self.mot1_steps},' \
                         f'{self.motor2},{self.mot2_s},{self.mot2_e},{self.mot2_steps},{self.dwell_t:.3f})'
 
         self.text_scan_plan.setText(self.scan_plan)
 
     def copyForBatch(self):
-        self.text_scan_plan.setText('yield from '+self.text_scan_plan.toPlainText()[1:])
+        self.text_scan_plan.setText('yield from '+self.scan_plan)
         self.text_scan_plan.selectAll()
         self.text_scan_plan.copy()
 
     def copyScanPlan(self):
-        self.text_scan_plan.setText(self.scan_plan)
+        self.text_scan_plan.setText('<'+self.scan_plan)
         self.text_scan_plan.selectAll()
         self.text_scan_plan.copy()
 
@@ -606,10 +604,11 @@ class Ui(QtWidgets.QMainWindow):
 
     #Sample Chamber
     def qMessageExcecute(self,funct):
+        QtTest.QTest.qWait(500)
         choice = QMessageBox.question(self, 'Sample Chamber Operation Warning',
                                       "Make sure this action is safe. \n Proceed?", QMessageBox.Yes |
                                       QMessageBox.No, QMessageBox.No)
-
+        QtTest.QTest.qWait(500)
         if choice == QMessageBox.Yes:
             RE(funct)
 

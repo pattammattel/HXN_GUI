@@ -1620,14 +1620,14 @@ QPushButton:pressed{
                          <item>
                           <widget class="QPushButton" name="pb_roiList_export">
                            <property name="text">
-                            <string>Export List</string>
+                            <string>  Export List  </string>
                            </property>
                           </widget>
                          </item>
                          <item>
                           <widget class="QPushButton" name="pb_roiList_import">
                            <property name="text">
-                            <string>Import List</string>
+                            <string>   Import List   </string>
                            </property>
                           </widget>
                          </item>
@@ -1746,7 +1746,7 @@ QPushButton:pressed{
                 <item row="1" column="1" rowspan="2" colspan="2">
                  <widget class="QGroupBox" name="groupBox_18">
                   <property name="title">
-                   <string>Detector Controls</string>
+                   <string>Detector/Camera Controls</string>
                   </property>
                   <layout class="QGridLayout" name="gridLayout_7">
                    <property name="leftMargin">
@@ -5056,8 +5056,8 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>1431</width>
-             <height>378</height>
+             <width>436</width>
+             <height>296</height>
             </rect>
            </property>
            <attribute name="label">
@@ -5425,8 +5425,8 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>1431</width>
-             <height>373</height>
+             <width>726</width>
+             <height>255</height>
             </rect>
            </property>
            <attribute name="label">
@@ -5875,8 +5875,8 @@ font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>1431</width>
-             <height>343</height>
+             <width>100</width>
+             <height>30</height>
             </rect>
            </property>
            <attribute name="label">
