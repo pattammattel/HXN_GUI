@@ -126,7 +126,7 @@ class ImageCorrelationWindow(QtWidgets.QMainWindow):
 
     def loadRefImage(self):
         self.file_name = QtWidgets.QFileDialog().getOpenFileName(self, "Select Ref Image", '',
-                                                                 'image file(*png *jpeg *tiff *tif )')
+                                                                 'image file(*png *jpeg *tiff *tif *jpg *JPG )')
         if self.file_name[0]:
             self.ref_image = cv2.imread(self.file_name[0])
             self.ref_image = cv2.cvtColor(self.ref_image, cv2.COLOR_BGR2RGB)
