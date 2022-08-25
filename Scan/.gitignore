@@ -1,6 +1,36 @@
-*.tiff
-*.txt
-*.pptx
-*.png
-*.nor
+
+### Python template
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+__enamlcache__/
+
+
+
+# imagefiles/icons
 *.jpg
+*.PNG
+*.png
+*.tiff
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+
+
+# vim
+*.swp
+
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+
+#ipython notebook stuff
+.ipynb_checkpoints/
+
+.tags

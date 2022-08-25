@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
 
-# Author: Ajith Pattammattel
+# __Author__: Ajith Pattammattel
 # Original Date:06-23-2020
 
 import os
@@ -11,27 +10,40 @@ import collections
 import webbrowser
 import pyqtgraph as pg
 import json
+import matplotlib
 from scipy.ndimage import rotate
+from epics import caget, caput
 
 from PyQt5 import QtWidgets, uic, QtCore, QtGui, QtTest
-from PyQt5.QtWidgets import QMessageBox, QFileDialog
-from PyQt5.QtCore import QObject, QTimer, QThread, pyqtSignal, pyqtSlot, QRunnable, QThreadPool
+from PyQt5.QtWidgets import QMessageBox, QFileDialog, QApplication, QLCDNumber, QLabel, QErrorMessage
+from PyQt5.QtCore import QObject, QTimer, QThread, pyqtSignal, pyqtSlot, QRunnable, QThreadPool, QDate
 
 from pdf_log import *
 from xanes2d import *
-
+from xanesFunctions import *
+from HXNSampleExchange import *
+ui_path = os.path.dirname(os.path.abspath(__file__))
 
 class Ui(QtWidgets.QMainWindow):
     def __init__(self):
         super(Ui, self).__init__()
-        ui_path = os.path.dirname(os.path.abspath(__file__))
-        uic.loadUi(os.path.join(ui_path, "hxn_gui_admin2.ui"), self)
+        uic.loadUi(os.path.join(ui_path,'hxn_gui_2.0.ui'), self)
         self.initParams()
         self.ImageCorrelationPage()
-        self.webbrowserSetUpHxnWS1()
+        self.client = webbrowser.get('firefox')
+        self.threadpool = QThreadPool()
+        self.tw_hxn_contact.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
 
         self.energies = []
         self.roiDict = {}
+
+        self.motor_list = {'zpssx': zpssx, 'zpssy': zpssy, 'zpssz': zpssz,
+        'dssx': dssx, 'dssy': dssy, 'dssz': dssz}
+
+        #self.updateLiveValues(self.livePVs)
+        #self.createlivePVList()
+        #self.liveUpdateTimer() #working
+
 
         # updating resolution/tot time
         self.dwell.valueChanged.connect(self.initParams)
@@ -48,6 +60,11 @@ class Ui(QtWidgets.QMainWindow):
         self.rb_1d.clicked.connect(self.initParams)
         self.rb_2d.clicked.connect(self.initParams)
 
+        #Abort scan plan
+        self.pb_reqPause.clicked.connect(self.requestScanPause)
+        self.pb_REAbort.clicked.connect(self.scanAbort)
+        self.pb_REResume.clicked.connect(self.scanResume)
+
         # text files and editor controls
         self.pb_save_cmd.clicked.connect(self.save_file)
         self.pb_clear_cmd.clicked.connect(self.clear_cmd)
@@ -63,46 +80,118 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_erf_fit.clicked.connect(self.plot_erf_fit)
         self.pb_plot_line_center.clicked.connect(self.plot_line_center)
 
+
         # xanes parameters
-        self.pb_gen_elist.clicked.connect(self.generateEList)
+        self.pb_gen_elist.clicked.connect(self.generateDataFrame)
         self.pb_set_epoints.clicked.connect(self.generate_epoints)
-        # self.pb_start_xanes.clicked.connect(self.zpXANES)
+        self.pb_print_xanes_param.clicked.connect(lambda: self.ple_info.setPlainText(str(self.xanesParamsDict)))
+        self.pb_display_xanes_plan.clicked.connect(self.displayXANESPlan)
+        #self.pb_Start_Xanes.clicked.connect(self.runZPXANES)
+        self.pb_xanes_rsr_fldr.clicked.connect(self.getXanesUserFolder)
 
         # scans and motor motion
         self.start.clicked.connect(self.initFlyScan)
+        #self.start.clicked.connect(self.liveUpdateThread)
+        #self.start.clicked.connect(self.flyThread)
 
-        self.pb_move_smarx_pos.clicked.connect(self.move_smarx)
-        self.pb_move_smary_pos.clicked.connect(self.move_smary)
-        self.pb_move_smarz_pos.clicked.connect(self.move_smarz)
-        self.pb_move_dth_pos.clicked.connect(self.move_dsth)
-        self.pb_move_zpz_pos.clicked.connect(self.move_zpz1)
 
-        self.pb_move_smarx_neg.clicked.connect(self.move_smarx(neg_=True))
-        self.pb_move_smary_neg.clicked.connect(self.move_smary(neg_=True))
-        self.pb_move_smarz_neg.clicked.connect(self.move_smarz(neg_=True))
-        self.pb_move_dth_neg.clicked.connect(self.move_dsth(neg_=True))
-        self.pb_move_zpz_neg.clicked.connect(self.move_zpz1(neg_=True))
+        if False: #self.rb_mll.isChecked():
+            #zpmotors
+            self.pb_move_smarx_pos.clicked.connect(self.move_dsx)
+            self.pb_move_smary_pos.clicked.connect(self.move_dsy)
+            self.pb_move_smarz_pos.clicked.connect(self.move_dsz)
+            self.pb_move_dth_pos.clicked.connect(self.move_dsth)
+            self.pb_move_zpz_pos.clicked.connect(self.move_zpz1)
+
+            self.pb_move_smarx_neg.clicked.connect(lambda: self.move_dsx(neg_=True))
+            self.pb_move_smary_neg.clicked.connect(lambda: self.move_dsy(neg_=True))
+            self.pb_move_smarz_neg.clicked.connect(lambda: self.move_dsz(neg_=True))
+            self.pb_move_dth_pos_neg.clicked.connect(lambda: self.move_dsth(neg_=True))
+            self.pb_move_zpz_neg.clicked.connect(lambda: self.move_zpz1(neg_=True))
+
+        else:
+
+
+            self.pb_move_smarx_pos.clicked.connect(self.move_smarx)
+            self.pb_move_smary_pos.clicked.connect(self.move_smary)
+            self.pb_move_smarz_pos.clicked.connect(self.move_smarz)
+            self.pb_move_dth_pos.clicked.connect(self.move_dsth)
+            self.pb_move_zpz_pos.clicked.connect(self.move_zpz1)
+
+            self.pb_move_smarx_neg.clicked.connect(lambda: self.move_smarx(neg_=True))
+            self.pb_move_smary_neg.clicked.connect(lambda: self.move_smary(neg_=True))
+            self.pb_move_smarz_neg.clicked.connect(lambda: self.move_smarz(neg_=True))
+            self.pb_move_dth_pos_neg.clicked.connect(lambda: self.move_dsth(neg_=True))
+            self.pb_move_zpz_neg.clicked.connect(lambda: self.move_zpz1(neg_=True))
 
         # Detector/Camera Motions
+
+        #Merlin
         self.pb_merlinOUT.clicked.connect(self.merlinOUT)
         self.pb_merlinIN.clicked.connect(self.merlinIN)
+        #fluorescence det
         self.pb_vortexOUT.clicked.connect(self.vortexOUT)
         self.pb_vortexIN.clicked.connect(self.vortexIN)
+        #cam06
         self.pb_cam6IN.clicked.connect(self.cam6IN)
         self.pb_cam6OUT.clicked.connect(self.cam6OUT)
+        self.pb_CAM6_IN.clicked.connect(self.cam6IN)
+        self.pb_CAM6_OUT.clicked.connect(self.cam6OUT)
+        #cam11
         self.pb_cam11IN.clicked.connect(self.cam11IN)
+
+        # sample exchange
+        #self.pb_start_pump.clicked.connect (lambda:StartPumpingProtocol([self.prb_pump_slow,self.prb_pump_fast]))
+        #self.pb_auto_he_fill.clicked.connect(lambda: StartAutoHeBackFill(self.prb_he_backfill))
+        #self.pb_vent.clicked.connect(lambda:ventChamber([self.prb_vent_slow,self.prb_vent_fast]))
+
+        # sample exchange
+        self.pb_start_pump.clicked.connect(self.pumpThread)
+        self.pb_auto_he_fill.clicked.connect(self.heBackFillThread)
+        self.pb_vent.clicked.connect(self.ventThread)
+
+        #SSA2 motion
+        self.pb_SSA2_Open.clicked.connect(lambda:self.SSA2_Pos(2.1, 2.1))
+        self.pb_SSA2_Close.clicked.connect(lambda:self.SSA2_Pos(0.05, 0.03))
+        self.pb_SSA2_Close.clicked.connect(lambda:self.SSA2_Pos(0.05, 0.03))
+        self.pb_SSA2_HClose.clicked.connect(lambda:self.SSA2_Pos(0.1, 2.1))
+        self.pb_SSA2_VClose.clicked.connect(lambda:self.SSA2_Pos(2.1, 0.1))
+
+        #s5 slits
+        self.pb_S5_Open.clicked.connect(lambda:self.S5_Pos(4,4))
+        self.pb_S5_Close.clicked.connect(lambda:self.S5_Pos(0.28,0.28))
+        self.pb_S5_HClose.clicked.connect(lambda:self.S5_Pos(0.1,0.28))
+        self.pb_S5_VClose.clicked.connect(lambda:self.S5_Pos(0.28,0.1))
+
+        #front end
+        self.pb_FS_IN.clicked.connect(self.FS_IN)
+        self.pb_FS_OUT.clicked.connect(self.FS_OUT)
+
+        #OSA Y Pos
+        self.pb_osa_out.clicked.connect(self.ZP_OSA_OUT)
+        self.pb_osa_in.clicked.connect(self.ZP_OSA_IN)
+
+        #alignment
+        self.pb_ZPZFocusScanStart.clicked.connect(self.zpFocusScan)
+        self.pb_MoveZPZ1AbsPos.clicked.connect(self.zpMoveAbs)
+
 
         # sample position
         self.pb_save_pos.clicked.connect(self.generatePositionDict)
         self.pb_roiList_import.clicked.connect(self.importROIDict)
         self.pb_roiList_export.clicked.connect(self.exportROIDict)
         self.pb_roiList_clear.clicked.connect(self.clearROIList)
-        self.sampleROI_List.itemClicked.connect(self.showROIPos)
+        #self.sampleROI_List.itemClicked.connect(self.showROIPos)
+        #self.sampleROI_List.itemClicked.connect(lambda: self.ple_info.appendPlainText(
+            #(str(self.roiDict[self.sampleROI_List.currentItem().text()]))))
+
+        self.sampleROI_List.itemClicked.connect(self.showROIPosition)
+
+        self.pb_move_pos.clicked.connect(self.gotoROIPosition)
         self.pb_recover_scan_pos.clicked.connect(self.gotoPosSID)
         self.pb_show_scan_pos.clicked.connect(self.viewScanPosSID)
         self.pb_print_scan_meta.clicked.connect(self.viewScanMetaData)
-        self.pb_recover_scan_pos.clicked.connect(self.gotoPosSID)
-        self.pb_show_scan_pos.clicked.connect(self.viewScanPosSID)
+        self.pb_copy_curr_pos.clicked.connect(self.copyPosition)
 
         # Quick fill scan Params
         self.pb_3030.clicked.connect(self.fill_common_scan_params)
@@ -110,12 +199,17 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_66.clicked.connect(self.fill_common_scan_params)
         self.pb_22.clicked.connect(self.fill_common_scan_params)
 
+        #copy scan plan
+        self.pb_scan_copy.clicked.connect(self.copyScanPlan)
+        self.pb_batchscan_copy.clicked.connect(self.copyForBatch)
+
         # elog
         self.pb_pdf_wd.clicked.connect(self.select_pdf_wd)
         self.pb_pdf_image.clicked.connect(self.select_pdf_image)
         self.pb_save_pdf.clicked.connect(self.force_save_pdf)
         self.pb_createpdf.clicked.connect(self.generate_pdf)
         self.pb_fig_to_pdf.clicked.connect(self.InsertFigToPDF)
+        self.dateEdit_elog.setDate(QDate.currentDate())
 
         # admin control
         self.pb_apply_user_settings.clicked.connect(self.setUserLevel)
@@ -123,16 +217,103 @@ class Ui(QtWidgets.QMainWindow):
         # close the application
         self.actionClose_Application.triggered.connect(self.close_application)
 
+        self.liveUpdateThread()
+        self.scanStatusThread()
+
         self.show()
 
-    def webbrowserSetUpHxnWS1(self):
-        try:
-            chrome_path = '/usr/bin/google-chrome-stable'
-            webbrowser.register('chrome', None, webbrowser.BackgroundBrowser(chrome_path))
-            self.client = webbrowser.get('chrome')
+    def createlivePVList(self):
+        #any change here should be made at the thread class too , not good, pass thsi dict to the thread?
 
-        except:
-            pass
+        self.livePVs = {
+            self.lcd_ic3:int(caget("XF:03IDC-ES{Sclr:2}_cts1.D")),
+            self.lcd_monoE:caget("XF:03ID{}Energy-I"),
+            self.lcdPressure:caget("XF:03IDC-VA{VT:Chm-CM:1}P-I"),
+            self.lcd_scanNumber:int(caget("XF:03IDC-ES{Status}ScanID-I")),
+            self.db_smarx:smarx.position,
+            self.db_smary:smary.position,
+            self.db_smarz:smarz.position,
+            self.db_zpsth:np.around(zpsth.position,2),
+            self.lcd_ZpTh:np.around(zpsth.position,2),
+            self.db_zpz1:np.around(zp.zpz1.position,4),
+            self.db_ssa2_x:ssa2.hgap.position,
+            self.db_ssa2_y:ssa2.vgap.position,
+            self.db_fs:caget("XF:03IDA-OP{FS:1-Ax:Y}Mtr.RBV"),
+            self.db_cam6:caget("XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.RBV"),
+            self.db_fs_det:np.around(fdet1.x.position,1),
+            self.db_diffx:np.around(diff.x.position,1),
+            self.db_cam06x:caget("XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.RBV"),
+            self.db_s5_x:s5.hgap.position,
+            self.db_s5_y:s5.vgap.position
+            }
+        return self.livePVs
+
+    '''
+    #moved to a thread
+    def updateLiveValues(self,livePVs):
+        #print ("updating live values")
+        self.livePVs = self.createlivePVList()
+        for item in livePVs.items():
+            if isinstance (item[0],QLabel):
+                if item[1]==1:
+                    item[0].setText("        Scan in Progress       ")
+                    item[0].setStyleSheet('background-color : green')
+                else:
+                    item[0].setText("         Idle        ")
+                    item[0].setStyleSheet('background-color : yellow')
+
+            else:
+                #print("False")
+                item[0].setValue(item[1])
+
+    '''
+
+    def updateLiveVals(self,livePVList):
+        #print ("updating live values")
+        self.livePVs = self.createlivePVList()
+        livePVs = {key:value for key, value in zip(self.livePVs.keys(),livePVList)}
+        for item in livePVs.items():
+                item[0].setValue(item[1])
+    '''
+    def liveUpdateTimer(self):
+        #print("live update on")
+
+        self.updateTimer = QTimer()
+        self.updateTimer.timeout.connect(lambda:self.updateLiveValues(self.livePVs))
+        self.updateTimer.start(500)
+
+    '''
+
+    def scanStatus(self,sts):
+
+        if sts==1:
+            self.label_scanStatus.setText("        Scan in Progress       ")
+            self.label_scanStatus.setStyleSheet("background-color:rgb(0, 255, 0);color:rgb(255,0, 0)")
+        else:
+            self.label_scanStatus.setText("         Idle        ")
+            self.label_scanStatus.setStyleSheet("background-color:rgb(255, 255, 0);color:rgb(0, 255, 0)")
+
+    def scanStatusThread(self):
+
+        self.scanStatus_thread = liveStatus("XF:03IDC-ES{Status}ScanRunning-I")
+        self.scanStatus_thread.current_sts.connect(self.scanStatus)
+        self.scanStatus_thread.start()
+
+    def liveUpdateThread(self):
+        print("Thread Started")
+        self.liveWorker = liveUpdate()
+        self.liveWorker.current_positions.connect(self.updateLiveVals)
+        self.liveWorker.start()
+
+    def scanStatusMonitor(self):
+        scanStatus = caget("XF:03IDC-ES{Status}ScanRunning-I")
+        if scanStatus == 1:
+            self.label_scanStatus.setText("Scan in Progress")
+            self.label_scanStatus.setStyleSheet("background-color:rgb(0, 255, 0);color:rgb(255,0, 0)")
+
+        else:
+            self.label_scanStatus.setText("Idle")
+            self.label_scanStatus.setStyleSheet("background-color:rgb(255, 255, 0);color:rgb(0, 255, 0)")
 
     def setUserLevel(self):
 
@@ -160,43 +341,68 @@ class Ui(QtWidgets.QMainWindow):
 
         self.dwell_t = self.dwell.value()
 
+        self.motor1 = self.cb_motor1.currentText()
+        self.motor2 = self.cb_motor2.currentText()
+
+
+        self.det_list = {'dets1': dets1, 'dets2': dets2, 'dets3': dets3,
+                         'dets4': dets4, 'dets_fs': dets_fs}
+
     def initParams(self):
         self.getScanValues()
 
-        cal_res_x = (abs(self.mot1_s) + abs(self.mot1_e)) / self.mot1_steps
-        cal_res_y = (abs(self.mot2_s) + abs(self.mot2_e)) / self.mot2_steps
+        cal_res_x = abs(self.mot1_e - self.mot1_s) / self.mot1_steps
+        cal_res_y = abs(self.mot2_e - self.mot2_s) / self.mot2_steps
         tot_t_2d = self.mot1_steps * self.mot2_steps * self.dwell_t / 60
         tot_t_1d = self.mot1_steps * self.dwell_t / 60
 
         if self.rb_1d.isChecked():
             self.label_scan_info_calc.setText(f'X: {(cal_res_x * 1000):.2f} nm, Y: {(cal_res_y * 1000):.2f} nm \n'
                                               f'{tot_t_1d:.2f} minutes + overhead')
-            self.label_scanMacro.setText(f'fly1d({self.det}, {self.mot1_s}, '
-                                         f'{self.mot1_e}, {self.mot1_steps}, {self.dwell_t:.3f})')
+            self.scan_plan = f'fly1d({self.det},{self.motor1}, {self.mot1_s},{self.mot1_e}, ' \
+                        f'{self.mot1_steps}, {self.dwell_t:.3f})'
+
+
 
         else:
             self.label_scan_info_calc.setText(f'X: {(cal_res_x * 1000):.2f} nm, Y: {(cal_res_y * 1000):.2f} nm \n'
                                               f'{tot_t_2d:.2f} minutes + overhead')
-            self.label_scanMacro.setText(f'fly2d({self.det}, {self.mot1_s}, {self.mot1_e}, {self.mot1_steps}, '
-                                         f'{self.mot2_s},{self.mot2_e},{self.mot2_steps},{self.dwell_t:.3f})')
+            self.scan_plan = f'fly2d({self.det}, {self.motor1},{self.mot1_s}, {self.mot1_e}, {self.mot1_steps},' \
+                        f'{self.motor2},{self.mot2_s},{self.mot2_e},{self.mot2_steps},{self.dwell_t:.3f})'
+
+        self.text_scan_plan.setText(self.scan_plan)
+
+    def copyForBatch(self):
+        self.text_scan_plan.setText('yield from '+self.scan_plan)
+        self.text_scan_plan.selectAll()
+        self.text_scan_plan.copy()
+
+    def copyScanPlan(self):
+        self.text_scan_plan.setText('<'+self.scan_plan)
+        self.text_scan_plan.selectAll()
+        self.text_scan_plan.copy()
 
     def initFlyScan(self):
         self.getScanValues()
-
-        self.motor1 = self.cb_motor1.currentText()
-        self.motor2 = self.cb_motor2.currentText()
-
-        self.motor_list = {'zpssx': zpssx, 'zpssy': zpssy, 'zpssz': zpssz}
-        self.det_list = {'dets1': dets1, 'dets2': dets2, 'dets3': dets3,
-                         'dets4': dets4, 'dets_fs': dets_fs}
 
         if self.rb_1d.isChecked():
             RE(fly1d(self.det_list[self.det], self.motor_list[self.motor1],
                      self.mot1_s, self.mot1_e, self.mot1_steps, self.dwell_t))
 
         else:
-            RE(fly2d(self.det_list[self.det], self.motor_list[self.motor1], self.mot1_s, self.mot1_e, self.mot1_steps,
-                     self.motor_list[self.motor2], self.mot2_s, self.mot2_e, self.mot2_steps, self.dwell_t))
+            if self.motor_list[self.motor1] == self.motor_list[self.motor2]:
+                msg = QErrorMessage(self)
+                msg.setWindowTitle("Flyscan Motors are the same")
+                msg.showMessage(f"Choose two different motors for 2D scan. You selected {self.motor_list[self.motor1].name}")
+                return
+            else:
+
+                RE(fly2d(self.det_list[self.det], self.motor_list[self.motor1], self.mot1_s, self.mot1_e, self.mot1_steps,
+                        self.motor_list[self.motor2], self.mot2_s, self.mot2_e, self.mot2_steps, self.dwell_t))
+
+    def flyThread(self):
+        flyWorker = Worker(self.initFlyScan)
+        self.threadpool.start(flyWorker)
 
     def disableMot2(self):
         self.y_start.setEnabled(False)
@@ -224,6 +430,21 @@ class Ui(QtWidgets.QMainWindow):
             self.x_step.setValue(valsToFill[2])
             self.y_step.setValue(valsToFill[3])
             self.dwell.setValue(valsToFill[4])
+
+    def requestScanPause(self):
+        RE.request_pause(True)
+        self.pb_REAbort.setEnabled(True)
+        self.pb_REResume.setEnabled(True)
+
+    def scanAbort(self):
+        RE.abort()
+        self.pb_REAbort.setEnabled(False)
+        self.pb_REResume.setEnabled(False)
+
+    def scanResume():
+        RE.resume()
+        self.pb_REAbort.setEnabled(False)
+        self.pb_REResume.setEnabled(False)
 
     def moveAMotor(self, val_box, mot_name, unit_conv_factor: float = 1, neg=False):
 
@@ -255,13 +476,40 @@ class Ui(QtWidgets.QMainWindow):
         else:
             RE(movr_zpz1(self.db_move_zpz.value() * 0.001))
 
+    #mll
+
+    def move_dsx(self, neg_=False):
+        self.moveAMotor(self.db_move_smarx, dsx, 1, neg=neg_)
+
+    def move_dsy(self, neg_=False):
+        self.moveAMotor(self.db_move_smary, dsy, 1, neg=neg_)
+
+    def move_dsz(self, neg_=False):
+        self.moveAMotor(self.db_move_smarz, dsz, 1, neg=neg_)
+
+    def move_dsth(self, neg_=False):
+        self.moveAMotor(self.db_move_dth, dsth, neg=neg_)
+
+
+
     def ZP_OSA_OUT(self):
-        RE(bps.movr(zposay, 2700))
+        curr_pos = caget("XF:03IDC-ES{ANC350:5-Ax:1}Mtr.VAL")
+        if curr_pos >2000:
+            self.ple_info.appendPlainText('OSAY is out of IN range')
+        else:
+            caput("XF:03IDC-ES{ANC350:5-Ax:1}Mtr.VAL",curr_pos+2700)
+
         self.ple_info.appendPlainText('OSA Y moved OUT')
 
     def ZP_OSA_IN(self):
-        RE(bps.movr(zposay, 2700))
-        self.ple_info.appendPlainText('OSA Y moved IN')
+        curr_pos = caget("XF:03IDC-ES{ANC350:5-Ax:1}Mtr.VAL")
+
+        if curr_pos > 2500:
+            caput("XF:03IDC-ES{ANC350:5-Ax:1}Mtr.VAL",curr_pos-2700)
+            self.ple_info.appendPlainText('OSA Y is IN')
+        else:
+            self.ple_info.appendPlainText('OSA Y is close to IN position')
+            pass
 
     def merlinIN(self):
         self.client.open('http://10.66.17.43')
@@ -286,12 +534,14 @@ class Ui(QtWidgets.QMainWindow):
             pass
 
     def vortexIN(self):
-        RE(bps.mov(fdet1.x, -8))
-        self.ple_info.appendPlainText('Vortex is IN')
+        RE(bps.mov(fdet1.x, -7))
+        caput("XF:03IDC-ES{Det:Vort-Ax:X}Mtr.VAL", -7)
+        self.ple_info.appendPlainText('FS det Moving')
 
     def vortexOUT(self):
-        RE(bps.mov(fdet1.x, -107))
-        self.ple_info.appendPlainText('Vortex is OUT')
+        #RE(bps.mov(fdet1.x, -107))
+        caput("XF:03IDC-ES{Det:Vort-Ax:X}Mtr.VAL", -107)
+        self.ple_info.appendPlainText('FS det Moving')
 
     def cam11IN(self):
         self.client.open('http://10.66.17.43')
@@ -308,16 +558,53 @@ class Ui(QtWidgets.QMainWindow):
 
     def cam6IN(self):
         caput('XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.VAL', 0)
-        self.ple_info.appendPlainText('CAM6 Motion Done!')
+        QtTest.QTest.qWait(1000)
+        self.ple_info.appendPlainText('CAM6 Moving!')
 
     def cam6OUT(self):
         caput('XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.VAL', -50)
-        self.ple_info.appendPlainText('CAM6 Motion Done!')
+        QtTest.QTest.qWait(1000)
+        self.ple_info.appendPlainText('CAM6 Moving!')
+
+    def FS_IN(self):
+        caput('XF:03IDA-OP{FS:1-Ax:Y}Mtr.VAL', -57.)
+        caput("XF:03IDA-BI{FS:1-CAM:1}cam1:Acquire",1)
+        QtTest.QTest.qWait(20000)
+        #self.ple_info.appendPlainText('FS Motion Done!')
+
+    def FS_OUT(self):
+        caput('XF:03IDA-OP{FS:1-Ax:Y}Mtr.VAL', -20.)
+        caput("XF:03IDA-BI{FS:1-CAM:1}cam1:Acquire",0)
+        QtTest.QTest.qWait(20000)
+        #self.ple_info.appendPlainText('FS Motion Done!')
+
+    def SSA2_Pos(self, x, y):
+        caput('XF:03IDC-OP{Slt:SSA2-Ax:XAp}Mtr.VAL', x)
+        caput('XF:03IDC-OP{Slt:SSA2-Ax:YAp}Mtr.VAL', y)
+        QtTest.QTest.qWait(15000)
+
+    def S5_Pos(self, x, y):
+        caput('XF:03IDC-ES{Slt:5-Ax:Vgap}Mtr.VAL', x) #PV names seems flipped
+        caput('XF:03IDC-ES{Slt:5-Ax:Hgap}Mtr.VAL', y)
+        QtTest.QTest.qWait(15000)
 
     def plot_me(self):
         sd = self.pb_plot_sd.text()
         elem = self.pb_plot_elem.text()
-        plot_data(int(sd), elem, 'sclr1_ch4')
+
+        if ',' in sd:
+            slist_s, slist_e = sd.split(",")
+
+            f_sd = int(slist_s.strip())
+            l_sd = int(slist_e.strip())
+            space = abs(int(slist_e.strip())-int(slist_s.strip()))+1
+
+            s_list = np.linspace(f_sd, l_sd, space)
+            for sd_ in s_list:
+                plot_data(int(sd_), elem, 'sclr1_ch4')
+
+        else:
+            plot_data(int(sd), elem, 'sclr1_ch4')
 
     def plot_erf_fit(self):
         sd = self.pb_plot_sd.text()
@@ -333,14 +620,18 @@ class Ui(QtWidgets.QMainWindow):
         plt.close('all')
 
     #xanes
+    def getXanesUserFolder(self):
+        self.xanes_folder = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
+        self.le_xanes_user_folder.setText(self.xanes_folder)
+
     def generate_epoints(self):
 
-        pre = np.linspace(self.dsb_pre_s.value(), self.dsb_pre_e.value(), self.sb_pre_p.value())
-        XANES1 = np.linspace(self.dsb_ed1_s.value(), self.dsb_ed1_e.value(), self.sb_ed1_p.value())
-        XANES2 = np.linspace(self.dsb_ed2_s.value(), self.dsb_ed2_e.value(), self.sb_ed2_p.value())
-        post = np.linspace(self.dsb_post_s.value(), self.dsb_post_e.value(), self.sb_post_p.value())
+        pre = (self.dsb_pre_s.value(), self.dsb_pre_e.value(), self.sb_pre_p.value())
+        XANES1 = (self.dsb_ed1_s.value(), self.dsb_ed1_e.value(), self.sb_ed1_p.value())
+        XANES2 = (self.dsb_ed2_s.value(), self.dsb_ed2_e.value(), self.sb_ed2_p.value())
+        post = (self.dsb_post_s.value(), self.dsb_post_e.value(), self.sb_post_p.value())
 
-        self.energies = np.concatenate([pre, XANES1, XANES2, post])
+        self.energies = generateEPoints(ePointsGen=[pre,XANES1,XANES2,post])
         self.ple_info.setPlainText(str(self.energies))
 
     def importEPoints(self):
@@ -364,7 +655,7 @@ class Ui(QtWidgets.QMainWindow):
 
     def importXanesParams(self):
 
-        file_name = QFileDialog().getOpenFileName(self, "Save Parameter File", ' ',
+        file_name = QFileDialog().getOpenFileName(self, "Load Parameter File", ' ',
                                                                  'json file(*json)')
         if file_name:
             with open(file_name[0], 'r') as fp:
@@ -377,16 +668,10 @@ class Ui(QtWidgets.QMainWindow):
     def exportXanesParams(self):
         self.xanesParam = {}
         e_pos = {'low': self.dsb_monoe_l.value(), 'high':self.dsb_monoe_h.value()}
-        ugap_pos= {'low': self.dsb_ugap_l.value(), 'high': self.dsb_ugap_h.value()}
-        crl_pos = {'low': self.dsb_crl_l.value(), 'high': self.dsb_crl_h.value()}
         zpz1_pos = {'low': self.dsb_zpz_l.value(), 'high': self.dsb_zpz_h.value()}
-        crl_combo = {'crl_combo_num': self.le_crl_combo_xanes.text()}
 
         self.xanesParam['mono_e'] = e_pos
-        self.xanesParam['ugap'] = ugap_pos
-        self.xanesParam['crl'] = crl_pos
         self.xanesParam['zpz1'] = zpz1_pos
-        self.xanesParam['crl_combo'] = crl_combo
 
         file_name = QFileDialog().getSaveFileName(self, "Save Parameter File",
                                                             'hxn_xanes_parameters.json',
@@ -402,13 +687,9 @@ class Ui(QtWidgets.QMainWindow):
 
         e_low, e_high = xanesParam['mono_e']['low'], xanesParam['mono_e']['high']
         ugap_low, ugap_high = xanesParam['ugap']['low'], xanesParam['ugap']['high']
-        crl_low, crl_high = xanesParam['crl']['low'], xanesParam['crl']['high']
         zpz1_low, zpz1_high = xanesParam['zpz1']['low'], xanesParam['zpz1']['high']
-        crl_combo = xanesParam['crl_combo']['crl_combo_num']
 
         self.dsb_monoe_l.setValue(e_low), self.dsb_monoe_h.setValue(e_high)
-        self.dsb_ugap_l.setValue(ugap_low), self.dsb_ugap_h.setValue(ugap_high)
-        self.dsb_crl_l.setValue(crl_low), self.dsb_crl_h.setValue(crl_high)
         self.dsb_zpz_l.setValue(zpz1_low), self.dsb_zpz_h.setValue(zpz1_high)
         self.le_crl_combo_xanes.setText(crl_combo)
 
@@ -417,8 +698,7 @@ class Ui(QtWidgets.QMainWindow):
             self.commonXanesParam = json.load(fp)
 
     def insertCommonXanesParams(self):
-        mot_list = [self.dsb_monoe_l, self.dsb_monoe_h, self.dsb_ugap_l, self.dsb_ugap_h,
-                    self.dsb_crl_l, self.dsb_crl_h, self.dsb_zpz_l, self.dsb_zpz_h, self.le_crl_combo_xanes]
+        mot_list = [self.dsb_monoe_l, self.dsb_monoe_h, self.dsb_zpz_l, self.dsb_zpz_h]
         commonElems = self.commonXanesParam.keys()
 
         button_name = self.sender().objectName()
@@ -429,33 +709,95 @@ class Ui(QtWidgets.QMainWindow):
         else:
             pass
 
-    def generateEList(self):
+    def generateDataFrame(self):
+        self.xanesParamsDict = {'high_e': self.dsb_monoe_h.value(), 'low_e': self.dsb_monoe_l.value(),
+                   'high_e_zpz1': self.dsb_zpz_h.value(), 'zpz1_slope': self.dsb_zpz_slope.value(),
+                   'energy': list(self.energies)}
 
         if not len(self.energies) == 0:
-
+            self.e_list = generateEList(XANESParam=self.xanesParamsDict)
             # print(energies)
-            dE = (self.dsb_monoe_h.value() - self.dsb_monoe_l.value())
-
-            ugap_slope = (self.dsb_ugap_h.value() - self.dsb_ugap_l.value()) / dE
-            ugap_list = self.dsb_ugap_h.value() + (self.energies - self.dsb_monoe_h.value()) * ugap_slope
-
-            crl_slope = (self.dsb_crl_h.value() - self.dsb_crl_l.value()) / dE
-            crl_list = self.dsb_crl_h.value() + (self.energies - self.dsb_monoe_h.value()) * crl_slope
-
-            zpz_slope = (self.dsb_zpz_h.value() - self.dsb_zpz_l.value()) / dE
-            zpz_list = self.dsb_zpz_h.value() + (self.energies - self.dsb_monoe_h.value()) * zpz_slope
-
-            self.e_list = np.column_stack((self.energies, ugap_list, zpz_list, crl_list))
             self.ple_info.setPlainText(str(self.e_list))
 
         else:
             self.statusbar.showMessage('No energy list found; set or load an e list first')
 
-    def zpXANES(self):
+    def initXANESParams(self):
         self.getScanValues()
-        RE(zp_list_xanes2d(self.e_list, self.det_list[self.det], self.motor_list[self.motor1],
-                           self.mot1_s, self.mot1_e, self.mot1_steps, self.motor_list[self.motor2],
-                           self.mot2_s, self.mot2_e, self.mot2_steps, self.dwell_t))
+
+        self.doXAlign, self.doYAlign = self.cb_x_align.isChecked(),self.cb_y_align.isChecked()
+        self.x_align_s, self.x_align_e = self.x_align_start.value(), self.x_align_end.value()
+        self.x_align_stp, self.x_align_dw = self.x_align_steps.value(), self.x_align_dwell.value()
+        self.align_x_thr, self.x_align_elem = self.align_x_threshold.value(), self.le_x_align_elem.text()
+
+        self.y_align_s, self.y_align_e = self.y_align_start.value(), self.y_align_end.value()
+        self.y_align_stp, self.y_align_dw = self.y_align_steps.value(), self.y_align_dwell.value()
+        self.align_y_thr, self.y_align_elem = self.align_y_threshold.value(), self.le_y_align_elem.text()
+
+        self.elemPlot = tuple(self.plot_elem_xanes.text().split(','))
+        self.xanes_folder = self.le_xanes_user_folder.text()
+
+    def displayXANESPlan(self):
+        self.generateDataFrame()
+        self.initXANESParams()
+
+        scan_plan = f"<zp_list_xanes2d({self.xanesParamsDict}, {self.det},{self.motor1},{self.mot1_s}, {self.mot1_e}, {self.mot1_steps}," \
+                    f"{self.motor2},  {self.mot2_s}, {self.mot2_e}, {self.mot2_steps}, {self.dwell_t}," \
+                    f"alignX={(self.x_align_s, self.x_align_e, self.x_align_stp, self.x_align_dw,self.x_align_elem, self.align_x_thr,self.doXAlign)}," \
+                    f"alignY={(self.y_align_s, self.y_align_e, self.y_align_stp,self.y_align_dw, self.y_align_elem, self.align_y_thr,self.doYAlign,)}," \
+                    f"pdfElem={self.elemPlot},saveLogFolder={self.xanes_folder})"
+
+        self.te_xanes_plan.setText(str(scan_plan))
+
+    def fillCurrentPos(self):
+         e_ = e.position
+         zpz1_ = zp.zpz1.position
+
+         self.dsb_monoe_h.setValue(e_)
+         self.dsb_zpz_h.setValue(zpz1_)
+
+    def runZPXANES(self):
+        self.initXANESParams()
+
+        dE = e.position - self.e_list['energy'][0]
+
+        if dE < 1:
+            '''
+            RE(zp_list_xanes2d(self.xanesParamsDict,
+                               self.det_list[self.det],
+                               self.motor_list[self.motor1],
+                               self.mot1_s,
+                               self.mot1_e,
+                               self.mot1_steps,
+                               self.motor_list[self.motor2],
+                               self.mot2_s,
+                               self.mot2_e,
+                               self.mot2_steps,
+                               self.dwell_t,
+                               alignX=(self.x_align_s,
+                                       self.x_align_e,
+                                       self.x_align_stp,
+                                       self.x_align_dw,
+                                       self.x_align_elem,
+                                       self.align_x_thr,
+                                       self.doXAlign),
+                               alignY=(self.y_align_s,
+                                       self.y_align_e,
+                                       self.y_align_stp,
+                                       self.y_align_dw,
+                                       self.y_align_elem,
+                                       self.align_y_thr,
+                                       self.doYAlign),
+                               pdfElem=self.elemPlot,
+                               saveLogFolder=self.xanes_folder))
+            '''
+            print (" Test Passed")
+        else:
+
+            msg = QErrorMessage
+            msg.setWindowTitle("Energy change error")
+            msg.showMessage("Requested energy change is far from current position")
+            return
 
     #tomo
     def zpTomoStepResCalc(self):
@@ -481,14 +823,39 @@ class Ui(QtWidgets.QMainWindow):
         yAlignElem = None
         yAlignThreshold = None
 
-
-
     #special scans
     def zpMosaic(self):
         pass
 
     def zpFocusScan(self):
-        pass
+        zpStart = self.sb_ZPZ1RelativeStart.value()*0.001
+        zpEnd = self.sb_ZPZ1RelativeEnd.value()*0.001
+        zpSteps = self.sb_ZPZ1Steps.value()
+
+        scanMotor = self.motor_list[self.cb_foucsScanMotor.currentText()]
+        scanStart = self.sb_FocusScanMtrStart.value()
+        scanEnd = self.sb_FocusScanMtrEnd.value()
+        scanSteps = self.sb_FocusScanMtrStep.value()
+        scanDwell = self.dsb_FocusScanDwell.value()
+
+        fitElem = self.le_FocusingElem.text()
+        linFlag = self.cb_linearFlag_zpFocus.isChecked()
+
+        RE(zp_z_alignment(zpStart,zpEnd,zpSteps,scanMotor,scanStart,scanEnd,scanSteps,scanDwell,
+                          elem= fitElem, linFlag = linFlag))
+
+    def zpMoveAbs(self):
+        zpTarget = self.dsb_ZPZ1TargetPos.value()
+        choice = QMessageBox.question(self, "Zone Plate Z Motion",
+                                      f"You're making an Absolute motion of ZP to {zpTarget}. \n Proceed?",
+                                      QMessageBox.Yes |
+                                      QMessageBox.No, QMessageBox.No)
+        QtTest.QTest.qWait(500)
+        if choice == QMessageBox.Yes:
+            RE(mov_zpz1(zpTarget))
+
+        else:
+            pass
 
     def zpRotAlignment(self):
         pass
@@ -529,6 +896,19 @@ class Ui(QtWidgets.QMainWindow):
         signal.signal(signal.SIGINT, signal.SIG_DFL)
         RE.abort()
 
+    #Sample Chamber
+    def qMessageExcecute(self,funct):
+        QtTest.QTest.qWait(500)
+        choice = QMessageBox.question(self, 'Sample Chamber Operation Warning',
+                                      "Make sure this action is safe. \n Proceed?", QMessageBox.Yes |
+                                      QMessageBox.No, QMessageBox.No)
+        QtTest.QTest.qWait(500)
+        if choice == QMessageBox.Yes:
+            RE(funct)
+
+        else:
+            pass
+
     # PDF Log
 
     def select_pdf_wd(self):
@@ -560,23 +940,28 @@ class Ui(QtWidgets.QMainWindow):
         self.statusbar.showMessage("Figure added to the pdf")
 
     # Sample Stage Navigation
-
-    def generatePositionDict(self):
+    def recordPositions(self):
 
         fx, fy, fz = zpssx.position, zpssy.position, zpssz.position
         cx, cy, cz = smarx.position, smary.position, smarz.position
         zpz1_pos = zp.zpz1.position
         zp_sx, zp_sz = zps.zpsx.position, zps.zpsz.position
         th = zpsth.position
-        roi = {
+        self.roi = {
             zpssx: fx, zpssy: fy, zpssz: fz,
             smarx: cx, smary: cy, smarz: cz,
             zp.zpz1: zpz1_pos, zpsth: th,
             zps.zpsx: zp_sx, zps.zpsz: zp_sz
         }
+
+    def generatePositionDict(self):
+
+        self.recordPositions()
         roi_name = 'ROI' + str(self.sampleROI_List.count())
-        self.roiDict[roi_name] = roi
+        self.roiDict[roi_name] = self.roi
         self.sampleROI_List.addItem(roi_name)
+
+        #make the item editable
         item = self.sampleROI_List.item(self.sampleROI_List.count()-1)
         item.setFlags(item.flags() | QtCore.Qt.ItemIsEditable)
 
@@ -586,7 +971,6 @@ class Ui(QtWidgets.QMainWindow):
             label = self.sampleROI_List.item(idx).text()
             label_[label] = idx
         self.roiDict['user_labels'] = label_
-        print(self.roiDict)
 
     def exportROIDict(self):
         self.applyDictWithLabel()
@@ -624,11 +1008,12 @@ class Ui(QtWidgets.QMainWindow):
 
     def showROIPos(self,item):
         item_num = self.sampleROI_List.row(item)
-        print(self.roiDict[f'ROI{item_num}'])
+        for key, value in self.roiDict[f'ROI{item_num}'].items():
+            self.ple_info.appendPlainText(f'{key.name}:{value:.4f}')
 
     def gotoROIPosition(self):
         roi_num = self.sampleROI_List.currentRow()
-        param_file = self.roiDict[roi_num]
+        param_file = self.roiDict[f'ROI{roi_num}']
         for key, value in param_file.items():
             if not key == zp.zpz1:
                 RE(bps.mov(key, value))
@@ -638,7 +1023,7 @@ class Ui(QtWidgets.QMainWindow):
 
     def showROIPosition(self, item):
         item_num = self.sampleROI_List.row(item)
-        param_file = self.roiDict[item_num]
+        param_file = self.roiDict[f'ROI{item_num}']
         self.ple_info.appendPlainText(('*' * 20))
         for key, value in param_file.items():
             self.ple_info.appendPlainText(f'{key.name}:{value:.4f}')
@@ -648,17 +1033,80 @@ class Ui(QtWidgets.QMainWindow):
 
     def gotoPosSID(self):
         sd = self.le_sid_position.text()
-        recover_zp_scan_pos(int(sid), 1, 1)
-        self.ple_info.appendPlainText(f'Positions recovered from {sid}')
+        zp_flag = self.cb_sid_moveZPZ.isChecked()
+
+        sdZPZ1 = (db[int(sd)].table("baseline")["zpz1"].values)[0]
+        currentZPZ1 = zp.zpz1.position
+        #current_energy = caget("XF:03ID{}Energy-I")
+        zDiff = abs(sdZPZ1-currentZPZ1)
+
+        if zDiff>1 and zp_flag:
+                choice = QMessageBox.question(self, 'Warning',
+                "You are recovering positions from a scan done at a different Focus."
+                "The ZPZ1 motion could cause collision. Are you sure??",
+                QMessageBox.Yes |QMessageBox.No, QMessageBox.No)
+
+                if choice == QMessageBox.Yes:
+                    RE(recover_zp_scan_pos(int(sd), zp_flag, 1))
+                else:
+                    return
+        else:
+
+            RE(recover_zp_scan_pos(int(sd), zp_flag, 1))
+
+        self.ple_info.appendPlainText(f'Positions recovered from {sd}')
 
     def viewScanPosSID(self):
         sd = self.le_sid_position.text()
-        self.ple_info.appendPlainText(str(RE(recover_zp_scan_pos(int(sd), 0, 0))))
+        data = db.get_table(db[int(sd)],stream_name='baseline')
+
+        zpz1 = data.zpz1[1]
+        zpx = data.zpx[1]
+        zpy = data.zpy[1]
+        smarx = data.smarx[1]
+        smary = data.smary[1]
+        smarz = data.smarz[1]
+        zpsz = data.zpsz[1]
+
+        info1 = f"scan id: {db[int(sd)].start['scan_id']}, zpz1:{zpz1 :.3f}, zpsz:{zpsz :.3f} \n"
+        info2 = f"smarx: {smarx :.3f}, smary: {smary :.3f}, smarz: {smarz :.3f} \n"
+        info3 = f"zpssx: {data.zpssx[1] :.3f}, zpssy: {data.zpssy[1] :.3f}, zpssz: {data.zpssz[1] :.3f} \n "
+
+
+        self.ple_info.appendPlainText(str(info1+info2+info3))
 
     def viewScanMetaData(self):
         sd = self.le_sid_position.text()
         h = db[int(sd)]
         self.ple_info.appendPlainText(str(h.start))
+
+    def copyPosition(self):
+
+        self.recordPositions()
+
+        stringToCopy = ' '
+        for item in self.roi.items():
+            stringToCopy += (f'{item[0].name}:{item[1]:.4f} \n')
+
+        #stringToCopy = str([item[0].name, item[1] for item in self.roi.items()])
+
+        cb = QApplication.clipboard()
+        cb.clear(mode=cb.Clipboard)
+        cb.setText(stringToCopy, mode=cb.Clipboard)
+
+    #Pumping the chamber
+    def pumpThread(self):
+
+        pumpWorker = Worker(StartPumpingProtocol([self.prb_pump_slow,self.prb_pump_fast]))
+        self.threadpool.start(pumpWorker)
+
+    def heBackFillThread(self):
+        heBackFillWorker = Worker(StartAutoHeBackFill(self.prb_he_backfill))
+        self.threadpool.start(heBackFillWorker)
+
+    def ventThread(self):
+        ventWorker =  Worker(ventChamber([self.prb_vent_slow,self.prb_vent_fast]))
+        self.threadpool.start(ventWorker)
 
     #Image correlation tool
 
@@ -821,7 +1269,7 @@ class Ui(QtWidgets.QMainWindow):
         self.dsb_ref2_y.setValue(self.scalingParam['lm2_vals']['cy2'])
 
     def scalingCalculation(self):
-        self.generateScalingParam()
+        self.getScalingParam()
         self.yshape, self.xshape = np.shape(self.ref_image)
         self.pixel_val_x = (self.lm2_x - self.lm1_x) / (int(self.lm2_px) - int(self.lm1_px))  # pixel value of X
         self.pixel_val_y = (self.lm2_y - self.lm1_y) / (int(self.lm2_py) - int(self.lm1_py))  # pixel value of Y; ususally same as X
@@ -894,6 +1342,19 @@ class Ui(QtWidgets.QMainWindow):
 
     #exit gui
 
+    def closeEvent(self,event):
+        reply = QMessageBox.question(self, 'Quit GUI', "Are you sure you want to close the window?")
+        if reply == QMessageBox.Yes:
+            event.accept()
+            self.scanStatus_thread.terminate()
+            self.liveWorker.terminate()
+            plt.close('all')
+            #self.updateTimer.stop()
+            QApplication.closeAllWindows()
+
+        else:
+            event.ignore()
+
     def close_application(self):
 
         choice = QMessageBox.question(self, 'Message',
@@ -902,13 +1363,82 @@ class Ui(QtWidgets.QMainWindow):
 
         if choice == QMessageBox.Yes:
             plt.close('all')
+            #stop the timers
+            #self.updateTimer.stop()
+            QApplication.closeAllWindows()
+
             print('quit application')
             sys.exit()
         else:
             pass
+
+class WorkerSignals(QObject):
+    finished = QtCore.pyqtSignal(object) # create a signal
+    result = QtCore.pyqtSignal(object) # create a signal that gets an object as argument
+
+class Worker(QRunnable):
+    def __init__(self, fn, *args, **kwargs):
+        super(Worker, self).__init__()
+        self.fn = fn # Get the function passed in
+        self.args = args # Get the arguments passed in
+        self.kwargs = kwargs # Get the keyward arguments passed in
+        self.signals = WorkerSignals()
+
+    def run(self): # our thread's worker function
+        result = self.fn(*self.args, **self.kwargs) # execute the passed in function with its arguments
+        #self.signals.result.emit(result)  # return result
+        self.signals.finished.emit(result)  # emit when thread ended
+
+#from FXI--modified
+class liveStatus(QThread):
+    current_sts = pyqtSignal(int)
+    def __init__(self, PV):
+        super().__init__()
+        self.PV = PV
+
+    def run(self):
+
+        while True:
+            self.current_sts.emit(caget(self.PV))
+            #print("New positions")
+            QtTest.QTest.qWait(500)
+
+
+class liveUpdate(QThread):
+    current_positions = pyqtSignal(list)
+
+    #use moveToThread method later
+    def run(self):
+
+        while True:
+            self.current_positions.emit([
+            int(caget("XF:03IDC-ES{Sclr:2}_cts1.D")),
+            caget("XF:03ID{}Energy-I"),
+            caget("XF:03IDC-VA{VT:Chm-CM:1}P-I"),
+            int(caget("XF:03IDC-ES{Status}ScanID-I")),
+            smarx.position,
+            smary.position,
+            smarz.position,
+            np.around(zpsth.position,2),
+            np.around(zpsth.position,2),
+            np.around(zp.zpz1.position,4),
+            ssa2.hgap.position,
+            ssa2.vgap.position,
+            caget("XF:03IDA-OP{FS:1-Ax:Y}Mtr.RBV"),
+            caget("XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.RBV"),
+            np.around(fdet1.x.position,1),
+            np.around(diff.x.position,1),
+            caget("XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.RBV"),
+            s5.hgap.position,
+            s5.vgap.position
+        ])
+            #print(livePVList[0])
+            QtTest.QTest.qWait(500)
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     window = Ui()
     window.show()
     sys.exit(app.exec_())
+
+
