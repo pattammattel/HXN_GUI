@@ -11,6 +11,7 @@ import webbrowser
 import pyqtgraph as pg
 import json
 import matplotlib
+from functools import partial 
 from scipy.ndimage import rotate
 from epics import caget, caput
 
@@ -22,12 +23,18 @@ from pdf_log import *
 from xanes2d import *
 from xanesFunctions import *
 from HXNSampleExchange import *
+HXNSampleExchanger = SampleExchangeProtocol()
+
+
+
 ui_path = os.path.dirname(os.path.abspath(__file__))
 
 class Ui(QtWidgets.QMainWindow):
+   
     def __init__(self):
         super(Ui, self).__init__()
-        uic.loadUi(os.path.join(ui_path,'hxn_gui_2.0.ui'), self)
+        
+        uic.loadUi(os.path.join(ui_path,'hxn_gui_v3.ui'), self)
         self.initParams()
         self.ImageCorrelationPage()
         self.client = webbrowser.get('firefox')
@@ -40,12 +47,9 @@ class Ui(QtWidgets.QMainWindow):
         self.motor_list = {'zpssx': zpssx, 'zpssy': zpssy, 'zpssz': zpssz,
         'dssx': dssx, 'dssy': dssy, 'dssz': dssz}
 
-        #self.updateLiveValues(self.livePVs)
-        #self.createlivePVList()
-        #self.liveUpdateTimer() #working
 
+        
 
-        # updating resolution/tot time
         self.dwell.valueChanged.connect(self.initParams)
         self.x_step.valueChanged.connect(self.initParams)
         self.y_step.valueChanged.connect(self.initParams)
@@ -64,6 +68,13 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_reqPause.clicked.connect(self.requestScanPause)
         self.pb_REAbort.clicked.connect(self.scanAbort)
         self.pb_REResume.clicked.connect(self.scanResume)
+
+        #shutters
+        self.pb_open_b_shutter.clicked.connect(lambda:caput("XF:03IDB-PPS{PSh}Cmd:Opn-Cmd", 1))
+        self.pb_close_b_shutter.clicked.connect(lambda:caput("XF:03IDB-PPS{PSh}Cmd:Cls-Cmd", 1))
+        self.pb_open_c_shutter.clicked.connect(lambda:caput("XF:03IDC-ES{Zeb:2}:SOFT_IN:B0", 1))
+        self.pb_close_c_shutter.clicked.connect(lambda:caput("XF:03IDC-ES{Zeb:2}:SOFT_IN:B0", 0))
+
 
         # text files and editor controls
         self.pb_save_cmd.clicked.connect(self.save_file)
@@ -139,6 +150,14 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_CAM6_OUT.clicked.connect(self.cam6OUT)
         #cam11
         self.pb_cam11IN.clicked.connect(self.cam11IN)
+        #dexela
+        self.pb_dexela_IN.clicked.connect(lambda:self.dexela_motion(move_to = -400))
+        self.pb_dexela_OUT.clicked.connect(lambda:self.dexela_motion(move_to = 0))
+
+        #light
+        self.pb_light_ON.clicked.connect(lambda:caput("XF:03IDC-ES{PDU:1}Cmd:Outlet8-Sel", 0))
+        self.pb_light_OFF.clicked.connect(lambda:caput("XF:03IDC-ES{PDU:1}Cmd:Outlet8-Sel", 1))
+
 
         # sample exchange
         #self.pb_start_pump.clicked.connect (lambda:StartPumpingProtocol([self.prb_pump_slow,self.prb_pump_fast]))
@@ -146,9 +165,15 @@ class Ui(QtWidgets.QMainWindow):
         #self.pb_vent.clicked.connect(lambda:ventChamber([self.prb_vent_slow,self.prb_vent_fast]))
 
         # sample exchange
-        self.pb_start_pump.clicked.connect(self.pumpThread)
-        self.pb_auto_he_fill.clicked.connect(self.heBackFillThread)
-        self.pb_vent.clicked.connect(self.ventThread)
+        #self.pb_start_pump.clicked.connect(self.pumpThread)
+        #self.pb_auto_he_fill.clicked.connect(self.heBackFillThread)
+        #self.pb_vent.clicked.connect(self.ventThread)
+        self.pb_vent.clicked.connect(self.venting_thread)
+        self.pb_stop_vent.clicked.connect(HXNSampleExchanger.stop_vending)
+        self.pb_start_pump.clicked.connect(self.start_pumping)
+        self.pb_stop_pump.clicked.connect(self.pumping_stop)
+        self.pb_auto_he_fill.clicked.connect(self.he_backfill_thread)
+        self.pb_open_fast_pumps.clicked.connect(HXNSampleExchanger.start_fast_pumps)
 
         #SSA2 motion
         self.pb_SSA2_Open.clicked.connect(lambda:self.SSA2_Pos(2.1, 2.1))
@@ -217,72 +242,81 @@ class Ui(QtWidgets.QMainWindow):
         # close the application
         self.actionClose_Application.triggered.connect(self.close_application)
 
+        self.create_live_pv_dict()
+        self.create_pump_pv_dict()
+        
+
         self.liveUpdateThread()
         self.scanStatusThread()
+        self.pump_update_thread()
 
         self.show()
+  
+    def create_live_pv_dict(self):
+        '''
+        generate a dictionary of slots and signals , 
+        later change to a json for flexibity ,; like mll specific?
+        '''
 
-    def createlivePVList(self):
-        #any change here should be made at the thread class too , not good, pass thsi dict to the thread?
+        self.live_PVs = {
 
-        self.livePVs = {
-            self.lcd_ic3:int(caget("XF:03IDC-ES{Sclr:2}_cts1.D")),
-            self.lcd_monoE:caget("XF:03ID{}Energy-I"),
-            self.lcdPressure:caget("XF:03IDC-VA{VT:Chm-CM:1}P-I"),
-            self.lcd_scanNumber:int(caget("XF:03IDC-ES{Status}ScanID-I")),
-            self.db_smarx:smarx.position,
-            self.db_smary:smary.position,
-            self.db_smarz:smarz.position,
-            self.db_zpsth:np.around(zpsth.position,2),
-            self.lcd_ZpTh:np.around(zpsth.position,2),
-            self.db_zpz1:np.around(zp.zpz1.position,4),
-            self.db_ssa2_x:ssa2.hgap.position,
-            self.db_ssa2_y:ssa2.vgap.position,
-            self.db_fs:caget("XF:03IDA-OP{FS:1-Ax:Y}Mtr.RBV"),
-            self.db_cam6:caget("XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.RBV"),
-            self.db_fs_det:np.around(fdet1.x.position,1),
-            self.db_diffx:np.around(diff.x.position,1),
-            self.db_cam06x:caget("XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.RBV"),
-            self.db_s5_x:s5.hgap.position,
-            self.db_s5_y:s5.vgap.position
+            self.lcd_ic3:"XF:03IDC-ES{Sclr:2}_cts1.D",
+            self.lcd_monoE:"XF:03ID{}Energy-I",
+            self.lcdPressure:"XF:03IDC-VA{VT:Chm-CM:1}P-I",
+            self.lcd_scanNumber:"XF:03IDC-ES{Status}ScanID-I",
+            self.db_smarx:smarx,
+            self.db_smary:smary,
+            self.db_smarz:smarz,
+            self.db_zpsth:zpsth,
+            self.lcd_ZpTh:zpsth,
+            self.db_zpz1:zp.zpz1,
+            self.db_ssa2_x:ssa2.hgap,
+            self.db_ssa2_y:ssa2.vgap,
+            self.db_fs:"XF:03IDA-OP{FS:1-Ax:Y}Mtr.RBV",
+            self.db_cam6:"XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.RBV",
+            self.db_fs_det:fdet1.x,
+            self.db_diffx:diff.x,
+            self.db_cam06x:"XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.RBV",
+            self.db_s5_x:s5.hgap,
+            self.db_s5_y:s5.vgap,
+            self.db_dexela:"XF:03IDC-ES{Stg:FPDet-Ax:Y}Mtr.RBV"
+
             }
-        return self.livePVs
+        
+    def create_pump_pv_dict(self):
+        '''
+        1--> valves closed, 0--> open
+        could not find PVs
+        self.rb_pumpA_on:
+        self.rb_pumpB_on:
+        self.rb_he_backfill_fail:
+        '''
 
-    '''
-    #moved to a thread
-    def updateLiveValues(self,livePVs):
+
+        self.pump_PVs = {
+
+            self.rb_slow_vent:"XF:03IDC-VA{ES:1-SlowVtVlv:Stg2}Sts:Cls-Sts",
+            self.rb_fast_vent:"XF:03IDC-VA{ES:1-FastVtVlv:Stg3}Sts:Cls-Sts",
+            self.rb_pumpA_slow:"XF:03IDC-VA{ES:1-SlowFrVlv:A}Sts:Cls-Sts",
+            self.rb_pumpA_fast:"XF:03IDC-VA{ES:1-FastFrVlv:A}Sts:Cls-Sts",
+            self.rb_pumpB_slow:"XF:03IDC-VA{ES:1-SlowFrVlv:B}Sts:Cls-Sts",
+            self.rb_pumpB_fast:"XF:03IDC-VA{ES:1-FastFrVlv:B}Sts:Cls-Sts",
+            
+            }
+
+    def handle_value_signals(self,pv_val_list):
         #print ("updating live values")
-        self.livePVs = self.createlivePVList()
+        livePVs = {key:value for key, value in zip(self.live_PVs.keys(),pv_val_list)}
         for item in livePVs.items():
-            if isinstance (item[0],QLabel):
-                if item[1]==1:
-                    item[0].setText("        Scan in Progress       ")
-                    item[0].setStyleSheet('background-color : green')
-                else:
-                    item[0].setText("         Idle        ")
-                    item[0].setStyleSheet('background-color : yellow')
-
-            else:
-                #print("False")
                 item[0].setValue(item[1])
 
-    '''
-
-    def updateLiveVals(self,livePVList):
-        #print ("updating live values")
-        self.livePVs = self.createlivePVList()
-        livePVs = {key:value for key, value in zip(self.livePVs.keys(),livePVList)}
+    def handle_bool_signals(self,pv_val_list):
+    
+        #self.pump_PVs.keys() = pv_val_list (works?)
+        livePVs = {key:value for key, value in zip(self.pump_PVs.keys(),pv_val_list)}
         for item in livePVs.items():
-                item[0].setValue(item[1])
-    '''
-    def liveUpdateTimer(self):
-        #print("live update on")
-
-        self.updateTimer = QTimer()
-        self.updateTimer.timeout.connect(lambda:self.updateLiveValues(self.livePVs))
-        self.updateTimer.start(500)
-
-    '''
+                item[0].setChecked(item[1])
+                
 
     def scanStatus(self,sts):
 
@@ -301,9 +335,16 @@ class Ui(QtWidgets.QMainWindow):
 
     def liveUpdateThread(self):
         print("Thread Started")
-        self.liveWorker = liveUpdate()
-        self.liveWorker.current_positions.connect(self.updateLiveVals)
+
+        self.liveWorker = liveUpdate(self.live_PVs)
+        self.liveWorker.current_positions.connect(self.handle_value_signals)
         self.liveWorker.start()
+
+    def pump_update_thread(self):
+        print("Pump Update Thread Started")
+        self.pump_update_worker = liveUpdate(self.pump_PVs,update_interval_ms = 2000)
+        self.pump_update_worker.current_positions.connect(self.handle_bool_signals)
+        self.pump_update_worker.start()
 
     def scanStatusMonitor(self):
         scanStatus = caget("XF:03IDC-ES{Status}ScanRunning-I")
@@ -399,10 +440,6 @@ class Ui(QtWidgets.QMainWindow):
 
                 RE(fly2d(self.det_list[self.det], self.motor_list[self.motor1], self.mot1_s, self.mot1_e, self.mot1_steps,
                         self.motor_list[self.motor2], self.mot2_s, self.mot2_e, self.mot2_steps, self.dwell_t))
-
-    def flyThread(self):
-        flyWorker = Worker(self.initFlyScan)
-        self.threadpool.start(flyWorker)
 
     def disableMot2(self):
         self.y_start.setEnabled(False)
@@ -524,6 +561,7 @@ class Ui(QtWidgets.QMainWindow):
 
     def merlinOUT(self):
         self.client.open('http://10.66.17.43')
+        QtTest.QTest.qWait(2000)
         choice = QMessageBox.question(self, 'Detector Motion Warning',
                                       "Make sure this motion is safe. \n Move?", QMessageBox.Yes |
                                       QMessageBox.No, QMessageBox.No)
@@ -533,9 +571,22 @@ class Ui(QtWidgets.QMainWindow):
         else:
             pass
 
+    def dexela_motion(self, move_to = 0):
+        
+        self.client.open('http://10.66.17.49')
+        QtTest.QTest.qWait(2000)
+        choice = QMessageBox.question(self, 'Detector Motion Warning',
+                                "Make sure this motion is safe. \n Move?", QMessageBox.Yes |
+                                QMessageBox.No, QMessageBox.No)
+
+        if choice == QMessageBox.Yes:
+            caput("XF:03IDC-ES{Stg:FPDet-Ax:Y}Mtr.VAL",move_to)
+        else:
+            pass
+
     def vortexIN(self):
-        RE(bps.mov(fdet1.x, -7))
-        caput("XF:03IDC-ES{Det:Vort-Ax:X}Mtr.VAL", -7)
+        #RE(bps.mov(fdet1.x, -7))
+        caput("XF:03IDC-ES{Det:Vort-Ax:X}Mtr.VAL", self.dsb_flur_in_pos.value())
         self.ple_info.appendPlainText('FS det Moving')
 
     def vortexOUT(self):
@@ -545,7 +596,7 @@ class Ui(QtWidgets.QMainWindow):
 
     def cam11IN(self):
         self.client.open('http://10.66.17.43')
-        QtTest.QTest.qWait(5000)
+        QtTest.QTest.qWait(2000)
         choice = QMessageBox.question(self, 'Detector Motion Warning',
                                       "Make sure this motion is safe. \n Move?", QMessageBox.Yes |
                                       QMessageBox.No, QMessageBox.No)
@@ -1372,7 +1423,273 @@ class Ui(QtWidgets.QMainWindow):
         else:
             pass
 
+    #add a decorator for exception catching using qmessagebox
+    def start_pumping(self, turbo_start_ = 350):
+
+        target_pressure_var = self.dsb_target_p.value()
+
+        choice = QMessageBox.question(self, 'Start Pumping',
+                                      f"HXN pumping will be excecuted with target value of {target_pressure_var}"
+                                      f" Please confirm.", QMessageBox.Yes |
+                                      QMessageBox.No, QMessageBox.No)
+
+        if choice == QMessageBox.Yes:
+
+            
+
+            # reset the progress bar 
+            self.prb_sample_exchange.reset()
+
+            #set min/max for the progress bar- by default the max-min>0 and pressure here is decreasing
+            #tracking relative change
+            self.prb_sample_exchange.setRange(0, int(caget("XF:03IDC-VA{VT:Chm-CM:1}P-I") - target_pressure_var))
+
+            self.lb_sample_change_action.setText("Pumping in progress")
+
+            self.pump_thread = QThread()
+            self.pump_worker = PumpWorker("XF:03IDC-VA{VT:Chm-CM:1}P-I", 
+                                        turbo_start = turbo_start_, 
+                                        target_pressure = target_pressure_var
+                                        )
+            self.pump_worker.moveToThread(self.pump_thread)
+            
+            #worker connections
+            self.pump_worker.start_slow_pump.connect(HXNSampleExchanger.start_pumping)
+            #self.pump_worker.start_fast_pump.connect(HXNSampleExchanger.start_fast_pumps)
+            #self.pump_worker.stop_fast_pump.connect(HXNSampleExchanger.stop_pumping)
+            self.pump_worker.pressure_change.connect(self.prb_sample_exchange.setValue)
+            self.pump_worker.finished.connect(self.pump_thread.quit)
+            self.pump_worker.finished.connect(lambda: self.lb_sample_change_action.setText("Pumping finished"))
+
+
+            #connect to thread
+            self.pump_thread.started.connect(self.pump_worker.do_pumping)
+            self.pump_thread.start()
+
+        else:
+            return
+
+    def venting_thread(self,fast_open_threshold = 550, target_pressure=745):
+
+        choice = QMessageBox.question(self, 'Start Venting',
+                                      "Microscope chamber will be vented. Continue?", QMessageBox.Yes |
+                                      QMessageBox.No, QMessageBox.No)
+
+        if choice == QMessageBox.Yes:
+
+            # reset the progress bar 
+            self.prb_sample_exchange.reset()
+
+            self.lb_sample_change_action.setText("Venting in progress")
+
+            #set min/max for the progress bar
+            self.prb_sample_exchange.setRange(caget("XF:03IDC-VA{VT:Chm-CM:1}P-I"),  target_pressure)
+            
+            self.vent_thread = QThread()
+            self.vent_worker = PumpWorker("XF:03IDC-VA{VT:Chm-CM:1}P-I", 
+                                        turbo_start = fast_open_threshold, 
+                                        target_pressure = target_pressure
+                                        )
+
+            self.vent_worker.moveToThread(self.vent_thread)
+
+            #worker connections
+            self.vent_worker.open_slow_vent.connect(lambda:HXNSampleExchanger.start_venting(fast_open_threshold))
+            #self.vent_worker.open_fast_vent.connect(lambda:HXNSampleExchanger.open_fast_vent())
+            self.vent_worker.pressure_change.connect(self.prb_sample_exchange.setValue)
+            self.vent_worker.finished.connect(self.vent_thread.quit)
+            self.vent_worker.finished.connect(lambda: self.lb_sample_change_action.setText("Venting finished"))
+
+            #connect to thread
+            self.vent_thread.started.connect(self.vent_worker.do_venting)
+            self.vent_thread.start()
+        else:
+            return
+
+
+    def he_backfill_thread(self,target_pressure = 250):
+
+        choice = QMessageBox.question(self, 'He Back fill',
+                                      "Have you opened the He valve?", QMessageBox.Yes |
+                                      QMessageBox.No, QMessageBox.No)
+        if choice == QMessageBox.Yes:
+
+            # reset the progress bar 
+            self.prb_sample_exchange.reset()
+
+            #set min/max for the progress bar
+            self.prb_sample_exchange.setRange(int(caget("XF:03IDC-VA{VT:Chm-CM:1}P-I")),  int(target_pressure))
+            
+            self.lb_sample_change_action.setText("He-backfill in progress")
+
+            self.he_thread = QThread()
+            self.he_worker = PumpWorker("XF:03IDC-VA{VT:Chm-CM:1}P-I", 
+                                        target_pressure, 
+                                        target_pressure
+                                        )
+
+            self.he_worker.moveToThread(self.he_thread)
+
+            #connections
+            self.he_worker.start_he_backfill.connect(HXNSampleExchanger.auto_he_backfill)
+            self.he_worker.pressure_change.connect(self.prb_sample_exchange.setValue)
+            self.he_worker.finished.connect(self.he_thread.quit)
+            self.he_worker.finished.connect(lambda: self.lb_sample_change_action.setText("He-Backfill finished"))
+            self.he_worker.finished.connect(lambda: QMessageBox.about(self, "He Backfill Status", "Chamber is Ready"))
+
+
+            #connect to thread
+            self.he_thread.started.connect(self.he_worker.do_auto_he_fill)
+            self.he_thread.start()
+
+        else:
+            return
+
+
+    def pumping_stop(self):
+
+        choice = QMessageBox.question(self, 'Stop Pumping',
+                                      "Pumping will be stopped. Continue?", QMessageBox.Yes |
+                                      QMessageBox.No, QMessageBox.No)
+
+        if choice == QMessageBox.Yes:
+        
+            HXNSampleExchanger.stop_pumping()
+            QtTest.QTest.qWait(3000)
+            self.pump_thread.quit()
+        else:
+            return
+
+#from FXI--modified
+class liveStatus(QThread):
+    current_sts = pyqtSignal(int)
+    def __init__(self, PV):
+        super().__init__()
+        self.PV = PV
+
+    def run(self):
+
+        while True:
+            self.current_sts.emit(caget(self.PV))
+            #print("New positions")
+            QtTest.QTest.qWait(500)
+
+class liveUpdate(QThread):
+    
+    current_positions = pyqtSignal(list)
+
+    def __init__(self, pv_dict, update_interval_ms = 500):
+        super().__init__()
+        self.pv_dict = pv_dict
+        self.update_interval_ms = update_interval_ms
+
+    def return_values(self):
+        readings = []
+        for i in self.pv_dict.values():
+            try:
+                readings.append(i.position)
+            except:
+                readings.append(caget(i))
+
+        return readings
+
+
+    #use moveToThread method later
+    def run(self):
+
+        while True:
+            positions = self.return_values()
+            #self.pv_list = list(self.pv_dict.values())
+            self.current_positions.emit(positions)
+            #print(list(self.pv_dict.values())[0])
+            #print(positions[0])
+            QtTest.QTest.qWait(self.update_interval_ms)
+
+
+class PumpWorker(QObject):
+
+    pressure_change = pyqtSignal(float)
+
+    start_slow_pump = pyqtSignal()
+    slow_pump_stopped = pyqtSignal()
+    start_fast_pump = pyqtSignal()
+    stop_fast_pump = pyqtSignal()
+    finished = pyqtSignal()
+
+    open_slow_vent = pyqtSignal()
+    open_fast_vent = pyqtSignal()
+
+    start_he_backfill = pyqtSignal()
+
+    def __init__(self, pressure_reader, turbo_start, target_pressure):
+
+        super(PumpWorker, self).__init__()
+        self.pressure_reader = pressure_reader 
+        self.turbo_start = turbo_start 
+        self.target_pressure = target_pressure
+        self.rel_pressure_target = caget(self.pressure_reader)-self.target_pressure
+
+    @pyqtSlot()
+    def do_pumping(self):
+        
+        self.start_slow_pump.emit()
+        
+        while caget(self.pressure_reader)>self.target_pressure:
+            #keep emitting the pressure value for progress bar
+            self.pressure_change.emit(self.rel_pressure_target-caget(self.pressure_reader))
+            QtTest.QTest.qWait(5000)
+
+        '''
+        self.start_fast_pump.emit()
+        print("fast_triggered")
+        
+        while caget(self.pressure_reader)>1.1:
+            
+            #if pressure is below threshold open fast
+            self.pressure_change.emit(self.rel_pressure_target-caget(self.pressure_reader))
+            QtTest.QTest.qWait(5000)
+
+        '''
+        
+        self.stop_fast_pump.emit() #progress update?
+
+        #emit finshied to terminate the loop
+        self.finished.emit()
+    
+    @pyqtSlot()
+    def do_venting(self):
+
+        self.open_slow_vent.emit()
+        
+
+        while True:
+            self.pressure_change.emit(int(caget(self.pressure_reader)))
+
+            if caget(self.pressure_reader)>self.target_pressure:
+                break
+
+
+        self.finished.emit()
+    
+    @pyqtSlot()
+    def do_auto_he_fill(self):
+
+         self.start_he_backfill.emit()
+
+         while True:
+            QtTest.QTest.qWait(5000)
+            self.pressure_change.emit(int(caget(self.pressure_reader)))
+
+            if caget(self.pressure_reader)>248.0:
+                
+                break
+        
+         self.finished.emit()
+
+
+
 class WorkerSignals(QObject):
+    started = QtCore.pyqtSignal(object)
     finished = QtCore.pyqtSignal(object) # create a signal
     result = QtCore.pyqtSignal(object) # create a signal that gets an object as argument
 
@@ -1389,56 +1706,12 @@ class Worker(QRunnable):
         #self.signals.result.emit(result)  # return result
         self.signals.finished.emit(result)  # emit when thread ended
 
-#from FXI--modified
-class liveStatus(QThread):
-    current_sts = pyqtSignal(int)
-    def __init__(self, PV):
-        super().__init__()
-        self.PV = PV
-
-    def run(self):
-
-        while True:
-            self.current_sts.emit(caget(self.PV))
-            #print("New positions")
-            QtTest.QTest.qWait(500)
-
-
-class liveUpdate(QThread):
-    current_positions = pyqtSignal(list)
-
-    #use moveToThread method later
-    def run(self):
-
-        while True:
-            self.current_positions.emit([
-            int(caget("XF:03IDC-ES{Sclr:2}_cts1.D")),
-            caget("XF:03ID{}Energy-I"),
-            caget("XF:03IDC-VA{VT:Chm-CM:1}P-I"),
-            int(caget("XF:03IDC-ES{Status}ScanID-I")),
-            smarx.position,
-            smary.position,
-            smarz.position,
-            np.around(zpsth.position,2),
-            np.around(zpsth.position,2),
-            np.around(zp.zpz1.position,4),
-            ssa2.hgap.position,
-            ssa2.vgap.position,
-            caget("XF:03IDA-OP{FS:1-Ax:Y}Mtr.RBV"),
-            caget("XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.RBV"),
-            np.around(fdet1.x.position,1),
-            np.around(diff.x.position,1),
-            caget("XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.RBV"),
-            s5.hgap.position,
-            s5.vgap.position
-        ])
-            #print(livePVList[0])
-            QtTest.QTest.qWait(500)
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     window = Ui()
     window.show()
     sys.exit(app.exec_())
+    app.deleteLater()
 
 
