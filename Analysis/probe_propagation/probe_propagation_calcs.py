@@ -73,7 +73,7 @@ def propagate_probe(probe_file,det_distance_m=0.5,energy=12,det_pixel_size = 55,
                                     end_um,
                                     num_steps)
 
-    print(projection_points)
+    #print(projection_points)
 
     #for sigma
     sigma = np.zeros((3, num_steps))
@@ -94,7 +94,7 @@ def propagate_probe(probe_file,det_distance_m=0.5,energy=12,det_pixel_size = 55,
 
     for i, distance in enumerate(projection_points):
 
-        print(i)
+        #print(i)
         tmp = propagate(prb,
                         energy,
                         distance,

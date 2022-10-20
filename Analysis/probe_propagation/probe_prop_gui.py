@@ -1,4 +1,4 @@
-
+import fnmatch
 import sys
 import os
 import json
@@ -9,11 +9,9 @@ import numpy as np
 import pyqtgraph as pg
 import pyqtgraph.exporters
 import tifffile as tf
-import time
-from scipy.ndimage.measurements import center_of_mass
+
 from PyQt5 import QtWidgets, uic, QtCore, QtGui, QtTest
-from PyQt5.QtWidgets import QMessageBox, QFileDialog, QDesktopWidget, QApplication, QSizePolicy
-from PyQt5.QtCore import QObject, QTimer, QThread, pyqtSignal, pyqtSlot, QRunnable, QThreadPool, QDate
+from PyQt5.QtWidgets import QMessageBox, QFileDialog, QApplication, QSizePolicy, QErrorMessage
 
 from probe_propagation_calcs import  *
 ui_path = os.path.dirname(os.path.abspath(__file__))
@@ -27,6 +25,8 @@ class ProbePropagationGUI(QtWidgets.QMainWindow):
         uic.loadUi(os.path.join(ui_path,'probe_prop_gui.ui'), self)
 
         self.sigma_selection_line = pg.InfiniteLine()
+        self.sigma_xhue_line = pg.InfiniteLine()
+        self.sigma_yhue_line = pg.InfiniteLine()
 
         self.image_view_probe.ui.menuBtn.hide()
         self.image_view_xhue.ui.menuBtn.hide()
@@ -43,8 +43,16 @@ class ProbePropagationGUI(QtWidgets.QMainWindow):
                                                        np.abs(
                                                            self.prb_array.transpose(2, 0, 1)))
                                                    )
+    def parse_ptycho_txtfile(self, txt_filename):
 
+        with open(txt_filename) as f:
+            lines = f.readlines()
 
+        energy = float(lines[51].split("=")[-1].strip('\n'))
+        det_dist = float(lines[52].split("=")[-1].strip('\n'))
+        det_pixel_size = float(lines[66].split("=")[-1].strip('\n'))
+
+        return energy,det_dist,det_pixel_size
 
     def load_probe(self):
 
@@ -57,38 +65,82 @@ class ProbePropagationGUI(QtWidgets.QMainWindow):
             self.image_view_probe.setImage(np.abs(np.load(filename[0])))
             self.image_view_probe.setPredefinedGradient("viridis")
 
+            try:
+                folder = os.path.dirname(filename[0])
+
+                for file in os.listdir(folder):
+                    #print(file)
+                    if fnmatch.fnmatch(file, "*ptycho*"):
+                        txtfile = file
+                        print(txtfile)
+
+                energy,\
+                det_dist,\
+                det_pixel_size = self.parse_ptycho_txtfile(os.path.join(folder,txtfile))
+
+                nx, ny = np.shape(np.abs(np.load(self.probe_file)))
+                self.dsb_energy.setValue(energy)
+                self.dsb_det_dist.setValue(det_dist)
+                self.dsb_det_pixel_size.setValue(det_pixel_size)
+                self.pixel_size, _ = calculate_res_and_dof(self.dsb_energy.value(),
+                                                           self.dsb_det_dist.value(),
+                                                           self.dsb_det_pixel_size.value(),
+                                                           nx)
+                # print(self.pixel_size)
+                self.dsb_calc_pixel_size.setValue(self.pixel_size * 1.e9)
+
+            except Exception as e:
+                err_msg = QErrorMessage(self)
+                err_msg.setWindowTitle("FileNotFoundError")
+                err_msg.showMessage(f"Unable to find .txt file with recon parametrs"
+                                    f" \n {e} "
+                                    f"\n Manually enter energy,det_dist,det_pixel_size")
+                pass
+
         else:
             return
 
     def propagate_and_plot(self, probe):
+        try:
+            self.pbar_propagation.setRange(0,0)
 
-        self.pbar_propagation.setRange(0,0)
+            self.prb_array, \
+            self.sigma, \
+            self.xfit, \
+            self.yfit = propagate_probe(probe,
+                                        det_distance_m = self.dsb_det_dist.value(),
+                                        energy = self.dsb_energy.value(),
+                                        det_pixel_size = self.dsb_det_pixel_size.value(),
+                                        start_um = self.dsb_prop_start.value(),
+                                        end_um = self.dsb_prop_end.value(),
+                                        step_size_um = self.dsb_prop_size.value())
 
-        self.prb_array, \
-        self.sigma, \
-        self.xfit, \
-        self.yfit = propagate_probe(probe,
-                                    det_distance_m = self.dsb_det_dist.value(),
-                                    energy = self.dsb_energy.value(),
-                                    det_pixel_size = self.dsb_det_pixel_size.value(),
-                                    start_um = self.dsb_prop_start.value(),
-                                    end_um = self.dsb_prop_end.value(),
-                                    step_size_um = self.dsb_prop_size.value())
+            nx,ny = np.shape(np.abs(np.load(probe)))
 
-        nx,ny = np.shape(np.abs(np.load(probe)))
+            self.pixel_size,_ = calculate_res_and_dof(self.dsb_energy.value(),
+                                                      self.dsb_det_dist.value(),
+                                                      self.dsb_det_pixel_size.value(),
+                                                      nx)
+            #print(self.pixel_size)
+            self.dsb_calc_pixel_size.setValue(self.pixel_size*1.e9)
 
-        self.pixel_size,_ = calculate_res_and_dof(self.dsb_energy.value(),
-                                                  self.dsb_det_dist.value(),
-                                                  self.dsb_det_pixel_size.value(),
-                                                  nx)
-        print(self.pixel_size)
-        self.dsb_calc_pixel_size.setValue(self.pixel_size*1.e9)
+            self.imshow_probe_stack(np.abs(self.prb_array.transpose(2,0,1)))
+            self.plot_hue(np.abs(self.prb_array.transpose(2, 0, 1)))
+            self.plot_sigma(self.sigma)
+            self.pbar_propagation.setRange(0, 100)
+            self.pbar_propagation.setValue(100)
 
-        self.imshow_probe_stack(np.abs(self.prb_array.transpose(2,0,1)))
-        self.plot_hue(np.abs(self.prb_array.transpose(2, 0, 1)))
-        self.plot_sigma(self.sigma)
-        self.pbar_propagation.setRange(0, 100)
-        self.pbar_propagation.setValue(100)
+        except Exception as e:
+            err_msg = QErrorMessage(self)
+            err_msg.setWindowTitle("Processing Error")
+            err_msg.showMessage(f"Unable to propagate"
+                                f" \n {e} "
+                                f"\n Try to reduce the range")
+            self.pbar_propagation.setRange(0, 100)
+            self.pbar_propagation.setValue(33)
+            self.pbar_propagation.setStyleSheet("QProgressBar" "{color: red}"
+                                                "QProgressBar::chunk " "{background-color: red;" )
+            pass
 
     def imshow_probe_stack(self, im_stack):
 
@@ -138,6 +190,10 @@ class ProbePropagationGUI(QtWidgets.QMainWindow):
                               f'Distance  = {self.sigma[0, self.slider_for_index.value()] :.2f}')
 
         self.sigma_selection_line.setPos(self.sigma[0][self.slider_for_index.value()])
+        self.sigma_xhue_line.setPos(self.slider_for_index.value())
+        self.sigma_yhue_line.setPos(self.slider_for_index.value())
+
+
         
     def plot_hue(self, im_stack):
 
@@ -147,8 +203,25 @@ class ProbePropagationGUI(QtWidgets.QMainWindow):
         y_hue = np.squeeze(im_stack.mean(2))
         self.image_view_yhue.setImage(y_hue)
 
-        self.image_view_xhue.setPredefinedGradient("viridis")
-        self.image_view_yhue.setPredefinedGradient("viridis")
+        self.image_view_xhue.setPredefinedGradient("bipolar")
+        self.image_view_yhue.setPredefinedGradient("bipolar")
+
+        self.sigma_xhue_line = pg.InfiniteLine(pos=self.slider_for_index.value(),
+                                             angle=90,
+                                             pen=pg.mkPen("y", width=2),
+                                             movable=True,
+                                             bounds=None,
+                                             )
+
+        self.sigma_yhue_line = pg.InfiniteLine(pos=self.slider_for_index.value(),
+                                             angle=90,
+                                             pen=pg.mkPen("y", width=2),
+                                             movable=True,
+                                             bounds=None,
+                                             )
+
+        self.image_view_xhue.addItem(self.sigma_xhue_line)
+        self.image_view_yhue.addItem(self.sigma_yhue_line)
 
     def plot_sigma(self, sigma):
         self.sigma_plot.clear()
@@ -180,22 +253,12 @@ class ProbePropagationGUI(QtWidgets.QMainWindow):
 
         self.sigma_selection_line = pg.InfiniteLine(pos=sigma[0][min_index[0][0]],
                                              angle=90,
-                                             pen=pg.mkPen("m", width=2.5),
+                                             pen=pg.mkPen("m", width=2),
                                              movable=True,
                                              bounds=None,
                                              )
 
         self.sigma_plot.addItem(self.sigma_selection_line)
-
-    def move_sigma_line(self):
-
-        pos_x, pos_y = self.sigma_selection_line.pos()
-        x_fwhm_ = self.x_fwhm[self.sigma[0] == np.floor(pos_x)]
-        print(x_fwhm_)
-        self.line_label.setText(str(x_fwhm_))
-
-
-
 
 if __name__ == '__main__':
     try:
