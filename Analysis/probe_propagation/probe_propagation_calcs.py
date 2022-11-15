@@ -2,6 +2,7 @@ import sys, os
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
+from scipy.stats import moment
 import pandas as pd
 
 
@@ -12,16 +13,20 @@ def calculate_res_and_dof(energy, det_distance_m, det_pixel_um, img_size):
 
     return pixel_size, depth_of_field
 
-def gauss_linear(x,p0,p1,p2,p3,p4):
-    return p0 + p1 * x + p2*np.exp(-(x-p3)**2/(2.*p4**2))
+def guassian(data, height, center, width, background):
 
-def gaussian_fit(x,y,para):
+    return background + height*np.exp(-(data-center)**2/(2*width**2))
 
-    para = np.array(para)
-    popt, pcov = curve_fit(gauss_linear,x,y,para)
-    y_fit = gauss_linear(x,popt[0],popt[1],popt[2],popt[3],popt[4])
 
-    return popt, pcov,y_fit
+def gaussian_fit(data):
+    X = np.arange(data.size)
+    xc = np.sum(X * data) / np.sum(data)
+    width = np.abs(np.sqrt(np.abs(np.sum((X - xc) ** 2 * data) / np.sum(data))))
+
+    popt, pcov = curve_fit(guassian,X,data,p0 = [data.max(),xc,width,data[0:5].mean()])
+    y_fit = guassian(X,popt[0],popt[1],popt[2],popt[3])
+
+    return popt, pcov, y_fit
 
 def propagate(probe_np_array,energy,dist,dx, dy):
 
@@ -139,17 +144,10 @@ def probe_img_to_linefit(prb_image, gaussian_sig_init = 0.8):
     x_fit_data[0] = line_tmp_x
     y_fit_data[0] = line_tmp_y
 
-    gaussian_params_y = [0., 0., 1, iy[0], gaussian_sig_init]
-    gaussian_params_x = [0., 0., 1, ix[0], gaussian_sig_init]
-
-    popt, pcov, y_fit = gaussian_fit(proj_y,
-                                     line_tmp_y / np.max(line_tmp_y),
-                                     gaussian_params_y)
-    sigma_y = popt[4]
-    popt, pcov, x_fit = gaussian_fit(proj_x,
-                                     line_tmp_x / np.max(line_tmp_x),
-                                     gaussian_params_x)
-    sigma_x = popt[4]
+    popt, pcov, y_fit = gaussian_fit(line_tmp_y/line_tmp_y.max())
+    sigma_y = np.abs(popt[2])
+    popt, pcov, x_fit = gaussian_fit(line_tmp_x/line_tmp_x.max())
+    sigma_x = np.abs(popt[2])
 
     x_fit_data[1] = x_fit
     y_fit_data[1] = y_fit

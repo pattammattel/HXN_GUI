@@ -89,9 +89,7 @@ class xrf_3ID(QtWidgets.QMainWindow):
 
         self.pb_start.clicked.connect(self.runSingleXANESJob)
         self.pb_xrf_start.clicked.connect(self.create_pyxrf_batch_macro)
-        #self.pb_live.clicked.connect(self.start_auto)
-        #self.pb_live.clicked.connect(self.autoXRFThread)
-        self.pb_live.clicked.connect(lambda:self.threadMaker(self.autoXRFThread))
+        self.pb_live.clicked.connect(self.autoXRFThread)
         self.pb_stop_live.clicked.connect(self.stopAuto)
         self.pb_xanes_calib.clicked.connect(self.getCalibrationData)
         self.pb_plot_calib.clicked.connect(self.plotCalibration)
@@ -114,6 +112,7 @@ class xrf_3ID(QtWidgets.QMainWindow):
         self.scan_thread = None
         self.scan_sts_thread = None
         self.xanes_thread = None
+        self.h5thread = None
 
         self.threadpool = QThreadPool()
         print(f"Multithreading with maximum  {self.threadpool.maxThreadCount()} threads")
@@ -362,7 +361,7 @@ class xrf_3ID(QtWidgets.QMainWindow):
         self.scan_thread.scan_num.connect(self.pyxrf_live_process) #thread this
         self.scan_thread.enableLiveButton.connect(self.liveButtonSts)
         self.scan_thread.start()
-        print(f"Thread Running: {self.scan_thread.isRunning()}")
+        print(f"Auto XRF Thread Running: {self.scan_thread.isRunning()}")
 
     def pyxrf_live_process(self, sid):
         invalidData = False
@@ -430,71 +429,12 @@ class xrf_3ID(QtWidgets.QMainWindow):
             pass
         
         self.sb_lastScanProcessed.setValue(sid)
+        QtTest.QTest.qWait(500)
 
-    def start_auto(self):
-
-        self.pte_status.clear()
-        self.pte_status.appendPlainText("live started")
-        print('live started')
-        cwd = self.le_wd.text()
-        param = self.le_param.text()
-        norm = self.le_sclr_2.text()
-        sid_display = int(caget('XF:03IDC-ES{Status}ScanID-I'))
-        self.pte_status.appendPlainText(f'current scan; {sid_display}')
-        print(f'current scan; {sid_display}')
-        QtTest.QTest.qWait(5000)
-        self.pb_live.setStyleSheet("background-color: rgb(0, 93, 29)")
-        QtTest.QTest.qWait(5000)
-        buffer_time=self.sb_buffer_time.value()
-        #hxn_auto_loader(wd=cwd, param_file_name=param, scaler_name=norm,
-                        #buffer_time=self.sb_buffer_time.value(), hdf=self.rb_make_hdf.isChecked(),
-                        #xrf_fit=self.rb_xrf_fit.isChecked())
-
-        self.sid = int(caget('XF:03IDC-ES{Status}ScanID-I'))-1
-        print_msg = True
-
-        self.doLiveProcessing = True
-
-        while self.doLiveProcessing:
-            
-
-            while caget('XF:03IDC-ES{Sclr:2}_cts1.B') < 5000:
-                logger.info('beam is not available: waiting for shutter to open')
-                QtTest.QTest.qWait(5000)
-
-            while caget('XF:03IDC-ES{Status}ScanRunning-I') == 1 and print_msg:
-                print('\n**Scan PV is active; waitng for scan to complete**\n')
-                QtTest.QTest.qWait(500)
-                print_msg = False
-
-            while caget('XF:03IDC-ES{Status}ScanRunning-I') == 0 and int(caget('XF:03IDC-ES{Status}ScanID-I')) != self.sid:
-                
-                self.sid = int(caget('XF:03IDC-ES{Status}ScanID-I'))
-                print(f'calling scan {self.sid} from data broaker')
-                hdr = db[(self.sid)]
-
-                QtTest.QTest.qWait(30000)
-                if bool(hdr.stop):
-
-                    if self.rb_make_hdf.isChecked():
-                        make_hdf(int(self.sid), wd=cwd, file_overwrite_existing=True)
-
-                    if self.rb_xrf_fit.isChecked():
-                        pyxrf_batch(int(self.sid), int(self.sid), wd=cwd, param_file_name=param, scaler_name=norm)
-
-                    QtTest.QTest.qWait(1000*buffer_time)
-                    print_msg = True
-
-                    print(f'\n**{self.sid} is processed: waitng for next scan **\n')
-
-        #QtTest.QTest.qWait(2000)
-
-        else:
-
-            print("Live process stopped")
 
     def open_pyxrf(self):
-        self.pyxrf_subprocess = subprocess.Popen(['pyxrf'])
+        os.system('gnome-terminal --tab --command pyxrf --active')
+        #self.pyxrf_subprocess = subprocess.Popen(['pyxrf'])
 
     def close_all_plots(self):
         return plt.close('all')
@@ -595,7 +535,9 @@ class liveData(QThread):
         while True:
             QtTest.QTest.qWait(333)
             while caget('XF:03IDC-ES{Status}ScanRunning-I') == 0 and caget('XF:03IDC-ES{Sclr:2}_cts1.D')>5000:
+
                 self.scan_num.emit(int(caget('XF:03IDC-ES{Status}ScanID-I')))
+                print("new scan signal sent")
                 self.sleep(self.buffertime)
                 #QtTest.QTest.qWait(self.buffertime*1000)
                 
@@ -606,6 +548,7 @@ class scanStatus(QThread):
     def run(self):
         while True:
             QtTest.QTest.qWait(500)
+            
             self.scan_num.emit(int(caget('XF:03IDC-ES{Status}ScanID-I')))
             self.scan_sts.emit(caget('XF:03IDC-ES{Status}ScanRunning-I'))
 
@@ -649,47 +592,59 @@ class loadh5(QThread):
         
         for sid in self.paramDict["sidList"]: #filter for 1d
             
-            hdr = db[int(sid)]
-            start_doc = hdr["start"]
-            
-            if not start_doc["plan_type"] in ("FlyPlan1D",):
-                try:
-                    make_hdf(
-                        int(sid), 
-                        wd = self.paramDict["wd"],
-                        file_overwrite_existing = self.paramDict['file_overwrite_existing']
-                        )
-                        
-                    #self.h5loaded.emit(sid)
-                    QtTest.QTest.qWait(50)
-                    h5DataAvailable = True
 
-                except:
-                    print(f" Failed to load {sid}")
-                    h5DataAvailable = False
-                    pass
+            #try to find the data in the db, except pass
+            try:
+                hdr = db[int(sid)]
+                start_doc = hdr["start"]
 
-
-                if self.paramDict["XRFfit"] and h5DataAvailable:
-
+                #skip 1D scans
+                if not start_doc["plan_type"] in ("FlyPlan1D",):
+                    
+                    
+                    #try to make h5, bypass any errors
                     try:
-                        fname = f"scan2D_{int(sid)}.h5"
-
-
-                        fit_pixel_data_and_save(
-                                self.paramDict["wd"],
-                                fname,
-                                param_file_name = self.paramDict["xrfParam"],
-                                scaler_name = self.paramDict["norm"],
-                                save_tiff = self.paramDict["saveXRFTiff"]
-                                )
+                        make_hdf(
+                            int(sid), 
+                            wd = self.paramDict["wd"],
+                            file_overwrite_existing = self.paramDict['file_overwrite_existing'],
+                            create_each_det = True
+                            )
+                            
+                        #self.h5loaded.emit(sid)
+                        QtTest.QTest.qWait(50)
+                        #if h5 available tracker to do xrf fitting
+                        h5DataAvailable = True
 
                     except:
-                        print("XRF Fitting Unsuccessful")
+                        print(f" Failed to load {sid}")
+                        h5DataAvailable = False
                         pass
 
-                else:
-                    pass
+
+                    if self.paramDict["XRFfit"] and h5DataAvailable:
+
+                        try:
+                            fname = f"scan2D_{int(sid)}.h5"
+
+
+                            fit_pixel_data_and_save(
+                                    self.paramDict["wd"],
+                                    fname,
+                                    param_file_name = self.paramDict["xrfParam"],
+                                    scaler_name = self.paramDict["norm"],
+                                    save_tiff = self.paramDict["saveXRFTiff"]
+                                    )
+
+                        except:
+                            print("XRF Fitting Unsuccessful")
+                            pass
+
+                    else:
+                        pass
+            except:
+                print("Trouble finding data from data broker")
+                pass
 
 class XRFFitThread(QThread):
     
@@ -708,7 +663,8 @@ class XRFFitThread(QThread):
                 fname,
                 param_file_name = self.paramDict["xrfParam"],
                 scaler_name = self.paramDict["norm"],
-                save_tiff = self.paramDict["saveXRFTiff"]
+                save_tiff = self.paramDict["saveXRFTiff"],
+                save_txt = True
                 )
 
         QtTest.QTest.qWait(500)
@@ -731,7 +687,10 @@ class xrfBatchThread(QThread):
             wd=self.paramDict["wd"], 
             param_file_name=self.paramDict["xrfParam"], 
             scaler_name=self.paramDict["norm"], 
-            save_tiff=self.paramDict["saveXRFTiff"])
+            save_tiff=self.paramDict["saveXRFTiff"],
+            save_txt = False,
+            ignore_datafile_metadata = True
+            )
 
 
 

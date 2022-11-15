@@ -12,11 +12,10 @@ import numpy as np
 import pyqtgraph as pg
 import pyqtgraph.exporters
 import tifffile as tf
-import time
 from scipy.ndimage.measurements import center_of_mass
 from PyQt5 import QtWidgets, uic, QtCore, QtGui, QtTest
-from PyQt5.QtWidgets import QMessageBox, QFileDialog, QDesktopWidget, QApplication, QSizePolicy
-from PyQt5.QtCore import QObject, QTimer, QThread, pyqtSignal, pyqtSlot, QRunnable, QThreadPool, QDate
+from PyQt5.QtWidgets import QMessageBox, QFileDialog,QErrorMessage
+from PyQt5.QtCore import QObject, QTimer, QThread, pyqtSignal
 ui_path = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -54,11 +53,6 @@ class ptychoSaveWindow(QtWidgets.QMainWindow):
         self.le_scan_num.editingFinished.connect(self.userUpdateHotPixelList)
         self.pb_updateROI.clicked.connect(self.updateROI)
 
-        #probe propogation
-        self.pb_prob_prop_calc.clicked.connect(lambda:prop_probe(self.probe_file))
-        self.pb_load_probe.clicked.connect(self.choose_probe)
-        self.pb_save_prp_data.clicked.connect(self.plot_propagation_data)
-
         #import/export json
         self.actionLoad_Param.triggered.connect(self.importParameters)
         self.actionSave_Param.triggered.connect(self.exportParameters)
@@ -71,6 +65,20 @@ class ptychoSaveWindow(QtWidgets.QMainWindow):
         '''
 
         self.show()
+
+    def exception_messager(func):
+
+        def inner_function(self,*args, **kwargs):
+
+            try:
+                self.func(*args, **kwargs)
+
+            except Exception as excep_msg:
+                err_msg = QErrorMessage(self)
+                err_msg.setWindowTitle("An Error Occured")
+                err_msg.showMessage(excep_msg)
+
+        return inner_function
 
     def updateDisplayParams(self, param_dict):
 
@@ -96,6 +104,7 @@ class ptychoSaveWindow(QtWidgets.QMainWindow):
 
         self.foldername = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select Folder')
         self.le_wd.setText((str(self.foldername)))
+
 
     def initializeParameters(self):
 
@@ -131,6 +140,7 @@ class ptychoSaveWindow(QtWidgets.QMainWindow):
         self.bl = self.db.get_table(self.header, stream_name='baseline')
         self.config["energy"] = self.bl.energy.iloc[0]
         self.config["det_dist"] = 0.5
+        self.config["scan_num"] = int(self.le_scan_num.text())
         print(self.config)
         self.updateDisplayParams(self.config)
 
@@ -220,7 +230,12 @@ class ptychoSaveWindow(QtWidgets.QMainWindow):
         """ Long process saving h5 data"""
 
         try:
+            self.saveThread.quit()
 
+        except:
+            pass
+
+        try:
             self.statusbar.showMessage(" Loading data; This could take a while...Please wait... ")
             self.saveThread = QThread()
             self.saveWorker = savePtychoH5(config)

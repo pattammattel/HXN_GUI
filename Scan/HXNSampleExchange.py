@@ -5,6 +5,7 @@ import time, tqdm
 from epics import caget, caput
 from PyQt5 import QtWidgets, uic, QtCore, QtGui, QtTest
 from PyQt5.QtWidgets import QMessageBox, QProgressBar
+from PyQt5.QtCore import QTime
 
 class SampleExchangeProtocol():
 
@@ -46,6 +47,7 @@ class SampleExchangeProtocol():
             self.pumpAFastStats = 'XF:03IDC-VA{ES:1-FastFrVlv:A}Sts:Cls-Sts'
 
             #He backfill PVs
+            self.he_valve = 'XF:03IDC-ES{IO:1}DO:4-Cmd'
             self.startAutoHeBackfill = 'XF:03IDC-VA{ES:1-AutoVt:He}Cmd:Start-Cmd'
         
 
@@ -91,12 +93,18 @@ class SampleExchangeProtocol():
 
             
 
-    def start_pumping(self, turbo_start_pressure = 350, target_pressure = 1.2 ):
+    def start_pumps(self, turbo_start_pressure = 400, target_pressure = 1.2 ):
         
+        #while lopp end after 1 hour
+
+        endtime = QTime.currentTime().addSecs(3600)
         
         #make sure vents are closed
         [self.triggerPV(pv) for pv in [self.fastVentClose,self.slowVentClose]]
         
+        if turbo_start_pressure<target_pressure:
+            turbo_start_pressure = target_pressure
+
         
         #turn on pumps 
         #make sure vents are closed
@@ -108,19 +116,24 @@ class SampleExchangeProtocol():
             
             while caget(self.pressure)>turbo_start_pressure:
                 
-                print("waiting for threshold pressure value for turbo")
-                QtTest.QTest.qWait(30*1000)
+                print(f"waiting for threshold pressure value {turbo_start_pressure} for turbo")
+                QtTest.QTest.qWait(10*1000)
                 
             print("FAST Open triggered")
             [self.triggerPV(pv) for pv in [self.pumpBFastOpen,self.pumpAFastOpen]]
 
-            
-            while caget(self.pressure)>target_pressure:
-                print("waiting for threshold target pressure value ")
-                QtTest.QTest.qWait(30*1000)
+            if not target_pressure>turbo_start_pressure:
+
+                while caget(self.pressure)>target_pressure:
+
+                    print(f"waiting for threshold target pressure value = {target_pressure}")
+                    QtTest.QTest.qWait(5*1000)
+                    if QTime.currentTime() > endtime:
+                        break
+                    
 
 
-            QtTest.QTest.qWait(5*1000)
+            QtTest.QTest.qWait(1000)
 
             #close pump valves
             [self.triggerPV(pv) for pv in [self.pumpBFastClose,self.pumpAFastClose,
@@ -159,7 +172,7 @@ class SampleExchangeProtocol():
 
     
     
-    def start_venting(self, fast_open_pressure = 550):
+    def start_venting(self):
         
         #make sure fluorescence detector is out before relasing the vaccuum
         caput('XF:03IDC-ES{Det:Vort-Ax:X}Mtr.VAL',-107)
@@ -167,14 +180,15 @@ class SampleExchangeProtocol():
         
         self.triggerPV(self.slowVentOpen)
         
-        while caget("XF:03IDC-VA{VT:Chm-CM:1}P-I")<fast_open_pressure:
+        while caget("XF:03IDC-VA{VT:Chm-CM:1}P-I")<550:
 
-            QtTest.QTest.qWait(5000)
-            print("waiting for threshold pressure ")
+            QtTest.QTest.qWait(10000)
+            print(f'waiting for threshold pressure {caget("XF:03IDC-VA{VT:Chm-CM:1}P-I")}<550')
             
-        
-        print("fast vent opened ")
-        self.triggerPV(self.fastVentOpen)
+        for i in range(5):
+            print("fast vent opened ")
+            self.triggerPV(self.fastVentOpen)
+            QtTest.QTest.qWait(5000)
 
 
     def stop_vending(self):
@@ -200,14 +214,15 @@ class SampleExchangeProtocol():
         QtTest.QTest.qWait(10*1000)
         #only execute if pump vales are closed
         
-        if readyForHe:    
+        if readyForHe:
+            
             self.triggerPV(self.startAutoHeBackfill)
 
-            return 
-            
         else: 
-            print("One or more valves is not closed; try again")  
-            return 
+            print("One or more valves is not closed; try again") 
+
+        
+            
 
     def stop_he_backfill(self):
         pass

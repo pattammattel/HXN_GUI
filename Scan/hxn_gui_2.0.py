@@ -17,7 +17,7 @@ from epics import caget, caput
 
 from PyQt5 import QtWidgets, uic, QtCore, QtGui, QtTest
 from PyQt5.QtWidgets import QMessageBox, QFileDialog, QApplication, QLCDNumber, QLabel, QErrorMessage
-from PyQt5.QtCore import QObject, QTimer, QThread, pyqtSignal, pyqtSlot, QRunnable, QThreadPool, QDate
+from PyQt5.QtCore import QObject, QTimer, QThread, pyqtSignal, pyqtSlot, QRunnable, QThreadPool, QDate, QTime
 
 from pdf_log import *
 from xanes2d import *
@@ -47,7 +47,7 @@ class Ui(QtWidgets.QMainWindow):
         self.motor_list = {'zpssx': zpssx, 'zpssy': zpssy, 'zpssz': zpssz,
         'dssx': dssx, 'dssy': dssy, 'dssz': dssz}
 
-
+        print("Loading HXN GUI")
         
 
         self.dwell.valueChanged.connect(self.initParams)
@@ -106,7 +106,7 @@ class Ui(QtWidgets.QMainWindow):
         #self.start.clicked.connect(self.flyThread)
 
 
-        if False: #self.rb_mll.isChecked():
+        if self.rb_mll.isChecked():
             #zpmotors
             self.pb_move_smarx_pos.clicked.connect(self.move_dsx)
             self.pb_move_smary_pos.clicked.connect(self.move_dsy)
@@ -126,13 +126,13 @@ class Ui(QtWidgets.QMainWindow):
             self.pb_move_smarx_pos.clicked.connect(self.move_smarx)
             self.pb_move_smary_pos.clicked.connect(self.move_smary)
             self.pb_move_smarz_pos.clicked.connect(self.move_smarz)
-            self.pb_move_dth_pos.clicked.connect(self.move_dsth)
+            self.pb_move_dth_pos.clicked.connect(self.move_zpth)
             self.pb_move_zpz_pos.clicked.connect(self.move_zpz1)
 
             self.pb_move_smarx_neg.clicked.connect(lambda: self.move_smarx(neg_=True))
             self.pb_move_smary_neg.clicked.connect(lambda: self.move_smary(neg_=True))
             self.pb_move_smarz_neg.clicked.connect(lambda: self.move_smarz(neg_=True))
-            self.pb_move_dth_pos_neg.clicked.connect(lambda: self.move_dsth(neg_=True))
+            self.pb_move_dth_pos_neg.clicked.connect(lambda: self.move_zpth(neg_=True))
             self.pb_move_zpz_neg.clicked.connect(lambda: self.move_zpz1(neg_=True))
 
         # Detector/Camera Motions
@@ -168,7 +168,7 @@ class Ui(QtWidgets.QMainWindow):
         #self.pb_start_pump.clicked.connect(self.pumpThread)
         #self.pb_auto_he_fill.clicked.connect(self.heBackFillThread)
         #self.pb_vent.clicked.connect(self.ventThread)
-        self.pb_vent.clicked.connect(self.venting_thread)
+        self.pb_start_vent.clicked.connect(self.venting_thread)
         self.pb_stop_vent.clicked.connect(HXNSampleExchanger.stop_vending)
         self.pb_start_pump.clicked.connect(self.start_pumping)
         self.pb_stop_pump.clicked.connect(self.pumping_stop)
@@ -295,13 +295,10 @@ class Ui(QtWidgets.QMainWindow):
 
         self.pump_PVs = {
 
-            self.rb_slow_vent:"XF:03IDC-VA{ES:1-SlowVtVlv:Stg2}Sts:Cls-Sts",
             self.rb_fast_vent:"XF:03IDC-VA{ES:1-FastVtVlv:Stg3}Sts:Cls-Sts",
             self.rb_pumpA_slow:"XF:03IDC-VA{ES:1-SlowFrVlv:A}Sts:Cls-Sts",
-            self.rb_pumpA_fast:"XF:03IDC-VA{ES:1-FastFrVlv:A}Sts:Cls-Sts",
             self.rb_pumpB_slow:"XF:03IDC-VA{ES:1-SlowFrVlv:B}Sts:Cls-Sts",
-            self.rb_pumpB_fast:"XF:03IDC-VA{ES:1-FastFrVlv:B}Sts:Cls-Sts",
-            
+
             }
 
     def handle_value_signals(self,pv_val_list):
@@ -315,7 +312,7 @@ class Ui(QtWidgets.QMainWindow):
         #self.pump_PVs.keys() = pv_val_list (works?)
         livePVs = {key:value for key, value in zip(self.pump_PVs.keys(),pv_val_list)}
         for item in livePVs.items():
-                item[0].setChecked(item[1])
+                item[0].setChecked(not bool(item[1]))
                 
 
     def scanStatus(self,sts):
@@ -502,7 +499,7 @@ class Ui(QtWidgets.QMainWindow):
     def move_smarz(self, neg_=False):
         self.moveAMotor(self.db_move_smarz, smarz, 0.001, neg=neg_)
 
-    def move_dsth(self, neg_=False):
+    def move_zpth(self, neg_=False):
         self.moveAMotor(self.db_move_dth, zpsth, neg=neg_)
 
     def move_zpz1(self, neg_=False):
@@ -1424,18 +1421,19 @@ class Ui(QtWidgets.QMainWindow):
             pass
 
     #add a decorator for exception catching using qmessagebox
-    def start_pumping(self, turbo_start_ = 350):
+    def start_pumping(self):
 
-        target_pressure_var = self.dsb_target_p.value()
+        turbo_start_ = 350
+
+        target_pressure_var = np.round(self.dsb_target_p.value(),1)
 
         choice = QMessageBox.question(self, 'Start Pumping',
                                       f"HXN pumping will be excecuted with target value of {target_pressure_var}"
+                                      f"Turbo starts at ~ {turbo_start_}"
                                       f" Please confirm.", QMessageBox.Yes |
                                       QMessageBox.No, QMessageBox.No)
 
         if choice == QMessageBox.Yes:
-
-            
 
             # reset the progress bar 
             self.prb_sample_exchange.reset()
@@ -1454,12 +1452,16 @@ class Ui(QtWidgets.QMainWindow):
             self.pump_worker.moveToThread(self.pump_thread)
             
             #worker connections
-            self.pump_worker.start_slow_pump.connect(HXNSampleExchanger.start_pumping)
+            self.pump_worker.start_slow_pump.connect(lambda:HXNSampleExchanger.start_pumps(target_pressure = target_pressure_var))
             #self.pump_worker.start_fast_pump.connect(HXNSampleExchanger.start_fast_pumps)
             #self.pump_worker.stop_fast_pump.connect(HXNSampleExchanger.stop_pumping)
             self.pump_worker.pressure_change.connect(self.prb_sample_exchange.setValue)
+            self.pump_worker.finished.connect(lambda:self.prb_sample_exchange.setRange(0,100))
+            self.pump_worker.finished.connect(lambda:self.prb_sample_exchange.setValue(100))
             self.pump_worker.finished.connect(self.pump_thread.quit)
             self.pump_worker.finished.connect(lambda: self.lb_sample_change_action.setText("Pumping finished"))
+
+            self.pump_worker.finished.connect(lambda:self.he_backfill_thread(target_pressure = 250))
 
 
             #connect to thread
@@ -1469,7 +1471,11 @@ class Ui(QtWidgets.QMainWindow):
         else:
             return
 
-    def venting_thread(self,fast_open_threshold = 550, target_pressure=745):
+    def venting_thread(self):
+
+        print("venting request")
+
+        target_pressure = 745
 
         choice = QMessageBox.question(self, 'Start Venting',
                                       "Microscope chamber will be vented. Continue?", QMessageBox.Yes |
@@ -1477,73 +1483,87 @@ class Ui(QtWidgets.QMainWindow):
 
         if choice == QMessageBox.Yes:
 
+        
+
             # reset the progress bar 
             self.prb_sample_exchange.reset()
 
             self.lb_sample_change_action.setText("Venting in progress")
 
             #set min/max for the progress bar
-            self.prb_sample_exchange.setRange(caget("XF:03IDC-VA{VT:Chm-CM:1}P-I"),  target_pressure)
+            self.prb_sample_exchange.setRange(int(caget("XF:03IDC-VA{VT:Chm-CM:1}P-I")),  target_pressure)
             
             self.vent_thread = QThread()
             self.vent_worker = PumpWorker("XF:03IDC-VA{VT:Chm-CM:1}P-I", 
-                                        turbo_start = fast_open_threshold, 
-                                        target_pressure = target_pressure
+                                        turbo_start = 550, 
+                                        target_pressure = 745
                                         )
 
             self.vent_worker.moveToThread(self.vent_thread)
 
             #worker connections
-            self.vent_worker.open_slow_vent.connect(lambda:HXNSampleExchanger.start_venting(fast_open_threshold))
+            self.vent_worker.open_slow_vent.connect(HXNSampleExchanger.start_venting)
             #self.vent_worker.open_fast_vent.connect(lambda:HXNSampleExchanger.open_fast_vent())
             self.vent_worker.pressure_change.connect(self.prb_sample_exchange.setValue)
+            self.vent_worker.finished.connect(lambda:self.prb_sample_exchange.setRange(0,100))
+            self.vent_worker.finished.connect(lambda:self.prb_sample_exchange.setValue(100))
             self.vent_worker.finished.connect(self.vent_thread.quit)
             self.vent_worker.finished.connect(lambda: self.lb_sample_change_action.setText("Venting finished"))
 
             #connect to thread
             self.vent_thread.started.connect(self.vent_worker.do_venting)
             self.vent_thread.start()
+        
         else:
+            print("Process aborted")
             return
-
+        
 
     def he_backfill_thread(self,target_pressure = 250):
 
+        '''
         choice = QMessageBox.question(self, 'He Back fill',
                                       "Have you opened the He valve?", QMessageBox.Yes |
                                       QMessageBox.No, QMessageBox.No)
         if choice == QMessageBox.Yes:
+        '''
 
-            # reset the progress bar 
-            self.prb_sample_exchange.reset()
+        QtTest.QTest.qWait(10000)
 
-            #set min/max for the progress bar
-            self.prb_sample_exchange.setRange(int(caget("XF:03IDC-VA{VT:Chm-CM:1}P-I")),  int(target_pressure))
-            
-            self.lb_sample_change_action.setText("He-backfill in progress")
+        #open he valve
+        caput('XF:03IDC-ES{IO:1}DO:4-Cmd',1)
 
-            self.he_thread = QThread()
-            self.he_worker = PumpWorker("XF:03IDC-VA{VT:Chm-CM:1}P-I", 
-                                        target_pressure, 
-                                        target_pressure
-                                        )
+        # reset the progress bar 
+        self.prb_sample_exchange.reset()
 
-            self.he_worker.moveToThread(self.he_thread)
+        #set min/max for the progress bar
+        self.prb_sample_exchange.setRange(0,  249)
+        
+        self.lb_sample_change_action.setText("He-backfill in progress")
 
-            #connections
-            self.he_worker.start_he_backfill.connect(HXNSampleExchanger.auto_he_backfill)
-            self.he_worker.pressure_change.connect(self.prb_sample_exchange.setValue)
-            self.he_worker.finished.connect(self.he_thread.quit)
-            self.he_worker.finished.connect(lambda: self.lb_sample_change_action.setText("He-Backfill finished"))
-            self.he_worker.finished.connect(lambda: QMessageBox.about(self, "He Backfill Status", "Chamber is Ready"))
+        self.he_thread = QThread()
+        self.he_worker = PumpWorker("XF:03IDC-VA{VT:Chm-CM:1}P-I", 
+                                    target_pressure, 
+                                    target_pressure
+                                    )
+
+        self.he_worker.moveToThread(self.he_thread)
+
+        #connections
+        self.he_worker.start_he_backfill.connect(HXNSampleExchanger.auto_he_backfill)
+        self.he_worker.pressure_change.connect(self.prb_sample_exchange.setValue)
+        self.he_worker.finished.connect(self.he_thread.quit)
+        self.he_worker.finished.connect(lambda:self.prb_sample_exchange.setRange(0,100))
+        self.he_worker.finished.connect(lambda:self.prb_sample_exchange.setValue(100))
+        self.he_worker.finished.connect(lambda: caput('XF:03IDC-ES{IO:1}DO:4-Cmd',0))
+        self.he_worker.finished.connect(lambda: self.lb_sample_change_action.setText("He-Backfill finished"))
+        self.he_worker.finished.connect(lambda: QMessageBox.about(self, "He Backfill Status", "Chamber is Ready"))
 
 
-            #connect to thread
-            self.he_thread.started.connect(self.he_worker.do_auto_he_fill)
-            self.he_thread.start()
+        #connect to thread
+        self.he_thread.started.connect(self.he_worker.do_auto_he_fill)
+        self.he_thread.start()
 
-        else:
-            return
 
 
     def pumping_stop(self):
@@ -1661,12 +1681,8 @@ class PumpWorker(QObject):
 
         self.open_slow_vent.emit()
         
-
-        while True:
+        while caget(self.pressure_reader)<self.target_pressure:
             self.pressure_change.emit(int(caget(self.pressure_reader)))
-
-            if caget(self.pressure_reader)>self.target_pressure:
-                break
 
 
         self.finished.emit()
@@ -1676,14 +1692,10 @@ class PumpWorker(QObject):
 
          self.start_he_backfill.emit()
 
-         while True:
+         while caget(self.pressure_reader)<248.0:
             QtTest.QTest.qWait(5000)
             self.pressure_change.emit(int(caget(self.pressure_reader)))
 
-            if caget(self.pressure_reader)>248.0:
-                
-                break
-        
          self.finished.emit()
 
 

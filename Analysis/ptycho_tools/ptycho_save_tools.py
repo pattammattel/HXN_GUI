@@ -272,8 +272,16 @@ def save_ptycho_h5(config, mesh_flag, fly_flag):
         print('pixel num, pixel size, depth of field: ', n, pixel_size, depth_of_field)
 
         print("creating h5")
-        with h5py.File(config["wd"] + '/h5_data/scan_' + str(config["scan_num"]) + '.h5', 'w') as hf:
-            # with h5py.File(config["wd"] + '/scan_' + str(config["scan_num"]) + '.h5', 'w') as hf:
+
+        h5_path = config["wd"] + '/h5_data/scan_' + str(config["scan_num"]) + '.h5'
+
+        if os.path.exists(h5_path):
+            os.remove(h5_path)
+            print ("overwriting exising file")
+
+
+        with h5py.File(h5_path) as hf:
+
             dset = hf.create_dataset('diffamp', data=data)
             dset = hf.create_dataset('points', data=points)
             dset = hf.create_dataset('x_range', data=x_range)
@@ -290,6 +298,11 @@ def save_ptycho_h5(config, mesh_flag, fly_flag):
         # symlink
         src = f'{config["wd"]}/h5_data/scan_{config["scan_num"]}.h5'
         dest = f'{config["wd"]}/scan_{config["scan_num"]}.h5'
+
+        if os.path.exists(dest):
+            os.remove(dest)
+            print ("overwriting exising symlink")
+
         os.symlink(src, dest)
 
     else:
