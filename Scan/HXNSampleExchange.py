@@ -59,6 +59,9 @@ class SampleExchangeProtocol():
         caput(PV_name,1)
         QtTest.QTest.qWait(2000)
 
+
+        
+
     def start_slow_pumps(self):
 
         #make sure vents are closed
@@ -90,6 +93,20 @@ class SampleExchangeProtocol():
                 if attempt>20:
                     print ("error opening fast pumps")
                     break
+
+
+
+    def stop_pumping(self):
+
+        #close pump valves
+        [self.triggerPV(pv) for pv in [self.pumpBFastClose,self.pumpAFastClose,
+                                    self.pumpBSlowClose,self.pumpASlowClose]]
+
+        #tun off the pumps
+        [self.triggerPV(pv) for pv in [self.pumpAOFF,self.pumpBOFF]]
+            
+        #Done!
+        return 
 
             
 
@@ -201,8 +218,9 @@ class SampleExchangeProtocol():
 
     def auto_he_backfill(self):
 
-        #pump valve status
+        self.stop_pumping()
 
+        #pump valve status
         HeFillReadiness = [self.pumpBSlowStats,self.pumpASlowStats,self.pumpBFastStats,self.pumpAFastStats]
 
         if [caget(pvs) == 1 for pvs in HeFillReadiness]:

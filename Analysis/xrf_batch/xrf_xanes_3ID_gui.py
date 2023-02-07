@@ -1,84 +1,29 @@
 # conda activate analysis-2019-3.0-hxn-clone2
 
-import sys, os, time, subprocess, logging, gc, h5py, traceback
+import sys, os, time, subprocess, logging, h5py, traceback, json
 import matplotlib.pyplot as plt
 import numpy as np
 import time
 import pyqtgraph as pg
 
 from PyQt5.QtCore import QObject, QTimer, QThread, pyqtSignal, pyqtSlot, QRunnable, QThreadPool
-from PyQt5 import QtWidgets, uic, QtTest
+from PyQt5 import QtWidgets, uic, QtTest, QtGui
 from PyQt5.QtWidgets import QMessageBox, QFileDialog
 from pyxrf.api import *
 from epics import caget
+from calcs import *
 
 logger = logging.getLogger()
 ui_path = os.path.dirname(os.path.abspath(__file__))
 
-def absoluteFilePaths(directory):
-    for dirpath,_,filenames in os.walk(directory):
-        for f in filenames:
-            yield os.path.abspath(os.path.join(dirpath, f))
-
-def getEnergyNScalar(h='h5file'):
-    """
-    Function retrieve the ion chamber readings and
-    mono energy from an h5 file created within pyxrf at HXN
-
-    input: h5 file path
-    output1: normalized IC3 reading ("float")
-    output2: mono energy ("float")
-
-    """
-    # open the h5
-
-    f = h5py.File(h, 'r')
-    # get Io and IC3,  edges are removeed to exclude nany dropped frame or delayed reading
-    Io = np.array(f['xrfmap/scalers/val'])[1:-1, 1:-1, 0].mean()
-    I = np.array(f['xrfmap/scalers/val'])[1:-1, 1:-1, 2].mean()
-    # get monoe
-    mono_e = f['xrfmap/scan_metadata'].attrs['instrument_mono_incident_energy']
-    f.close()
-    # return values
-    return I / Io, mono_e
-
-def getCalibSpectrum(path_=os.getcwd()):
-    """
-	Get the I/Io and enegry value from all the h5 files in the given folder
-
-	-------------
-	input: path to folder (string), if none, use current working directory
-	output: calibration array containing energy in column and log(I/Io) in the other (np.array)
-    -------------
-	"""
-
-    # get the all the files in the directory
-    fileList = list(absoluteFilePaths(path_))
-
-    # empty list to add values
-    spectrum = []
-    energyList = []
-
-    for file in sorted(fileList):
-        if file.endswith('.h5'):  # filer for h5
-            IbyIo, mono_e = getEnergyNScalar(h=file)
-            energyList.append(mono_e)
-            spectrum.append(IbyIo)
-
-    # get the output in two column format
-    calib_spectrum = np.column_stack([energyList, (-1 * np.log10(spectrum))])
-    # sort by energy
-    calib_spectrum = calib_spectrum[np.argsort(calib_spectrum[:, 0])]
-    # save as txt to the parent folder
-    #np.savetxt('calibration_spectrum.txt', calib_spectrum)
-    logger.info("calibration spectrum saved in : {path_} ")
-
-    return calib_spectrum
 
 class xrf_3ID(QtWidgets.QMainWindow):
     def __init__(self):
         super(xrf_3ID, self).__init__()
         uic.loadUi(os.path.join(ui_path, "xrf_xanes_3ID_gui.ui"), self)
+
+        sys.stdout = EmittingStream(textWritten=self.normalOutputWritten)
+        sys.stderr = EmittingStream(textWritten=self.errorOutputWritten)
 
         self.pyxrf_subprocess = None
 
@@ -98,7 +43,7 @@ class xrf_3ID(QtWidgets.QMainWindow):
         #batchfiles
         self.pb_addTobBatch.clicked.connect(self.addToXANESBatchJob)
         self.pb_runBatch.clicked.connect(self.runBatchFile)
-        self.pb_showBatch.clicked.connect(lambda: self.pte_status.appendPlainText(str(self.batchJob)))
+        self.pb_showBatch.clicked.connect(lambda: self.pte_status.append(str(self.batchJob)))
         self.pb_clear_batch.clicked.connect(lambda: self.batchJob.clear())
 
         self.pb_open_pyxrf.clicked.connect(self.open_pyxrf)
@@ -106,13 +51,30 @@ class xrf_3ID(QtWidgets.QMainWindow):
 
         self.pb_scan_meta.clicked.connect(self.print_metadata)
         self.pb_scan_dets.clicked.connect(self.print_dets)
+        
+        
+        #load previous config
+
+        line_edits =  [self.le_XRFBatchSID,
+                        self.le_wd,
+                        self.le_param,
+                        self.le_startid,
+                        self.le_lastid,
+                        self.xanes_elem,
+                        self.alignment_elem]
 
 
+        for le in line_edits:
+            le.textEdited.connect(self.save_config)
+
+        self.load_config(os.path.join(ui_path,"config_file.json"))
+
+        
         #threds
-        self.scan_thread = None
-        self.scan_sts_thread = None
-        self.xanes_thread = None
-        self.h5thread = None
+        self.scan_thread = QThread()
+        self.scan_sts_thread = QThread()
+        self.xanes_thread = QThread()
+        self.h5thread = QThread()
 
         self.threadpool = QThreadPool()
         print(f"Multithreading with maximum  {self.threadpool.maxThreadCount()} threads")
@@ -123,6 +85,32 @@ class xrf_3ID(QtWidgets.QMainWindow):
         self.last_sid = 100
 
         self.show()
+
+    def __del__(self):
+        import sys
+        # Restore sys.stdout
+        sys.stdout = sys.__stdout__
+
+
+    def normalOutputWritten(self, text):
+        """Append text to the QTextEdit."""
+        # Maybe QTextEdit.append() works as well, but this is how I do it:
+        cursor = self.pte_status.textCursor()
+        cursor.movePosition(QtGui.QTextCursor.End)
+        cursor.insertText(text)
+        self.pte_status.setTextCursor(cursor)
+        self.pte_status.ensureCursorVisible()
+
+
+    def errorOutputWritten(self, text):
+        """Append text to the QTextEdit."""
+        # Maybe QTextEdit.append() works as well, but this is how I do it:
+        cursor = self.pte_status.textCursor()
+        cursor.movePosition(QtGui.QTextCursor.End)
+        cursor.insertText(text)
+        self.pte_status.setTextCursor(cursor)
+        self.pte_status.ensureCursorVisible()
+
 
     def get_wd(self):
         folder_path = QFileDialog().getExistingDirectory(self, "Select Folder")
@@ -135,6 +123,47 @@ class xrf_3ID(QtWidgets.QMainWindow):
     def get_ref_file(self):
         file_name = QFileDialog().getOpenFileName(self, "Open file", '', 'ref file (*.txt, *.nor, *.csv)')
         self.le_ref.setText(str(file_name[0]))
+
+
+    def save_config(self):
+
+        self.config = {"xrf_scan_range":self.le_XRFBatchSID.text(),
+                       "wd":self.le_wd.text(),
+                       "param_file":self.le_param.text(),
+                       "xanes_start_id":self.le_startid.text(),
+                       "xanes_end_id":self.le_lastid.text(),
+                       "xanes_elem":self.xanes_elem.text(),
+                       "alignment_elem":self.alignment_elem.text()
+                       }
+
+        with open(os.path.join(ui_path, "config_file.json"), "w") as fp:
+
+            json.dump(self.config, fp, indent = 4)
+
+
+    def load_config(self, json_file):
+
+        if json_file:
+
+            with open(json_file, 'r') as fp:
+                self.config = json.load(fp)
+            
+            try:
+                self.le_XRFBatchSID.setText(self.config["xrf_scan_range"]),
+                self.le_wd.setText(self.config["wd"]),
+                self.le_param.setText(self.config["param_file"]),
+                self.le_startid.setText(self.config["xanes_start_id"]),
+                self.le_lastid.setText(self.config["xanes_end_id"]),
+                self.xanes_elem.setText(self.config["xanes_elem"]),
+                self.alignment_elem.setText(self.config["alignment_elem"])
+
+            except:
+                pass
+
+
+        else:
+            pass
+
     
     def parseScanRange(self,str_scan_range):
         scanNumbers = []
@@ -157,7 +186,7 @@ class xrf_3ID(QtWidgets.QMainWindow):
         cwd = self.le_wd.text()
         all_sid = self.parseScanRange(self.le_XRFBatchSID.text())
         QtTest.QTest.qWait(500)
-        #self.pte_status.appendPlainText(f"scans to process {all_sid}")
+        self.pte_status.append(f"scans to process {all_sid}")
         QtTest.QTest.qWait(500)
 
         h5Param = {'sidList':all_sid,
@@ -198,7 +227,7 @@ class xrf_3ID(QtWidgets.QMainWindow):
             pass
 
     def stopXRFBatch(self):
-        self.h5thread.terminate()
+        self.h5thread.quit()
 
     def xrfThread(self,sid):
 
@@ -253,18 +282,18 @@ class xrf_3ID(QtWidgets.QMainWindow):
         build_xanes_map_param["pre_edge"] = self.ch_b_baseline.isChecked()
         build_xanes_map_param["align"] = self.cb_align.isChecked()
 
-        #self.pte_status.appendPlainText(str(build_xanes_map_param))
+        self.pte_status.append(str(build_xanes_map_param))
 
         return build_xanes_map_param
 
     def addToXANESBatchJob(self):
         self.batchJob[f"job_{len(self.batchJob)+1}"] = self.createParamDictXANES()
-        self.pte_status.appendPlainText(str(self.batchJob))
+        self.pte_status.append(str(self.batchJob))
 
     def runBatchFile(self):
         if self.batchJob:
             for value in self.batchJob.values():
-                plt.close('all')
+                #plt.close('all')
                 self.create_xanes_macro(value)
 
     def create_xanes_macro(self,param_dict):
@@ -297,13 +326,13 @@ class xrf_3ID(QtWidgets.QMainWindow):
             make_hdf(first_sid, last_sid, wd=cwd, file_overwrite_existing=self.rb_h5Overwrite.isChecked())
         else:
             QtTest.QTest.qWait(0.1)
-            self.pte_status.appendPlainText("Loading h5 From DataBroker is skipped ")
+            self.pte_status.append("Loading h5 From DataBroker is skipped ")
         #worker2 = Worker(getCalibSpectrum, path_ = cwd)
         #worker2.signals.result.connect(self.print_output)
         #list(map(worker2.signals.finished.connect, [self.thread_complete, self.plotCalibration]))
         self.calib_spec = getCalibSpectrum(path_= cwd)
         QtTest.QTest.qWait(0.1)
-        self.pte_status.appendPlainText(str("calibration spec available"))
+        self.pte_status.append(str("calibration spec available"))
         #np.savetxt(os.path.join(self.le_wd.text(), "calibration_spec.txt"), self.calib_spec)
         self.plotCalibration()
 
@@ -325,7 +354,7 @@ class xrf_3ID(QtWidgets.QMainWindow):
             pass
 
     def stopAuto(self):
-        self.scan_thread.terminate()
+        self.scan_thread.quit()
         self.pte_status.clear()
         self.lbl_live_sts_msg.setText("  Live processing is OFF  ")
         self.lbl_live_sts_msg.setStyleSheet("background-color: yellow")
@@ -401,7 +430,7 @@ class xrf_3ID(QtWidgets.QMainWindow):
                     continue
                 break
 
-            self.pte_status.appendPlainText(f"{sid} h5 loaded")
+            self.pte_status.append(f"{sid} h5 loaded")
             QtTest.QTest.qWait(50)
                 
         if self.rb_xrf_fit.isChecked() and not invalidData and sid != self.last_sid:
@@ -418,13 +447,13 @@ class xrf_3ID(QtWidgets.QMainWindow):
             self.last_sid = sid
 
             invalidData = False
-            self.pte_status.appendPlainText(f"{sid} Fitted")
+            self.pte_status.append(f"{sid} Fitted")
             QtTest.QTest.qWait(50)
 
             #pyxrf_batch(sid, sid, wd=cwd, param_file_name=param, scaler_name=norm, save_tiff=True)
         else:
             
-            #self.pte_status.appendPlainText(f"Error processing : {self.last_sid}")
+            self.pte_status.append(f"Error processing : {self.last_sid}")
             QtTest.QTest.qWait(500)
             pass
         
@@ -443,13 +472,13 @@ class xrf_3ID(QtWidgets.QMainWindow):
         sid = int(self.le_sid_meta.text())
         h = db[sid]
         self.pte_status.clear()
-        self.pte_status.appendPlainText(str(h.start))
+        self.pte_status.append(str(h.start))
 
     def print_dets(self):
         sid = int(self.le_sid_meta.text())
         h = db[sid]
         self.pte_status.clear()
-        self.pte_status.appendPlainText(str(h.start['detectors']))
+        self.pte_status.append(str(h.start['detectors']))
 
     # Thread Signals
 
@@ -472,7 +501,7 @@ class xrf_3ID(QtWidgets.QMainWindow):
         for thrd in [self.scan_thread,self.scan_sts_thread,self.xanes_thread,self.h5thread,self.xrfThread]:
             if not thrd == None:
                 if thrd.isRunning():
-                    thrd.terminate()
+                    thrd.quit()
                     QtTest.QTest.qWait(500)
                     thrd.quit()
         if not self.pyxrf_subprocess == None:
@@ -575,7 +604,8 @@ class XANESProcessing(QThread):
             subtract_pre_edge_baseline = self.paramDict["pre_edge"],
             alignment_enable = self.paramDict["align"], 
             output_save_all=self.paramDict["save_all"],
-            use_incident_energy_from_param_file=True 
+            use_incident_energy_from_param_file=True ,
+            skip_scan_types = ['FlyPlan1D']
             )
 
 class loadh5(QThread):
@@ -603,14 +633,17 @@ class loadh5(QThread):
                     
                     
                     #try to make h5, bypass any errors
-                    try:
+                    try: 
+
                         make_hdf(
                             int(sid), 
                             wd = self.paramDict["wd"],
                             file_overwrite_existing = self.paramDict['file_overwrite_existing'],
-                            create_each_det = True
+                            create_each_det = True,
+                            skip_scan_types = ['FlyPlan1D']
                             )
-                            
+                    
+                           
                         #self.h5loaded.emit(sid)
                         QtTest.QTest.qWait(50)
                         #if h5 available tracker to do xrf fitting
@@ -664,11 +697,11 @@ class XRFFitThread(QThread):
                 param_file_name = self.paramDict["xrfParam"],
                 scaler_name = self.paramDict["norm"],
                 save_tiff = self.paramDict["saveXRFTiff"],
-                save_txt = True
+                save_txt = False
                 )
 
         QtTest.QTest.qWait(500)
-        self.terminate()
+        self.quit()
 
         
 class xrfBatchThread(QThread):
@@ -692,11 +725,17 @@ class xrfBatchThread(QThread):
             ignore_datafile_metadata = True
             )
 
+class EmittingStream(QObject):
 
+    textWritten = pyqtSignal(str)
+
+    def write(self, text):
+        self.textWritten.emit(str(text))
 
 if __name__ == "__main__":
 
     formatter = logging.Formatter(fmt='%(asctime)s : %(levelname)s : %(message)s')
+    
 
     stream_handler = logging.StreamHandler()
     stream_handler.setFormatter(formatter)

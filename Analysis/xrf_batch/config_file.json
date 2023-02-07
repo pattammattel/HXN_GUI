@@ -1,0 +1,9 @@
+{
+    "xrf_scan_range": "201978-202000",
+    "wd": "/nsls2/data/hxn/legacy/users/2023Q1/Ajith_2023Q1/Sproutster_old_data",
+    "param_file": "/nsls2/data/hxn/legacy/users/2023Q1/Ajith_2023Q1/Sproutster_old_data/scan2D_173200_model_parameters.json",
+    "xanes_start_id": "173315",
+    "xanes_end_id": "173513",
+    "xanes_elem": "Hf_L",
+    "alignment_elem": "Fe_K"
+}

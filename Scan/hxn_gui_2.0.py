@@ -1,6 +1,9 @@
+"""
+ __Author__: Ajith Pattammattel
+ Original Date:06-23-2020
+ Last Update: 12-02-2022
 
-# __Author__: Ajith Pattammattel
-# Original Date:06-23-2020
+ """
 
 import os
 import signal
@@ -23,6 +26,7 @@ from pdf_log import *
 from xanes2d import *
 from xanesFunctions import *
 from HXNSampleExchange import *
+from exceptions import *
 HXNSampleExchanger = SampleExchangeProtocol()
 
 
@@ -33,13 +37,17 @@ class Ui(QtWidgets.QMainWindow):
    
     def __init__(self):
         super(Ui, self).__init__()
+
+        print("Loading... Please wait")
         
-        uic.loadUi(os.path.join(ui_path,'hxn_gui_v3.ui'), self)
+        uic.loadUi(os.path.join(ui_path,'hxn_gui_v4.ui'), self)
+        print("Ui File loaded")
+
         self.initParams()
         self.ImageCorrelationPage()
         self.client = webbrowser.get('firefox')
         self.threadpool = QThreadPool()
-        self.tw_hxn_contact.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
+        #self.tw_hxn_contact.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
 
         self.energies = []
         self.roiDict = {}
@@ -90,6 +98,13 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_plot.clicked.connect(self.plot_me)
         self.pb_erf_fit.clicked.connect(self.plot_erf_fit)
         self.pb_plot_line_center.clicked.connect(self.plot_line_center)
+
+        #energy change
+
+        print("energy_change")
+        self.pb_move_energy.clicked.connect(self.change_energy)
+        self.dsb_target_e.valueChanged.connect(self.update_energy_calc)
+        self.sb_harmonic.valueChanged.connect(self.update_energy_calc)
 
 
         # xanes parameters
@@ -151,26 +166,17 @@ class Ui(QtWidgets.QMainWindow):
         #cam11
         self.pb_cam11IN.clicked.connect(self.cam11IN)
         #dexela
-        self.pb_dexela_IN.clicked.connect(lambda:self.dexela_motion(move_to = -400))
-        self.pb_dexela_OUT.clicked.connect(lambda:self.dexela_motion(move_to = 0))
+        self.pb_dexela_IN.clicked.connect(lambda:self.dexela_motion(move_to = 0))
+        self.pb_dexela_OUT.clicked.connect(lambda:self.dexela_motion(move_to = 400))
 
         #light
         self.pb_light_ON.clicked.connect(lambda:caput("XF:03IDC-ES{PDU:1}Cmd:Outlet8-Sel", 0))
         self.pb_light_OFF.clicked.connect(lambda:caput("XF:03IDC-ES{PDU:1}Cmd:Outlet8-Sel", 1))
 
-
-        # sample exchange
-        #self.pb_start_pump.clicked.connect (lambda:StartPumpingProtocol([self.prb_pump_slow,self.prb_pump_fast]))
-        #self.pb_auto_he_fill.clicked.connect(lambda: StartAutoHeBackFill(self.prb_he_backfill))
-        #self.pb_vent.clicked.connect(lambda:ventChamber([self.prb_vent_slow,self.prb_vent_fast]))
-
-        # sample exchange
-        #self.pb_start_pump.clicked.connect(self.pumpThread)
-        #self.pb_auto_he_fill.clicked.connect(self.heBackFillThread)
-        #self.pb_vent.clicked.connect(self.ventThread)
+        #sample exchange
         self.pb_start_vent.clicked.connect(self.venting_thread)
         self.pb_stop_vent.clicked.connect(HXNSampleExchanger.stop_vending)
-        self.pb_start_pump.clicked.connect(self.start_pumping)
+        self.pb_start_pump.clicked.connect(lambda:self.start_pumping_in_thread(350))
         self.pb_stop_pump.clicked.connect(self.pumping_stop)
         self.pb_auto_he_fill.clicked.connect(self.he_backfill_thread)
         self.pb_open_fast_pumps.clicked.connect(HXNSampleExchanger.start_fast_pumps)
@@ -264,21 +270,21 @@ class Ui(QtWidgets.QMainWindow):
             self.lcd_monoE:"XF:03ID{}Energy-I",
             self.lcdPressure:"XF:03IDC-VA{VT:Chm-CM:1}P-I",
             self.lcd_scanNumber:"XF:03IDC-ES{Status}ScanID-I",
-            self.db_smarx:smarx,
-            self.db_smary:smary,
-            self.db_smarz:smarz,
-            self.db_zpsth:zpsth,
-            self.lcd_ZpTh:zpsth,
-            self.db_zpz1:zp.zpz1,
-            self.db_ssa2_x:ssa2.hgap,
-            self.db_ssa2_y:ssa2.vgap,
+            self.db_smarx:"XF:03IDC-ES{SPod:1-Ax:2}Pos-I",
+            self.db_smary:"XF:03IDC-ES{SPod:1-Ax:3}Pos-I",
+            self.db_smarz:"XF:03IDC-ES{SPod:1-Ax:1}Pos-I",
+            self.db_zpsth:"XF:03IDC-ES{SC210:1-Ax:1}Mtr.RBV",
+            self.lcd_ZpTh:"XF:03IDC-ES{SC210:1-Ax:1}Mtr.RBV",
+            self.db_zpz1:"XF:03IDC-ES{MCS:1-Ax:zpz1}Mtr.RBV",
+            self.db_ssa2_x:"XF:03IDC-OP{Slt:SSA2-Ax:XAp}Mtr.RBV",
+            self.db_ssa2_y:"XF:03IDC-OP{Slt:SSA2-Ax:YAp}Mtr.RBV",
             self.db_fs:"XF:03IDA-OP{FS:1-Ax:Y}Mtr.RBV",
             self.db_cam6:"XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.RBV",
-            self.db_fs_det:fdet1.x,
-            self.db_diffx:diff.x,
+            self.db_fs_det:"XF:03IDC-ES{Det:Vort-Ax:X}Mtr.RBV",
+            self.db_diffx:"XF:03IDC-ES{Diff-Ax:X}Mtr.RBV",
             self.db_cam06x:"XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.RBV",
-            self.db_s5_x:s5.hgap,
-            self.db_s5_y:s5.vgap,
+            self.db_s5_x:"XF:03IDC-ES{Slt:5-Ax:Vgap}Mtr.RBV",
+            self.db_s5_y:"XF:03IDC-ES{Slt:5-Ax:Hgap}Mtr.RBV",
             self.db_dexela:"XF:03IDC-ES{Stg:FPDet-Ax:Y}Mtr.RBV"
 
             }
@@ -391,12 +397,12 @@ class Ui(QtWidgets.QMainWindow):
 
         cal_res_x = abs(self.mot1_e - self.mot1_s) / self.mot1_steps
         cal_res_y = abs(self.mot2_e - self.mot2_s) / self.mot2_steps
-        tot_t_2d = self.mot1_steps * self.mot2_steps * self.dwell_t / 60
-        tot_t_1d = self.mot1_steps * self.dwell_t / 60
+        self.tot_t_2d = self.mot1_steps * self.mot2_steps * self.dwell_t / 60
+        self.tot_t_1d = self.mot1_steps * self.dwell_t / 60
 
         if self.rb_1d.isChecked():
             self.label_scan_info_calc.setText(f'X: {(cal_res_x * 1000):.2f} nm, Y: {(cal_res_y * 1000):.2f} nm \n'
-                                              f'{tot_t_1d:.2f} minutes + overhead')
+                                              f'{self.tot_t_1d:.2f} minutes + overhead')
             self.scan_plan = f'fly1d({self.det},{self.motor1}, {self.mot1_s},{self.mot1_e}, ' \
                         f'{self.mot1_steps}, {self.dwell_t:.3f})'
 
@@ -404,7 +410,7 @@ class Ui(QtWidgets.QMainWindow):
 
         else:
             self.label_scan_info_calc.setText(f'X: {(cal_res_x * 1000):.2f} nm, Y: {(cal_res_y * 1000):.2f} nm \n'
-                                              f'{tot_t_2d:.2f} minutes + overhead')
+                                              f'{self.tot_t_2d:.2f} minutes + overhead')
             self.scan_plan = f'fly2d({self.det}, {self.motor1},{self.mot1_s}, {self.mot1_e}, {self.mot1_steps},' \
                         f'{self.motor2},{self.mot2_s},{self.mot2_e},{self.mot2_steps},{self.dwell_t:.3f})'
 
@@ -424,8 +430,34 @@ class Ui(QtWidgets.QMainWindow):
         self.getScanValues()
 
         if self.rb_1d.isChecked():
-            RE(fly1d(self.det_list[self.det], self.motor_list[self.motor1],
-                     self.mot1_s, self.mot1_e, self.mot1_steps, self.dwell_t))
+            
+            if self.tot_t_1d>1.0:
+                choice = QMessageBox.question(self, 'Warning',
+                                f"Total scan time is {self.tot_t_1d :.2f}. Continue?", QMessageBox.Yes |
+                                QMessageBox.No, QMessageBox.No)
+
+                if choice == QMessageBox.Yes:
+
+                    RE(fly1d(self.det_list[self.det], 
+                             self.motor_list[self.motor1],
+                             self.mot1_s, 
+                             self.mot1_e, 
+                             self.mot1_steps, 
+                             self.dwell_t))
+
+                else:
+                    return
+
+            else:
+
+                RE(fly1d(self.det_list[self.det],
+                         self.motor_list[self.motor1],
+                         self.mot1_s, 
+                         self.mot1_e, 
+                         self.mot1_steps, 
+                         self.dwell_t))
+
+                    
 
         else:
             if self.motor_list[self.motor1] == self.motor_list[self.motor2]:
@@ -433,10 +465,40 @@ class Ui(QtWidgets.QMainWindow):
                 msg.setWindowTitle("Flyscan Motors are the same")
                 msg.showMessage(f"Choose two different motors for 2D scan. You selected {self.motor_list[self.motor1].name}")
                 return
+            elif self.tot_t_2d>5.0:
+                    choice = QMessageBox.question(self, 'Warning',
+                                f"Total scan time is more than {self.tot_t_2d :.2f}. Continue?", 
+                                QMessageBox.Yes |
+                                QMessageBox.No, QMessageBox.No)
+
+                    if choice == QMessageBox.Yes:
+
+
+                        RE(fly2d(self.det_list[self.det], 
+                                 self.motor_list[self.motor1], 
+                                 self.mot1_s, self.mot1_e, 
+                                 self.mot1_steps,
+                                 self.motor_list[self.motor2], 
+                                 self.mot2_s, 
+                                 self.mot2_e, 
+                                 self.mot2_steps, 
+                                 self.dwell_t))
+
+                    else:
+                        return
+
             else:
 
-                RE(fly2d(self.det_list[self.det], self.motor_list[self.motor1], self.mot1_s, self.mot1_e, self.mot1_steps,
-                        self.motor_list[self.motor2], self.mot2_s, self.mot2_e, self.mot2_steps, self.dwell_t))
+                RE(fly2d(self.det_list[self.det], 
+                         self.motor_list[self.motor1], 
+                         self.mot1_s, self.mot1_e, 
+                         self.mot1_steps,
+                         self.motor_list[self.motor2], 
+                         self.mot2_s, 
+                         self.mot2_e, 
+                         self.mot2_steps, 
+                         self.dwell_t))
+
 
     def disableMot2(self):
         self.y_start.setEnabled(False)
@@ -525,6 +587,69 @@ class Ui(QtWidgets.QMainWindow):
         self.moveAMotor(self.db_move_dth, dsth, neg=neg_)
 
 
+    #Energy change ui
+
+    def update_energy_calc(self, target_energy):
+
+        logger.info("calculating energy values")
+        
+        target_pitch = Energy.calculatePitch(target_energy)
+        target_mirror_coating = Energy.findAMirror(target_energy)
+
+        if self.sb_harmonic.value() == -1:
+            target_ugap = Energy.gap(target_energy)
+        else:
+            target_ugap = Energy.gap(target_energy, self.sb_harmonic.value())
+
+        print(f"{target_pitch = :.4f},{target_ugap[0] = :.1f},{target_mirror_coating} ")
+
+        self.dsb_target_ugap.setValue(target_ugap[0])
+        self.dsb_target_pitch.setValue(target_pitch)
+        self.cb_target_coating.setCurrentText(target_mirror_coating)
+        self.sb_calc_harmonic.setValue(target_ugap[1])
+
+        return target_pitch,target_ugap,target_mirror_coating
+
+
+
+    def change_energy(self):
+        
+        print("attempt to change energy")
+
+        target_energy = self.dsb_target_e.value()
+        
+        logger.info("attempt to change energy")
+        target_pitch,target_ugap,target_mirror_coating = self.update_energy_calc(target_energy)
+
+        if not caget('XF:03IDA-OP{FS:1-Ax:Y}Mtr.VAL')<-50: 
+
+            fs_choice = QMessageBox.question(self, 'Info',
+            f"Do you want to insert front end fluorescence camera?", 
+            QMessageBox.Yes |
+            QMessageBox.No, QMessageBox.No)
+            if fs_choice == QMessageBox.Yes:
+
+                caput('XF:03IDA-OP{FS:1-Ax:Y}Mtr.VAL', -57.)
+                caput("XF:03IDA-BI{FS:1-CAM:1}cam1:Acquire",1)
+
+            else:
+                pass      
+
+        choice = QMessageBox.question(self, 'Info',
+        f"{target_energy = :.2f} {target_ugap[0] = :.2f} \n {target_pitch = :.4f} {target_mirror_coating = } Continue?", 
+        QMessageBox.Yes |
+        QMessageBox.No, QMessageBox.No)
+
+        if choice == QMessageBox.Yes:
+
+            RE(Energy.move(target_energy, self.sb_harmonic.value()))
+
+            if self.cb_beam_at_ssa2.isChecked():
+                RE(find_beam_at_ssa2(max_iter = self.sb_max_iter.value()))
+
+        else:
+            return 
+
 
     def ZP_OSA_OUT(self):
         curr_pos = caget("XF:03IDC-ES{ANC350:5-Ax:1}Mtr.VAL")
@@ -570,7 +695,8 @@ class Ui(QtWidgets.QMainWindow):
 
     def dexela_motion(self, move_to = 0):
         
-        self.client.open('http://10.66.17.49')
+        self.client.open('http://10.66.17.48')
+        self.client.open('http://10.66.17.43')
         QtTest.QTest.qWait(2000)
         choice = QMessageBox.question(self, 'Detector Motion Warning',
                                 "Make sure this motion is safe. \n Move?", QMessageBox.Yes |
@@ -605,11 +731,13 @@ class Ui(QtWidgets.QMainWindow):
             pass
 
     def cam6IN(self):
+        caput("XF:03IDC-ES{CAM:06}cam1:Acquire",1)
         caput('XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.VAL', 0)
         QtTest.QTest.qWait(1000)
         self.ple_info.appendPlainText('CAM6 Moving!')
 
     def cam6OUT(self):
+        caput("XF:03IDC-ES{CAM:06}cam1:Acquire",0)
         caput('XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.VAL', -50)
         QtTest.QTest.qWait(1000)
         self.ple_info.appendPlainText('CAM6 Moving!')
@@ -621,8 +749,9 @@ class Ui(QtWidgets.QMainWindow):
         #self.ple_info.appendPlainText('FS Motion Done!')
 
     def FS_OUT(self):
-        caput('XF:03IDA-OP{FS:1-Ax:Y}Mtr.VAL', -20.)
         caput("XF:03IDA-BI{FS:1-CAM:1}cam1:Acquire",0)
+        caput('XF:03IDA-OP{FS:1-Ax:Y}Mtr.VAL', -20.)
+        
         QtTest.QTest.qWait(20000)
         #self.ple_info.appendPlainText('FS Motion Done!')
 
@@ -1394,8 +1523,8 @@ class Ui(QtWidgets.QMainWindow):
         reply = QMessageBox.question(self, 'Quit GUI', "Are you sure you want to close the window?")
         if reply == QMessageBox.Yes:
             event.accept()
-            self.scanStatus_thread.terminate()
-            self.liveWorker.terminate()
+            self.scanStatus_thread.quit()
+            self.liveWorker.quit()
             plt.close('all')
             #self.updateTimer.stop()
             QApplication.closeAllWindows()
@@ -1420,16 +1549,16 @@ class Ui(QtWidgets.QMainWindow):
         else:
             pass
 
-    #add a decorator for exception catching using qmessagebox
-    def start_pumping(self):
 
-        turbo_start_ = 350
 
-        target_pressure_var = np.round(self.dsb_target_p.value(),1)
+    def start_pumping_in_thread(self, turbo_start=350):
+
+        user_target_pressure = np.round(self.dsb_target_p.value(),1)
+
 
         choice = QMessageBox.question(self, 'Start Pumping',
-                                      f"HXN pumping will be excecuted with target value of {target_pressure_var}"
-                                      f"Turbo starts at ~ {turbo_start_}"
+                                      f"HXN pumping will be excecuted with target value of {user_target_pressure}"
+                                      f"Turbo starts at ~ {turbo_start:.1f}"
                                       f" Please confirm.", QMessageBox.Yes |
                                       QMessageBox.No, QMessageBox.No)
 
@@ -1440,36 +1569,51 @@ class Ui(QtWidgets.QMainWindow):
 
             #set min/max for the progress bar- by default the max-min>0 and pressure here is decreasing
             #tracking relative change
-            self.prb_sample_exchange.setRange(0, int(caget("XF:03IDC-VA{VT:Chm-CM:1}P-I") - target_pressure_var))
+            self.prb_sample_exchange.setRange(0, 100)
 
             self.lb_sample_change_action.setText("Pumping in progress")
 
-            self.pump_thread = QThread()
-            self.pump_worker = PumpWorker("XF:03IDC-VA{VT:Chm-CM:1}P-I", 
-                                        turbo_start = turbo_start_, 
-                                        target_pressure = target_pressure_var
-                                        )
-            self.pump_worker.moveToThread(self.pump_thread)
+            self.pump_worker_thread = PumpingThread("XF:03IDC-VA{VT:Chm-CM:1}P-I", 
+                                             turbo_start, 
+                                             user_target_pressure
+                                            )
             
-            #worker connections
-            self.pump_worker.start_slow_pump.connect(lambda:HXNSampleExchanger.start_pumps(target_pressure = target_pressure_var))
-            #self.pump_worker.start_fast_pump.connect(HXNSampleExchanger.start_fast_pumps)
-            #self.pump_worker.stop_fast_pump.connect(HXNSampleExchanger.stop_pumping)
-            self.pump_worker.pressure_change.connect(self.prb_sample_exchange.setValue)
-            self.pump_worker.finished.connect(lambda:self.prb_sample_exchange.setRange(0,100))
-            self.pump_worker.finished.connect(lambda:self.prb_sample_exchange.setValue(100))
-            self.pump_worker.finished.connect(self.pump_thread.quit)
-            self.pump_worker.finished.connect(lambda: self.lb_sample_change_action.setText("Pumping finished"))
+            #thread connections
+            self.pump_worker_thread.start_slow_pump.connect(HXNSampleExchanger.start_slow_pumps)
+            self.pump_worker_thread.start_fast_pump.connect(HXNSampleExchanger.start_fast_pumps)
+            self.pump_worker_thread.pressure_change.connect(self.prb_sample_exchange.setValue)
+            self.pump_worker_thread.finished.connect(HXNSampleExchanger.stop_pumping)
+            self.pump_worker_thread.finished.connect(lambda:self.prb_sample_exchange.setRange(0,100))
+            self.pump_worker_thread.finished.connect(lambda:self.prb_sample_exchange.setValue(100))
+            self.pump_worker_thread.finished.connect(self.pump_worker_thread.quit)
+            self.pump_worker_thread.finished.connect(lambda: self.lb_sample_change_action.setText("Pumping finished"))
+            self.pump_worker_thread.finished.connect(lambda:self.he_backfill_thread(target_pressure = 250))
 
-            self.pump_worker.finished.connect(lambda:self.he_backfill_thread(target_pressure = 250))
-
-
-            #connect to thread
-            self.pump_thread.started.connect(self.pump_worker.do_pumping)
-            self.pump_thread.start()
+            self.pump_worker_thread.start()
 
         else:
             return
+
+   
+    def vent_in_thread(self, target_pressure = 745):
+
+        choice = QMessageBox.question(self, 'Start Venting',
+                                      "Microscope chamber will be vented. Continue?", QMessageBox.Yes |
+                                      QMessageBox.No, QMessageBox.No)
+
+        if choice == QMessageBox.Yes:
+
+            # reset the progress bar 
+            self.prb_sample_exchange.reset()
+
+            self.lb_sample_change_action.setText("Venting in progress")
+
+            #set min/max for the progress bar
+            self.prb_sample_exchange.setRange(0,  target_pressure)
+
+            self.vent_thread = VentingThread("XF:03IDC-VA{VT:Chm-CM:1}P-I", 550)
+
+
 
     def venting_thread(self):
 
@@ -1483,7 +1627,7 @@ class Ui(QtWidgets.QMainWindow):
 
         if choice == QMessageBox.Yes:
 
-        
+            caput("XF:03IDC-ES{Diff-Ax:X}Mtr.VAL", -600)
 
             # reset the progress bar 
             self.prb_sample_exchange.reset()
@@ -1562,6 +1706,8 @@ class Ui(QtWidgets.QMainWindow):
 
         #connect to thread
         self.he_thread.started.connect(self.he_worker.do_auto_he_fill)
+        if self.cb_sample_ex_cam11_in.isChecked():
+            self.he_thread.finished.connect(lambda:RE(go_det("cam11")))
         self.he_thread.start()
 
 
@@ -1576,7 +1722,7 @@ class Ui(QtWidgets.QMainWindow):
         
             HXNSampleExchanger.stop_pumping()
             QtTest.QTest.qWait(3000)
-            self.pump_thread.quit()
+            self.pump_worker_thread.quit()
         else:
             return
 
@@ -1606,10 +1752,8 @@ class liveUpdate(QThread):
     def return_values(self):
         readings = []
         for i in self.pv_dict.values():
-            try:
-                readings.append(i.position)
-            except:
-                readings.append(caget(i))
+            
+            readings.append(caget(i))
 
         return readings
 
@@ -1624,6 +1768,92 @@ class liveUpdate(QThread):
             #print(list(self.pv_dict.values())[0])
             #print(positions[0])
             QtTest.QTest.qWait(self.update_interval_ms)
+
+
+class PumpingThread(QThread):
+
+    pressure_change = pyqtSignal(float)
+    pressure_change_int = pyqtSignal(int)
+
+    start_slow_pump = pyqtSignal()
+    start_fast_pump = pyqtSignal()
+    finished = pyqtSignal()
+
+
+    def __init__(self, pressure_pv, turbo_start_p, target_p):
+        
+        super().__init__()
+        self.pressure_pv = pressure_pv
+        self.turbo_start_p = turbo_start_p
+        self.target_p = target_p
+
+
+    def run(self):
+
+        self.start_slow_pump.emit()
+
+        while caget(self.pressure_pv)>self.turbo_start_p:
+            #keep emitting the pressure value for progress bar
+            self.pressure_change.emit(round((760-caget(self.pressure_pv))/7.6))
+            QtTest.QTest.qWait(5000)
+
+        self.start_fast_pump.emit()
+        print("fast_triggered")
+        
+        while caget(self.pressure_pv)>self.target_p:
+            
+            #if pressure is below threshold open fast
+            self.pressure_change.emit(round((760-caget(self.pressure_pv))/7.6))
+            QtTest.QTest.qWait(5000)
+
+        self.finished.emit()
+
+
+class VentingThread(QThread):
+    
+    pressure_change = pyqtSignal(float)
+    open_vent = pyqtSignal()
+    finished = pyqtSignal()
+
+    def __init__(self, presure_pv, target_p):
+
+        #make edits to trigger fast vent open from here
+        
+        super().__init__()
+        self.presure_pv = presure_pv
+        self.target_p = target_p
+    
+    def run(self):
+
+        self.open_vent.emit()
+        
+        while caget(self.pressure_reader)<self.target_p:
+            self.pressure_change.emit(round(caget(self.pressure_pv)))
+
+        self.finished.emit()
+
+
+class HeBackFillThread(QThread):
+
+    pressure_change = pyqtSignal(float)
+    start_he_backfill = pyqtSignal()
+    finished = pyqtSignal()
+
+    def __init__(self, presure_pv, target_p):
+    
+        super().__init__()
+        self.presure_pv = presure_pv
+        self.target_p = target_p
+
+    def run(self):
+
+        self.start_he_backfill.emit()
+
+        while caget(self.pressure_reader)<248.0:
+            QtTest.QTest.qWait(5000)
+            self.pressure_change.emit(int(caget(self.pressure_pv)))
+
+        self.finished.emit()
 
 
 class PumpWorker(QObject):
