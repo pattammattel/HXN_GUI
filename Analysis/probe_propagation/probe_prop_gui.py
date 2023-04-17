@@ -197,6 +197,14 @@ class ProbePropagationGUI(QtWidgets.QMainWindow):
         
     def plot_hue(self, im_stack):
 
+        try:
+            
+            self.image_view_xhue.removeItem(self.sigma_xhue_line)
+            self.image_view_yhue.removeItem(self.sigma_yhue_line)
+
+        except:
+            pass
+
         x_hue = np.squeeze(im_stack.mean(1))
         self.image_view_xhue.setImage(x_hue)
 
@@ -237,7 +245,7 @@ class ProbePropagationGUI(QtWidgets.QMainWindow):
                              symbolSize=4,
                              symbolBrush="y",
                              clear=False,
-                             name = 'X')
+                             name = 'Y')
 
         self.sigma_plot.plot(sigma[0], self.y_fwhm,
                              pen='m',
@@ -245,7 +253,7 @@ class ProbePropagationGUI(QtWidgets.QMainWindow):
                              symbolSize=4,
                              symbolBrush="c",
                              clear=False,
-                             name = 'Y')
+                             name = 'X')
 
         min_index = np.argwhere(sigma[2] == np.min(sigma[2]))
 

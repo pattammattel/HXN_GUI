@@ -7,7 +7,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>927</width>
+    <width>884</width>
     <height>913</height>
    </rect>
   </property>
@@ -72,107 +72,6 @@ QGroupBox {
 </string>
    </property>
    <layout class="QGridLayout" name="gridLayout_14">
-    <item row="2" column="1">
-     <widget class="QPushButton" name="pb_clear_updates">
-      <property name="text">
-       <string>Clear Text</string>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="0" colspan="2">
-     <widget class="QGroupBox" name="groupBox">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="styleSheet">
-       <string notr="true"/>
-      </property>
-      <property name="title">
-       <string/>
-      </property>
-      <layout class="QGridLayout" name="gridLayout_7">
-       <item row="0" column="0">
-        <layout class="QGridLayout" name="gridLayout_4">
-         <item row="0" column="1">
-          <widget class="QLineEdit" name="le_wd">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="placeholderText">
-            <string>C:\Matrix\Blue Pill</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0" rowspan="3">
-          <layout class="QGridLayout" name="gridLayout_2">
-           <item row="0" column="0">
-            <widget class="QPushButton" name="pb_wd">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>Select Working Directory</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QPushButton" name="pb_param">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>Select XRF Paramater File</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item row="1" column="1">
-          <widget class="QLineEdit" name="le_param">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="placeholderText">
-            <string>C:\Matrix\Blue Pill\TheChosenOne.json</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-      </layout>
-     </widget>
-    </item>
-    <item row="2" column="0">
-     <widget class="QPushButton" name="pb_open_pyxrf">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="styleSheet">
-       <string notr="true">background-color: rgb(237, 212, 0);</string>
-      </property>
-      <property name="text">
-       <string>      Open PyXRF GUI      </string>
-      </property>
-     </widget>
-    </item>
     <item row="1" column="0" colspan="2">
      <widget class="QTabWidget" name="tabWidget">
       <property name="enabled">
@@ -185,7 +84,7 @@ QGroupBox {
        <string notr="true"/>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <property name="documentMode">
        <bool>true</bool>
@@ -240,19 +139,6 @@ QGroupBox {
                </property>
               </widget>
              </item>
-             <item row="0" column="1">
-              <widget class="QRadioButton" name="rb_xrf_fit">
-               <property name="text">
-                <string>XRF Fitting</string>
-               </property>
-               <property name="checked">
-                <bool>true</bool>
-               </property>
-               <property name="autoExclusive">
-                <bool>false</bool>
-               </property>
-              </widget>
-             </item>
              <item row="1" column="0">
               <widget class="QRadioButton" name="rb_h5OverWrite">
                <property name="text">
@@ -273,6 +159,29 @@ QGroupBox {
                </property>
                <property name="autoExclusive">
                 <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QRadioButton" name="rb_xrf_fit">
+               <property name="text">
+                <string>XRF Fitting</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+               <property name="autoExclusive">
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QRadioButton" name="rb_skip1d">
+               <property name="text">
+                <string>Skip 1D</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
                </property>
               </widget>
              </item>
@@ -367,7 +276,7 @@ QGroupBox {
                 <number>10</number>
                </property>
                <property name="value">
-                <number>200</number>
+                <number>30</number>
                </property>
               </widget>
              </item>
@@ -550,8 +459,18 @@ QGroupBox {
            <property name="horizontalSpacing">
             <number>25</number>
            </property>
+           <item row="1" column="0">
+            <widget class="QPushButton" name="pb_addTobBatch">
+             <property name="text">
+              <string>Add to Batch Job</string>
+             </property>
+            </widget>
+           </item>
            <item row="1" column="1">
             <widget class="QPushButton" name="pb_showBatch">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
              <property name="text">
               <string>Show Batch File</string>
              </property>
@@ -564,13 +483,6 @@ QGroupBox {
              </property>
             </widget>
            </item>
-           <item row="1" column="0">
-            <widget class="QPushButton" name="pb_addTobBatch">
-             <property name="text">
-              <string>Add to Batch Job</string>
-             </property>
-            </widget>
-           </item>
            <item row="0" column="0">
             <widget class="QLabel" name="label_20">
              <property name="text">
@@ -580,11 +492,35 @@ QGroupBox {
            </item>
            <item row="1" column="4">
             <widget class="QPushButton" name="pb_clear_batch">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
              <property name="styleSheet">
               <string notr="true"/>
              </property>
              <property name="text">
               <string>Clear Batch File</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0" colspan="5">
+            <widget class="QProgressBar" name="xanes_batch_progress">
+             <property name="styleSheet">
+              <string notr="true">QProgressBar
+{
+border: solid grey;
+border-radius: 15px;
+color: black;
+}
+QProgressBar::chunk 
+{
+background-color: #05B8CC;
+border-radius :15px;
+}      
+</string>
+             </property>
+             <property name="value">
+              <number>24</number>
              </property>
             </widget>
            </item>
@@ -732,6 +668,62 @@ QGroupBox {
              </widget>
             </item>
            </layout>
+          </item>
+         </layout>
+        </item>
+        <item row="0" column="0">
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <item>
+           <widget class="QLabel" name="label">
+            <property name="text">
+             <string>First Scan ID:</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="le_startid">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="placeholderText">
+             <string>00000</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_2">
+            <property name="text">
+             <string>Last Scan ID:</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="le_lastid">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="placeholderText">
+             <string>00000</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
@@ -893,62 +885,6 @@ QGroupBox {
               <string>build_xanes_map</string>
              </property>
             </item>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item row="0" column="0">
-         <layout class="QHBoxLayout" name="horizontalLayout">
-          <item>
-           <widget class="QLabel" name="label">
-            <property name="text">
-             <string>First Scan ID:</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="le_startid">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-            <property name="placeholderText">
-             <string>00000</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="label_2">
-            <property name="text">
-             <string>Last Scan ID:</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="le_lastid">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-            <property name="placeholderText">
-             <string>00000</string>
-            </property>
            </widget>
           </item>
          </layout>
@@ -1302,8 +1238,109 @@ QGroupBox {
       </widget>
      </widget>
     </item>
-    <item row="3" column="0" colspan="2">
+    <item row="5" column="0" colspan="2">
      <widget class="QTextEdit" name="pte_status"/>
+    </item>
+    <item row="2" column="1">
+     <widget class="QPushButton" name="pb_clear_updates">
+      <property name="text">
+       <string>Clear Text</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="0" colspan="2">
+     <widget class="QGroupBox" name="groupBox">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+      <property name="title">
+       <string/>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_7">
+       <item row="0" column="0">
+        <layout class="QGridLayout" name="gridLayout_4">
+         <item row="0" column="1">
+          <widget class="QLineEdit" name="le_wd">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="placeholderText">
+            <string>C:\Matrix\Blue Pill</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0" rowspan="3">
+          <layout class="QGridLayout" name="gridLayout_2">
+           <item row="0" column="0">
+            <widget class="QPushButton" name="pb_wd">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Select Working Directory</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QPushButton" name="pb_param">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Select XRF Paramater File</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLineEdit" name="le_param">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="placeholderText">
+            <string>C:\Matrix\Blue Pill\TheChosenOne.json</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item row="2" column="0">
+     <widget class="QPushButton" name="pb_open_pyxrf">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color: rgb(237, 212, 0);</string>
+      </property>
+      <property name="text">
+       <string>      Open PyXRF GUI      </string>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>
@@ -1312,7 +1349,7 @@ QGroupBox {
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>927</width>
+     <width>884</width>
      <height>30</height>
     </rect>
    </property>

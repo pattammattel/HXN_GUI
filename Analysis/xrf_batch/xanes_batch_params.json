@@ -1,0 +1,36 @@
+{
+      "job_1": {
+            "cwd": "/nsls2/data/hxn/legacy/users/2023Q1/Yan_2023Q1/As_XANES/xanes_p1",
+            "param": "/data/users/2023Q1/Yan_2023Q1/As_XANES/model_parameters_209946_11940.json",
+            "last_sid": 210213,
+            "first_sid": 210024,
+            "ref": "",
+            "fit_method": "nnls",
+            "elem": "As_K",
+            "align_elem": "total_cnt",
+            "e_shift": 0.0,
+            "admm_lambda": 5,
+            "work_flow": "build_xanes_map",
+            "norm": "sclr1_ch4",
+            "save_all": true,
+            "pre_edge": false,
+            "align": false
+      },
+      "job_2": {
+            "cwd": "/nsls2/data/hxn/legacy/users/2023Q1/Yan_2023Q1/As_XANES/xanes_p1",
+            "param": "/data/users/2023Q1/Yan_2023Q1/As_XANES/model_parameters_209946_11940.json",
+            "last_sid": 210213,
+            "first_sid": 210024,
+            "ref": "",
+            "fit_method": "nnls",
+            "elem": "As_K",
+            "align_elem": "total_cnt",
+            "e_shift": 0.0,
+            "admm_lambda": 5,
+            "work_flow": "build_xanes_map",
+            "norm": "sclr1_ch4",
+            "save_all": true,
+            "pre_edge": false,
+            "align": true
+      }
+}

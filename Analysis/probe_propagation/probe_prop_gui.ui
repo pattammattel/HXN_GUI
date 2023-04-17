@@ -92,7 +92,17 @@ font: 10pt &quot;Segoe UI&quot;;</string>
     </property>
     <item row="1" column="0">
      <layout class="QGridLayout" name="gridLayout_18">
-      <item row="0" column="0">
+      <item row="3" column="2">
+       <widget class="ImageView" name="image_view_yhue">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
        <layout class="QGridLayout" name="gridLayout_8">
         <item row="0" column="0">
          <widget class="QLabel" name="label_5">
@@ -113,28 +123,7 @@ font: 10pt &quot;Segoe UI&quot;;</string>
         </item>
        </layout>
       </item>
-      <item row="0" column="1">
-       <layout class="QGridLayout" name="gridLayout_16">
-        <item row="0" column="0">
-         <widget class="QLabel" name="lbl_xfit">
-          <property name="text">
-           <string>FWHM = , Distance = </string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="PlotWidget" name="plot_xfit">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item row="0" column="2">
+      <item row="1" column="2">
        <layout class="QGridLayout" name="gridLayout_17">
         <item row="0" column="0">
          <widget class="QLabel" name="lbl_yfit">
@@ -155,7 +144,38 @@ font: 10pt &quot;Segoe UI&quot;;</string>
         </item>
        </layout>
       </item>
-      <item row="1" column="0" colspan="3">
+      <item row="3" column="0">
+       <widget class="PlotWidget" name="sigma_plot">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <layout class="QGridLayout" name="gridLayout_16">
+        <item row="0" column="0">
+         <widget class="QLabel" name="lbl_xfit">
+          <property name="text">
+           <string>FWHM = , Distance = </string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="PlotWidget" name="plot_xfit">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="2" column="0" colspan="3">
        <layout class="QGridLayout" name="gridLayout">
         <item row="0" column="0">
          <widget class="QSlider" name="slider_for_index">
@@ -173,17 +193,7 @@ font: 10pt &quot;Segoe UI&quot;;</string>
         </item>
        </layout>
       </item>
-      <item row="2" column="0">
-       <widget class="PlotWidget" name="sigma_plot">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
+      <item row="3" column="1">
        <widget class="ImageView" name="image_view_xhue">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -193,13 +203,29 @@ font: 10pt &quot;Segoe UI&quot;;</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="2">
-       <widget class="ImageView" name="image_view_yhue">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
+      <item row="0" column="1">
+       <widget class="QLabel" name="label_10">
+        <property name="styleSheet">
+         <string notr="true">font: 75 oblique 20pt &quot;Cantarell&quot;;</string>
+        </property>
+        <property name="text">
+         <string>Y</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QLabel" name="label_11">
+        <property name="styleSheet">
+         <string notr="true">font: 75 oblique 20pt &quot;Cantarell&quot;;</string>
+        </property>
+        <property name="text">
+         <string>X</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
         </property>
        </widget>
       </item>
@@ -553,7 +579,7 @@ font: 10pt &quot;Segoe UI&quot;;</string>
      <x>0</x>
      <y>0</y>
      <width>935</width>
-     <height>26</height>
+     <height>30</height>
     </rect>
    </property>
   </widget>

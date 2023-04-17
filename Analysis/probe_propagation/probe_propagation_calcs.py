@@ -22,9 +22,12 @@ def gaussian_fit(data):
     X = np.arange(data.size)
     xc = np.sum(X * data) / np.sum(data)
     width = np.abs(np.sqrt(np.abs(np.sum((X - xc) ** 2 * data) / np.sum(data))))
-
-    popt, pcov = curve_fit(guassian,X,data,p0 = [data.max(),xc,width,data[0:5].mean()])
-    y_fit = guassian(X,popt[0],popt[1],popt[2],popt[3])
+    try:
+        popt, pcov = curve_fit(guassian,X,data,p0 = [data.max(),xc,width,data[0:5].mean()])
+        y_fit = guassian(X,popt[0],popt[1],popt[2],popt[3])
+    except:
+        popt, pcov = np.nan
+        y_fit = data/data
 
     return popt, pcov, y_fit
 

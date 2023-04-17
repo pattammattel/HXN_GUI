@@ -200,10 +200,10 @@ class SampleExchangeProtocol():
         while caget("XF:03IDC-VA{VT:Chm-CM:1}P-I")<550:
 
             QtTest.QTest.qWait(10000)
-            print(f'waiting for threshold pressure {caget("XF:03IDC-VA{VT:Chm-CM:1}P-I")}<550')
+            #print(f'waiting for threshold pressure {caget("XF:03IDC-VA{VT:Chm-CM:1}P-I")}<550')
             
         for i in range(5):
-            print("fast vent opened ")
+            #print("fast vent opened ")
             self.triggerPV(self.fastVentOpen)
             QtTest.QTest.qWait(5000)
 
@@ -219,6 +219,8 @@ class SampleExchangeProtocol():
     def auto_he_backfill(self):
 
         self.stop_pumping()
+
+        QtTest.QTest.qWait(10000)
 
         #pump valve status
         HeFillReadiness = [self.pumpBSlowStats,self.pumpASlowStats,self.pumpBFastStats,self.pumpAFastStats]
