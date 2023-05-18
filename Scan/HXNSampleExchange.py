@@ -110,7 +110,7 @@ class SampleExchangeProtocol():
 
             
 
-    def start_pumps(self, turbo_start_pressure = 400, target_pressure = 1.2 ):
+    def start_pumps(self, fast_pump_start_pressure = 400, target_pressure = 1.2 ):
         
         #while lopp end after 1 hour
 
@@ -119,8 +119,8 @@ class SampleExchangeProtocol():
         #make sure vents are closed
         [self.triggerPV(pv) for pv in [self.fastVentClose,self.slowVentClose]]
         
-        if turbo_start_pressure<target_pressure:
-            turbo_start_pressure = target_pressure
+        if fast_pump_start_pressure<target_pressure:
+            fast_pump_start_pressure = target_pressure
 
         
         #turn on pumps 
@@ -131,15 +131,15 @@ class SampleExchangeProtocol():
             [self.triggerPV(pv) for pv in [self.pumpAON,self.pumpASlowOpen,self.pumpBON,self.pumpBSlowOpen]]
             
             
-            while caget(self.pressure)>turbo_start_pressure:
+            while caget(self.pressure)>fast_pump_start_pressure:
                 
-                print(f"waiting for threshold pressure value {turbo_start_pressure} for turbo")
+                print(f"waiting for threshold pressure value {fast_pump_start_pressure} for fast_pump")
                 QtTest.QTest.qWait(10*1000)
                 
             print("FAST Open triggered")
             [self.triggerPV(pv) for pv in [self.pumpBFastOpen,self.pumpAFastOpen]]
 
-            if not target_pressure>turbo_start_pressure:
+            if not target_pressure>fast_pump_start_pressure:
 
                 while caget(self.pressure)>target_pressure:
 
