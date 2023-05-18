@@ -1,9 +1,9 @@
 {
-    "xrf_scan_range": "214559-214574",
-    "wd": "/data/users/2023Q1/Zhao_2023Q1/xrf_data",
-    "param_file": "/data/users/2023Q1/Zhao_2023Q1/pyxrf_model_parameters_214373.json",
-    "xanes_start_id": "210024",
-    "xanes_end_id": "210213",
+    "xrf_scan_range": "216237-216239",
+    "wd": "/nsls2/data1/hxn/legacy/users/2023Q2/Zhao_2023Q2/Fluo",
+    "param_file": "/nsls2/data1/hxn/legacy/users/2023Q2/Zhao_2023Q2/mll_tomo_params.json",
+    "xanes_start_id": "215272",
+    "xanes_end_id": "215395",
     "xanes_elem": "As_K",
     "alignment_elem": "total_cnt"
 }

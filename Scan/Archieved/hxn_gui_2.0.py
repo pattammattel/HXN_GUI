@@ -26,7 +26,7 @@ from pdf_log import *
 from xanes2d import *
 from xanesFunctions import *
 from HXNSampleExchange import *
-from exceptions import *
+from Scan.utilities import *
 HXNSampleExchanger = SampleExchangeProtocol()
 
 

@@ -2,31 +2,20 @@ import sys
 import json
 import os
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QFileDialog, QLabel, QVBoxLayout,QMessageBox
-from PyQt5 import QtWidgets, uic
+from PyQt5 import QtWidgets, uic,QtTest
 from functools import wraps
-#from mll_tomo_json import *
+from utilities import *
 
 ui_path = os.path.dirname(os.path.abspath(__file__))
 param_file_to_run = "/nsls2/data/hxn/legacy/user_macros/HXN_GUI/Scan/temp_files/mll_tomo_params.json"
 
 
-#decorator for messagebox
-def show_error_message_box(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except Exception as e:
-            error_message = f"An error occurred: {str(e)}"
-            QMessageBox.critical(None, "Error", error_message)
-    return wrapper
 
-
-
-class MLLTomoGUI(QtWidgets.QWidget):
+class MLLTomoGUI(QtWidgets.QMainWindow):
     def __init__(self):
-        super().__init__()
-        uic.loadUi(os.path.join(ui_path,"mll_tomo_ui.ui"), self)
+        super(MLLTomoGUI, self).__init__()
+        uic.loadUi(os.path.join(ui_path,"ui_files/mll_tomo_ui_.ui"), self)
+        self.active_folder = "/nsls2/data/hxn/legacy/user_macros"
 
         #connections
         self.pb_import_params.clicked.connect(lambda:self.import_parameter_file())
@@ -37,10 +26,22 @@ class MLLTomoGUI(QtWidgets.QWidget):
         self.pb_stop_pdf.clicked.connect(lambda:self.update_bool_choices(update = "stop_pdf"))
         self.pb_resume_scan.clicked.connect(lambda:self.update_bool_choices(update = "resume_scan"))
         self.pb_start_pdf.clicked.connect(lambda:self.update_bool_choices(update = "start_pdf"))
-        self.pb_start_scan.clicked.connect(lambda: RE(mll_tomo_json(param_file_to_run)))
+        self.pb_start_scan.clicked.connect(lambda: self.run_tomo())
+        #self.pb_start_scan.clicked.connect(lambda: self.send_tomo_to_queue())
         
         #open the last file to fill in paramaters
         self.display_imported_parameters(param_file_to_run)
+
+    @show_error_message_box
+    def send_tomo_to_queue(self):
+        RM.item_add((BPlan("mll_tomo_json",
+                    param_file_to_run)))
+
+    
+    @show_error_message_box
+    def run_tomo(self):
+        RE((mll_tomo_json(param_file_to_run)))
+
 
     @show_error_message_box
     def import_parameter_file(self):
@@ -85,6 +86,7 @@ class MLLTomoGUI(QtWidgets.QWidget):
         self.le_xalign_elem.setText(self.param_dict["xalign"]["elem"])
         self.cb_xalign_center_with.setCurrentText(self.param_dict["xalign"]["center_with"])
         self.sb_xalign_threshold.setValue(self.param_dict["xalign"]["threshold"])
+        self.dsb_xalign_offset.setValue(self.param_dict["xalign"]["offset"])
 
         #y align
         self.cb_do_yalign.setChecked(self.param_dict["yalign"]["do_align"])
@@ -95,6 +97,7 @@ class MLLTomoGUI(QtWidgets.QWidget):
         self.le_yalign_elem.setText(self.param_dict["yalign"]["elem"])
         self.cb_yalign_center_with.setCurrentText(self.param_dict["yalign"]["center_with"])
         self.sb_xalign_threshold.setValue(self.param_dict["yalign"]["threshold"])
+        self.dsb_yalign_offset.setValue(self.param_dict["yalign"]["offset"])
         
         #align 2d
         self.cb_do_align2d.setChecked(self.param_dict["align_2d_com"]["do_align"])
@@ -112,8 +115,8 @@ class MLLTomoGUI(QtWidgets.QWidget):
 
 
         #add/remove angles
-        self.le_add_angles.setText(str(self.param_dict["add_angles"]))
-        self.le_remove_angles.setText(str(self.param_dict["remove_angles"]))
+        self.le_add_angles.setText(str(self.param_dict["add_angles"])[1:-1])
+        self.le_remove_angles.setText(str(self.param_dict["remove_angles"])[1:-1])
 
     @show_error_message_box
     def update_parameter_dict(self):
@@ -141,6 +144,7 @@ class MLLTomoGUI(QtWidgets.QWidget):
         self.param_dict["xalign"]["elem"] = self.le_xalign_elem.text()
         self.param_dict["xalign"]["center_with"] = self.cb_xalign_center_with.currentText()
         self.param_dict["xalign"]["threshold"] = self.sb_xalign_threshold.value()
+        self.param_dict["xalign"]["offset"] = self.dsb_xalign_offset.value()
 
         #y align
         self.param_dict["yalign"]["do_align"] = self.cb_do_yalign.isChecked()
@@ -151,6 +155,7 @@ class MLLTomoGUI(QtWidgets.QWidget):
         self.param_dict["yalign"]["elem"] = self.le_yalign_elem.text()
         self.param_dict["yalign"]["center_with"] = self.cb_yalign_center_with.currentText()
         self.param_dict["yalign"]["threshold"] = self.sb_xalign_threshold.value()
+        self.param_dict["yalign"]["offset"] = self.dsb_yalign_offset.value()
         
         #align 2d
         self.param_dict["align_2d_com"]["do_align"] = self.cb_do_align2d.isChecked()
@@ -169,8 +174,8 @@ class MLLTomoGUI(QtWidgets.QWidget):
 
         #add/remove angles 
         #TODO change to parse angle list
-        self.param_dict["add_angles"] = list(self.le_add_angles.text())
-        self.param_dict["remove_angles"] = list(self.le_remove_angles.text())
+        self.param_dict["add_angles"] = parse_angle_range(self.le_add_angles.text())
+        self.param_dict["remove_angles"] = parse_angle_range(self.le_remove_angles.text())
 
         
     @show_error_message_box
@@ -189,10 +194,11 @@ class MLLTomoGUI(QtWidgets.QWidget):
         else:
             #manual saving
             # Open a file dialog to get the save location
-            save_file_path, _ = QFileDialog.getSaveFileName(None, "Save JSON file", "", "JSON Files (*.json)")
+            save_file_path, _ = QFileDialog.getSaveFileName(self,"Save JSON file", self.active_folder, "JSON Files (*.json)")
             
             # If a file was selected, write the data to the file as JSON
             if save_file_path:
+                self.active_folder = save_file_path
                 with open(save_file_path, 'w') as outfile:
                     json.dump(self.param_dict, outfile, indent=6)
 
@@ -207,20 +213,36 @@ class MLLTomoGUI(QtWidgets.QWidget):
 
         else:
             self.param_dict[update] = True
-
+        
+        self.statusbar.showMessage(f"{update} change applied")
+        self.export_parameter_file(auto = True)
 
     @show_error_message_box
     def update_angles(self):
         
-        self.param_dict["add_angles"] = list(self.le_add_angles.text())
-        self.param_dict["remove_angles"] = list(self.le_add_angles.text())
+        #self.param_dict["add_angles"] = list(self.le_add_angles.text())
+        #self.param_dict["remove_angles"] = list(self.le_add_angles.text())
+
+        self.param_dict["add_angles"] = parse_angle_range(self.le_add_angles.text())
+        self.param_dict["remove_angles"] = parse_angle_range(self.le_add_angles.text())
 
 
+    def closeEvent(self,event):
+        
+        reply = QMessageBox.question(self, 'Quit GUI', "Are you sure you want to close the window?")
 
+        if reply == QMessageBox.Yes:
+            while RE.state=="idle":
+                QtTest.QTest.qWait(1000)
+                event.accept()
+                plt.close('all')
+        else:
+            event.ignore()
 
 
 if __name__ == "__main__":
-    app = QtWidgets.QApplication(sys.argv)
+    app = QtWidgets.QApplication([sys.argv]
+)
     widget = MLLTomoGUI()
     widget.show()
     sys.exit(app.exec_())
