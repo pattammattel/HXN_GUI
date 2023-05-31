@@ -29,6 +29,33 @@ def show_error_message_box(func):
             pass
     return wrapper
 
+def run_build_xanes_dict(param_dict):
+        
+    build_xanes_map(param_dict["first_sid"], param_dict["last_sid"], wd=param_dict["cwd"],
+                    xrf_subdir=param_dict["cwd"], xrf_fitting_param_fln=param_dict["param"],
+                    scaler_name=param_dict["norm"], sequence=param_dict["work_flow"],
+                    ref_file_name=param_dict["ref"], fitting_method=param_dict["fit_method"],
+                    emission_line=param_dict["elem"], emission_line_alignment=param_dict["align_elem"],
+                    incident_energy_shift_keV=(param_dict["e_shift"] * 0.001),
+                    subtract_pre_edge_baseline = param_dict["pre_edge"],
+                    alignment_enable = param_dict["align"], output_save_all=param_dict["save_all"],
+                    use_incident_energy_from_param_file=True )
+
+    plt.close()
+
+    if param_dict["align"]:
+        build_xanes_map(param_dict["first_sid"], param_dict["last_sid"], wd=param_dict["cwd"],
+                    xrf_subdir=param_dict["cwd"], xrf_fitting_param_fln=param_dict["param"],
+                    scaler_name=param_dict["norm"], sequence="build_xanes_map",
+                    ref_file_name=param_dict["ref"], fitting_method=param_dict["fit_method"],
+                    emission_line=param_dict["elem"], emission_line_alignment=param_dict["align_elem"],
+                    incident_energy_shift_keV=(param_dict["e_shift"] * 0.001),
+                    subtract_pre_edge_baseline = param_dict["pre_edge"],
+                    alignment_enable = False, output_save_all=param_dict["save_all"],
+                    use_incident_energy_from_param_file=True )
+        
+        plt.close()
+
 
 class xrf_3ID(QtWidgets.QMainWindow):
     def __init__(self):
@@ -161,6 +188,7 @@ class xrf_3ID(QtWidgets.QMainWindow):
             with open(json_file, 'r') as fp:
                 self.config = json.load(fp)
             
+            try:
                 self.le_XRFBatchSID.setText(self.config["xrf_scan_range"]),
                 self.le_wd.setText(self.config["wd"]),
                 self.le_param.setText(self.config["param_file"]),
@@ -168,6 +196,9 @@ class xrf_3ID(QtWidgets.QMainWindow):
                 self.le_lastid.setText(self.config["xanes_end_id"]),
                 self.xanes_elem.setText(self.config["xanes_elem"]),
                 self.alignment_elem.setText(self.config["alignment_elem"])
+
+            except:
+                pass
 
 
         else:
@@ -298,35 +329,36 @@ class xrf_3ID(QtWidgets.QMainWindow):
 
     def addToXANESBatchJob(self):
         self.batchJob[f"job_{len(self.batchJob)+1}"] = self.createParamDictXANES()
-        self.pte_status.append(str(self.batchJob))
+        out_file_ = os.path.join(ui_path,'xanes_batch_params.json')
+        with open(out_file_, 'w') as outfile:
+            json.dump(self.batchJob, outfile, indent=6)
 
-    @show_error_message_box
+        outfile.close()
+        #self.pte_status.append(str(self.batchJob))
+
+    def show_in_pte(self,str_to_show):
+        self.pte_status.append(str(str_to_show))
+
     def runBatchFile(self):
-        if self.batchJob:
-            for value in self.batchJob.values():
-                #plt.close('all')
-                self.create_xanes_macro(value)
+        with open(os.path.join(ui_path,'xanes_batch_params.json'),'r') as infile:
+            batch_job = json.load(infile)
+        infile.close()
 
-    def create_xanes_macro(self,param_dict):
-
-        self.xanes_thread = XANESProcessing(param_dict)
-        self.xanes_thread.start()
         
-        '''
-        build_xanes_map(param_dict["first_sid"], param_dict["last_sid"], wd=param_dict["cwd"],
-                        xrf_subdir=param_dict["cwd"], xrf_fitting_param_fln=param_dict["param"],
-                        scaler_name=param_dict["norm"], sequence=param_dict["work_flow"],
-                        ref_file_name=param_dict["ref"], fitting_method=param_dict["fit_method"],
-                        emission_line=param_dict["elem"], emission_line_alignment=param_dict["align_elem"],
-                        incident_energy_shift_keV=(param_dict["e_shift"] * 0.001),
-                        subtract_pre_edge_baseline = param_dict["pre_edge"],
-                        alignment_enable = param_dict["align"], output_save_all=param_dict["save_all"],
-                        use_incident_energy_from_param_file=True )
-        '''
-    
+
+        if batch_job:
+            self.xanes_batch_progress.setRange(0,0)
+
+            self.batch_xanes_thread = XANESBatchProcessing(batch_job)
+            self.batch_xanes_thread.current_process.connect(self.show_in_pte)
+            self.batch_xanes_thread.finished.connect(lambda:self.xanes_batch_progress.setRange(0,100))
+            self.batch_xanes_thread.finished.connect(lambda:self.xanes_batch_progress.setValue(100))
+            self.batch_xanes_thread.start()
+
     def runSingleXANESJob(self):
         params = self.createParamDictXANES()
-        self.create_xanes_macro(params)
+        self.xanes_thread = XANESProcessing(params)
+        self.xanes_thread.start()
 
     def getCalibrationData(self):
 
@@ -607,26 +639,47 @@ class XANESProcessing(QThread):
         self.paramDict = paramDict
 
     def run(self):
+        run_build_xanes_dict(self.paramDict)
 
-        build_xanes_map(
-            self.paramDict["first_sid"], 
-            self.paramDict["last_sid"], 
-            wd=self.paramDict["cwd"],
-            xrf_subdir=self.paramDict["cwd"], 
-            xrf_fitting_param_fln=self.paramDict["param"],
-            scaler_name=self.paramDict["norm"], 
-            sequence=self.paramDict["work_flow"],
-            ref_file_name=self.paramDict["ref"], 
-            fitting_method=self.paramDict["fit_method"],
-            emission_line=self.paramDict["elem"], 
-            emission_line_alignment=self.paramDict["align_elem"],
-            incident_energy_shift_keV=(self.paramDict["e_shift"] * 0.001),
-            subtract_pre_edge_baseline = self.paramDict["pre_edge"],
-            alignment_enable = self.paramDict["align"], 
-            output_save_all=self.paramDict["save_all"],
-            use_incident_energy_from_param_file=True ,
-            skip_scan_types = ['FlyPlan1D']
-            )
+class XANESBatchProcessing(QThread):
+
+    current_process = pyqtSignal(dict)
+    current_iter = pyqtSignal(int)
+
+    def __init__(self, batch_job_dict):
+        super().__init__()
+        self.batch_job_dict = batch_job_dict
+        self.paramDict = {}
+
+    def run(self):
+        n = 0 
+        for key, value in self.batch_job_dict.items():
+
+            save_dict = self.paramDict
+            self.paramDict = value
+            self.current_process.emit(self.paramDict)
+            n = +1
+            self.current_iter.emit(n)
+
+            try:
+                
+                run_build_xanes_dict(self.paramDict)
+                
+                h = db[int(save_dict["first_sid"])]
+                start_doc = h["start"]
+
+                save_dict["n_points"] = (start_doc["num1"],start_doc["num2"])
+                save_dict["exposure_time_sec"] = start_doc["exposure_time"]
+                save_dict["step_size_um"] = start_doc["per_points"]
+
+                outfile = os.path.join(save_dict["cwd"],f'{save_dict["first_sid"]}_{save_dict["last_sid"]}.json')
+                with open(outfile, "w") as fp:
+                    json.dump(save_dict,fp, indent=6)
+            except:
+                pass
+
+
+
 
 class loadh5(QThread):
     
