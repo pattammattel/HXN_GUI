@@ -96,8 +96,7 @@ class Ui(QtWidgets.QMainWindow):
         only_lett_le = QtGui.QRegularExpressionValidator(reg_ex_xrf)
         #self.le_roi_elems.setValidator(only_lett_le)
         #self.le_live_elems.setValidator(only_lett_le)
-        #self.le_line_elem.setValidator(only_lett_le)
-    
+        #self.le_line_elem.setValidator(only_lett_le)    
         
     def connect_advanced_scans(self):
         #advanced scans
@@ -257,7 +256,8 @@ class Ui(QtWidgets.QMainWindow):
         roi_elems = xrf_elems["roi_elems"]
         live_plot_elems  = xrf_elems["live_plot_elems"]
         line_plot_elem = xrf_elems["line_plot_elem"]
-
+        
+        self.sb_live_elem_num.setValue(len(xrf_elems["live_plot_elems"]))
         self.le_roi_elems.setText(str(roi_elems)[1:-1])
         self.le_live_elems.setText(str(live_plot_elems)[1:-1])
         self.le_line_elem.setText(str(line_plot_elem)[1:-1])

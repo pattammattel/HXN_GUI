@@ -2,7 +2,7 @@
       "angle_info": {
             "start": 0,
             "end": 10,
-            "num": 2
+            "num": 3
       },
       "fly2d_scan": {
             "det": "dets1",
@@ -50,21 +50,16 @@
             "move_x": true,
             "move_y": true
       },
-      "stop_iter": true,
+      "stop_iter": false,
       "add_angles": [
-            0,
-            2,
-            4
+            null
       ],
       "remove_angles": [
-            -100.0,
-            -102.0,
-            -104.0,
-            -106.0,
-            -108.0,
-            -110.0
+            null
       ],
       "stop_pdf": false,
       "pause_scan": false,
-      "test": true
+      "test": true,
+      "th_init": -0.003205,
+      "y_init": 0.29504
 }

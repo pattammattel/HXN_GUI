@@ -113,10 +113,20 @@ class MLLTomoGUI(QtWidgets.QMainWindow):
         self.cb_align2d_move_x.setChecked(self.param_dict["align_2d_com"]["move_x"])
         self.cb_align2d_move_y.setChecked(self.param_dict["align_2d_com"]["move_y"])
 
+        print(self.param_dict["add_angles"])
+        print(self.param_dict["remove_angles"])
 
         #add/remove angles
-        self.le_add_angles.setText(str(self.param_dict["add_angles"])[1:-1])
-        self.le_remove_angles.setText(str(self.param_dict["remove_angles"])[1:-1])
+        if self.param_dict["add_angles"] == None:
+            self.le_add_angles.setText("None")
+        else:
+            self.le_add_angles.setText(str(self.param_dict["add_angles"])[1:-1])
+            
+
+        if self.param_dict["remove_angles"] == None:
+            self.le_remove_angles.setText("None")
+        else:   
+            self.le_remove_angles.setText(str(self.param_dict["remove_angles"])[1:-1])
 
     @show_error_message_box
     def update_parameter_dict(self):
@@ -174,8 +184,17 @@ class MLLTomoGUI(QtWidgets.QMainWindow):
 
         #add/remove angles 
         #TODO change to parse angle list
-        self.param_dict["add_angles"] = parse_angle_range(self.le_add_angles.text())
-        self.param_dict["remove_angles"] = parse_angle_range(self.le_remove_angles.text())
+
+        print(self.le_remove_angles.text())
+
+        if self.le_add_angles.text():
+            self.param_dict["add_angles"] = parse_angle_range(self.le_add_angles.text())
+        else:
+            self.param_dict["add_angles"]=None
+        if self.le_remove_angles.text():
+            self.param_dict["remove_angles"] = parse_angle_range(self.le_remove_angles.text())
+        else:
+            self.param_dict["remove_angles"]=None
 
         
     @show_error_message_box
@@ -232,10 +251,10 @@ class MLLTomoGUI(QtWidgets.QMainWindow):
         reply = QMessageBox.question(self, 'Quit GUI', "Are you sure you want to close the window?")
 
         if reply == QMessageBox.Yes:
-            while RE.state=="idle":
+            if RE.state=="idle":
+                plt.close('all')
                 QtTest.QTest.qWait(1000)
                 event.accept()
-                plt.close('all')
         else:
             event.ignore()
 
