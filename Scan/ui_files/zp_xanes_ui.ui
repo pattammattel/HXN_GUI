@@ -83,22 +83,7 @@ QRadioButton::indicator:unchecked {
 </string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QGridLayout" name="gridLayout_31">
-    <property name="leftMargin">
-     <number>12</number>
-    </property>
-    <property name="topMargin">
-     <number>12</number>
-    </property>
-    <property name="rightMargin">
-     <number>12</number>
-    </property>
-    <property name="bottomMargin">
-     <number>12</number>
-    </property>
-    <property name="verticalSpacing">
-     <number>12</number>
-    </property>
+   <layout class="QGridLayout" name="gridLayout_23">
     <item row="0" column="0">
      <layout class="QGridLayout" name="gridLayout_28">
       <property name="spacing">
@@ -108,87 +93,14 @@ QRadioButton::indicator:unchecked {
        <widget class="QPushButton" name="pb_start_scan">
         <property name="text">
          <string>
-Start Tomo Scan
+Start Scan
 </string>
         </property>
        </widget>
       </item>
-      <item row="1" column="0">
-       <layout class="QGridLayout" name="gridLayout_27">
-        <item row="0" column="3">
-         <layout class="QGridLayout" name="gridLayout_22">
-          <item row="1" column="0">
-           <widget class="QPushButton" name="pb_resume_scan">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="styleSheet">
-             <string notr="true"/>
-            </property>
-            <property name="text">
-             <string>Resume Scan</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QPushButton" name="pb_pause_scan">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="styleSheet">
-             <string notr="true"/>
-            </property>
-            <property name="text">
-             <string>Pause Scan</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item row="0" column="1">
-         <widget class="QPushButton" name="pb_abort_scan">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">color: rgb(204, 0, 0);</string>
-          </property>
-          <property name="text">
-           <string>
-Abort Scan
-</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="2">
-         <widget class="QPushButton" name="pb_update_scan">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>                                 
-Update Scan Parameters 
-                                                          </string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
      </layout>
     </item>
-    <item row="0" column="1">
+    <item row="0" column="1" colspan="3">
      <widget class="QGroupBox" name="groupBox_3">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -222,7 +134,7 @@ Update Scan Parameters
           </sizepolicy>
          </property>
          <property name="text">
-          <string>Export Parameters</string>
+          <string>Export Parameter File</string>
          </property>
         </widget>
        </item>
@@ -235,7 +147,7 @@ Update Scan Parameters
           </sizepolicy>
          </property>
          <property name="text">
-          <string>Import Parameters</string>
+          <string>Import Parameter File</string>
          </property>
         </widget>
        </item>
@@ -271,10 +183,10 @@ Update Scan Parameters
     <item row="1" column="0">
      <widget class="QGroupBox" name="groupBox_5">
       <property name="title">
-       <string>Angle Info</string>
+       <string>Choose Element</string>
       </property>
       <layout class="QGridLayout" name="gridLayout_29">
-       <item row="0" column="0">
+       <item row="0" column="1">
         <widget class="QLabel" name="label_13">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -287,185 +199,20 @@ Update Scan Parameters
          </property>
         </widget>
        </item>
-       <item row="3" column="0" colspan="2">
-        <layout class="QGridLayout" name="gridLayout_26">
-         <item row="1" column="1">
-          <widget class="QLineEdit" name="le_remove_angles">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0" rowspan="2">
-          <layout class="QGridLayout" name="gridLayout_25">
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_3">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>Add Angles:</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="label_4">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>Remove Angles:</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item row="0" column="1">
-          <widget class="QLineEdit" name="le_add_angles">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-          </widget>
-         </item>
-        </layout>
+       <item row="1" column="1">
+        <widget class="QComboBox" name="comboBox_2"/>
        </item>
-       <item row="2" column="0" colspan="2">
-        <layout class="QGridLayout" name="gridLayout_23">
-         <item row="0" column="0">
-          <layout class="QVBoxLayout" name="verticalLayout">
-           <item>
-            <widget class="QLabel" name="label_40">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>Start Angle</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QSpinBox" name="sb_start_angle">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="minimum">
-              <number>-120</number>
-             </property>
-             <property name="maximum">
-              <number>120</number>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item row="0" column="1">
-          <layout class="QVBoxLayout" name="verticalLayout_2">
-           <item>
-            <widget class="QLabel" name="label_50">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>End Angle</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QSpinBox" name="sb_end_angle">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="minimum">
-              <number>-120</number>
-             </property>
-             <property name="maximum">
-              <number>120</number>
-             </property>
-             <property name="value">
-              <number>90</number>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item row="0" column="2">
-          <layout class="QVBoxLayout" name="verticalLayout_3">
-           <item>
-            <widget class="QLabel" name="label_60">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>No. of Steps</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QSpinBox" name="sb_angle_num">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="maximum">
-              <number>500</number>
-             </property>
-             <property name="value">
-              <number>90</number>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-        </layout>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>XANES Element and edge</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
     </item>
-    <item row="1" column="1">
+    <item row="1" column="1" colspan="3">
      <widget class="QGroupBox" name="groupBox_2">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -975,7 +722,7 @@ Update Scan Parameters
       </layout>
      </widget>
     </item>
-    <item row="2" column="0" colspan="2">
+    <item row="2" column="0" colspan="4">
      <widget class="QGroupBox" name="groupBox">
       <property name="title">
        <string>Alignment Scans</string>
@@ -2065,6 +1812,71 @@ Update Scan Parameters
         </layout>
        </item>
       </layout>
+     </widget>
+    </item>
+    <item row="3" column="0">
+     <widget class="QPushButton" name="pb_update_scan">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="text">
+       <string>                                 
+Update Scan Parameters 
+                                                          </string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="1">
+     <widget class="QPushButton" name="pb_abort_scan">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: rgb(204, 0, 0);</string>
+      </property>
+      <property name="text">
+       <string>
+Abort Scan
+</string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="2">
+     <widget class="QPushButton" name="pb_resume_scan">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+      <property name="text">
+       <string>Resume Scan</string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="3">
+     <widget class="QPushButton" name="pb_pause_scan">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+      <property name="text">
+       <string>Pause Scan</string>
+      </property>
      </widget>
     </item>
    </layout>

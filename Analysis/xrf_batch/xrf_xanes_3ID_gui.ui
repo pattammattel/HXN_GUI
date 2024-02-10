@@ -84,7 +84,7 @@ QGroupBox {
        <string notr="true"/>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <property name="documentMode">
        <bool>true</bool>
@@ -451,7 +451,7 @@ QGroupBox {
          </spacer>
         </item>
         <item row="4" column="0">
-         <widget class="QGroupBox" name="groupBox_5">
+         <widget class="QGroupBox" name="pb_stop_xanes_batch">
           <property name="title">
            <string>Batch it</string>
           </property>
@@ -521,6 +521,13 @@ border-radius :15px;
              </property>
              <property name="value">
               <number>24</number>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="2">
+            <widget class="QPushButton" name="pushButton">
+             <property name="text">
+              <string>Stop Batch</string>
              </property>
             </widget>
            </item>

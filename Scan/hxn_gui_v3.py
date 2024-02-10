@@ -35,6 +35,8 @@ from utilities import *
 from element_lines import *
 from mll_tomo_gui import *
 ui_path = os.path.dirname(os.path.abspath(__file__))
+det_and_camera_names_motion = ['cam11','merlin','eiger']
+det_and_camera_names_data = ['cam11','merlin1','merlin2','eiger1']
 
 
 class Ui(QtWidgets.QMainWindow):
@@ -45,6 +47,33 @@ class Ui(QtWidgets.QMainWindow):
         print("Loading UI... Please wait")
         uic.loadUi(os.path.join(ui_path,'ui_files/hxn_gui_v3.ui'), self)
         print("UI File loaded")
+
+        # self.fly_motor_dict = {'zpssx': zpssx, 
+        #                        'zpssy': zpssy, 
+        #                        'zpssz': zpssz,
+        #                        'dssx': dssx, 
+        #                        'dssy': dssy, 
+        #                        'dssz': dssz}
+
+        self.fly_motor_dict = {'dssx': dssx, 
+                               'dssy': dssy, 
+                               'dssz': dssz, 
+                               'zpssx': zpssx, 
+                               'zpssy': zpssy, 
+                               'zpssz': zpssz,}
+
+        self.fly_det_dict = {'dets1': dets1, 
+                             'dets2': dets2, 
+                             'dets3': dets3,
+                             'dets4': dets4, 
+                             'dets_fs': dets_fs}
+        
+        #TODO add a qbox with mll or zp option to set the configs
+
+        self.cb_dets.addItems([det_name for det_name in self.fly_det_dict.keys()])
+        self.cb_motor1.addItems([name for name in self.fly_motor_dict.keys()])
+        self.cb_motor2.addItems([name for name in self.fly_motor_dict.keys()])
+        self.cb_motor2.setCurrentIndex(1)
 
         self.connect_flyscan_signals()
         self.connect_user_setup_signals()
@@ -109,6 +138,7 @@ class Ui(QtWidgets.QMainWindow):
         
         #self.mll_tomo_window = MLLTomoGUI()
         #self.mll_tomo_window.show()
+        
 
     #shutters
     def connect_shutters(self):
@@ -263,8 +293,8 @@ class Ui(QtWidgets.QMainWindow):
         self.le_line_elem.setText(str(line_plot_elem)[1:-1])
 
         for elem,box in zip(roi_elems,self.xrf_combo_boxes):
-            try:box.setCurrentText(elem)
-            except:box.setCurrentText("Si")
+            box.setCurrentText(elem)
+            #except:box.setCurrentText("Si")
 
     @show_error_message_box
     def export_xrf_elem_list(self, auto = False):
@@ -324,9 +354,6 @@ class Ui(QtWidgets.QMainWindow):
     #flyscan
 
     def connect_flyscan_signals(self):
-        #flyscan
-        self.motor_list = {'zpssx': zpssx, 'zpssy': zpssy, 'zpssz': zpssz,
-        'dssx': dssx, 'dssy': dssy, 'dssz': dssz}
 
         self.dwell.valueChanged.connect(self.initParams)
         self.x_step.valueChanged.connect(self.initParams)
@@ -335,7 +362,7 @@ class Ui(QtWidgets.QMainWindow):
         self.y_start.valueChanged.connect(self.initParams)
         self.x_end.valueChanged.connect(self.initParams)
         self.y_end.valueChanged.connect(self.initParams)
-        self.pb_dets.currentTextChanged.connect(self.initParams)        
+        self.cb_dets.currentTextChanged.connect(self.initParams)        
         self.cb_motor1.currentTextChanged.connect(self.initParams)
         self.cb_motor2.currentTextChanged.connect(self.initParams)
         print("Fly Motors Connected")
@@ -345,7 +372,7 @@ class Ui(QtWidgets.QMainWindow):
         self.rb_2d.clicked.connect(self.enableMot2)
         self.rb_1d.clicked.connect(self.initParams)
         self.rb_2d.clicked.connect(self.initParams)
-        self.start.clicked.connect(lambda:self.initFlyScan())
+        self.start.clicked.connect(lambda:self.run_fly_scan())
 
         # Quick fill scan Params
         self.pb_3030.clicked.connect(self.fill_common_scan_params)
@@ -356,6 +383,7 @@ class Ui(QtWidgets.QMainWindow):
         #copy scan plan
         self.pb_scan_copy.clicked.connect(self.copyScanPlan)
         self.pb_batchscan_copy.clicked.connect(self.copyForBatch)
+        self.pb_enable_run.clicked.connect(lambda:self.start.setEnabled(True))
 
         #q server
         self.pb_flyplan_to_qserver.clicked.connect(lambda:self.send_to_queue())
@@ -363,13 +391,13 @@ class Ui(QtWidgets.QMainWindow):
         self.set_tooltip_for_dets()
 
     def set_tooltip_for_dets(self):
-        all_items = [self.pb_dets.itemText(i) for i in range(self.pb_dets.count())]
+        all_items = [self.cb_dets.itemText(i) for i in range(self.cb_dets.count())]
 
-        for i in range(self.pb_dets.count()):
-            self.pb_dets.setItemData(i,str([det.name for det in eval(all_items[i])]),QtCore.Qt.ToolTipRole)
+        for i in range(self.cb_dets.count()):
+            self.cb_dets.setItemData(i,str([det.name for det in eval(all_items[i])]),QtCore.Qt.ToolTipRole)
         
     def getScanValues(self):
-        self.det = self.pb_dets.currentText()
+        self.det = self.cb_dets.currentText()
 
         self.mot1_s = self.x_start.value()
         self.mot1_e = self.x_end.value()
@@ -384,10 +412,6 @@ class Ui(QtWidgets.QMainWindow):
         self.motor1 = self.cb_motor1.currentText()
         self.motor2 = self.cb_motor2.currentText()
 
-
-        self.det_list = {'dets1': dets1, 'dets2': dets2, 'dets3': dets3,
-                         'dets4': dets4, 'dets_fs': dets_fs}
-
     def initParams(self):
         self.getScanValues()
 
@@ -400,7 +424,7 @@ class Ui(QtWidgets.QMainWindow):
             self.label_scan_info_calc.setText(f'X: {(cal_res_x * 1000):.2f} nm, Y: {(cal_res_y * 1000):.2f} nm \n'
                                               f'{self.tot_t_1d:.2f} minutes + overhead')
             self.scan_plan = f'fly1d({self.det},{self.motor1}, {self.mot1_s},{self.mot1_e}, ' \
-                        f'{self.mot1_steps}, {self.dwell_t:.3f})'
+                        f'{self.mot1_steps}, {self.dwell_t:.5f})'
 
 
 
@@ -408,7 +432,7 @@ class Ui(QtWidgets.QMainWindow):
             self.label_scan_info_calc.setText(f'X: {(cal_res_x * 1000):.2f} nm, Y: {(cal_res_y * 1000):.2f} nm \n'
                                               f'{self.tot_t_2d:.2f} minutes + overhead')
             self.scan_plan = f'fly2d({self.det}, {self.motor1},{self.mot1_s}, {self.mot1_e}, {self.mot1_steps},' \
-                        f'{self.motor2},{self.mot2_s},{self.mot2_e},{self.mot2_steps},{self.dwell_t:.3f})'
+                        f'{self.motor2},{self.mot2_s},{self.mot2_e},{self.mot2_steps},{self.dwell_t:.5f})'
 
         self.text_scan_plan.setText(self.scan_plan)
 
@@ -444,6 +468,9 @@ class Ui(QtWidgets.QMainWindow):
             elif self.motor1.startswith("zp"):
                 roi = get_current_position(zp_flag = True)
 
+            ic = sclr2_ch2.get()
+            scan_time = self.mot1_steps * self.mot2_steps * self.dwell_t / 60
+
             RM.item_add((BPlan("recover_pos_and_scan",
                             scan_name,
                             roi, 
@@ -456,14 +483,28 @@ class Ui(QtWidgets.QMainWindow):
                             self.mot2_s, 
                             self.mot2_e, 
                             self.mot2_steps, 
-                            self.dwell_t)))
+                            self.dwell_t,
+                            ic1_count = ic,
+                            scan_time_min = scan_time)))
 
 
  
-    @show_error_message_box
-    def initFlyScan(self):
+#@show_error_message_box
+    def run_fly_scan(self):
         self.getScanValues()
 
+        if caget("XF:03IDB-PPS{PSh}Sts:Cls-Sts") == 1:
+            choice = QMessageBox.question(self, 'Warning',
+                f"Photon shutter is closed, Do you wan to open it before starting?", QMessageBox.Yes |
+                QMessageBox.No, QMessageBox.No)
+            
+            if choice == QMessageBox.Yes:
+                caput("XF:03IDB-PPS{PSh}Cmd:Opn-Cmd",1)
+                QtTest.QTest.qWait(2000)
+
+            else:
+                pass
+        
         if self.rb_1d.isChecked():
             
             if self.tot_t_1d>1.0:
@@ -472,9 +513,9 @@ class Ui(QtWidgets.QMainWindow):
                                 QMessageBox.No, QMessageBox.No)
 
                 if choice == QMessageBox.Yes:
-
-                    RE(fly1d(self.det_list[self.det], 
-                             self.motor_list[self.motor1],
+                    #self.progress_bar_update(self.mot1_steps,int(self.dwell_t*10000))
+                    RE(fly1d(eval(self.det), 
+                             eval(self.motor1),
                              self.mot1_s, 
                              self.mot1_e, 
                              self.mot1_steps, 
@@ -484,21 +525,18 @@ class Ui(QtWidgets.QMainWindow):
                     return
 
             else:
-
-                RE(fly1d(self.det_list[self.det],
-                         self.motor_list[self.motor1],
+                #self.progress_bar_update(self.mot1_steps,int(self.dwell_t*10000))
+                RE(fly1d(eval(self.det),
+                         eval(self.motor1),
                          self.mot1_s, 
                          self.mot1_e, 
                          self.mot1_steps, 
                          self.dwell_t))
-
-                    
-
         else:
-            if self.motor_list[self.motor1] == self.motor_list[self.motor2]:
+            if self.fly_motor_dict[self.motor1] == self.fly_motor_dict[self.motor2]:
                 msg = QErrorMessage(self)
                 msg.setWindowTitle("Flyscan Motors are the same")
-                msg.showMessage(f"Choose two different motors for 2D scan. You selected {self.motor_list[self.motor1].name}")
+                msg.showMessage(f"Choose two different motors for 2D scan. You selected {self.fly_motor_dict[self.motor1].name}")
                 return
             elif self.tot_t_2d>5.0:
                     choice = QMessageBox.question(self, 'Warning',
@@ -508,12 +546,12 @@ class Ui(QtWidgets.QMainWindow):
 
                     if choice == QMessageBox.Yes:
 
-
-                        RE(fly2d(self.det_list[self.det], 
-                                 self.motor_list[self.motor1], 
+                        #self.progress_bar_update(self.mot1_steps*self.mot2_steps,int(self.dwell_t*10000))
+                        RE(fly2d(eval(self.det), 
+                                 eval(self.motor1), 
                                  self.mot1_s, self.mot1_e, 
                                  self.mot1_steps,
-                                 self.motor_list[self.motor2], 
+                                 eval(self.motor1), 
                                  self.mot2_s, 
                                  self.mot2_e, 
                                  self.mot2_steps, 
@@ -523,17 +561,37 @@ class Ui(QtWidgets.QMainWindow):
                         return
 
             else:
-
-                RE(fly2d(self.det_list[self.det], 
-                         self.motor_list[self.motor1], 
+                
+                #self.progress_bar_update(self.mot1_steps*self.mot2_steps,int(self.dwell_t*10000))
+                RE(fly2d(eval(self.det), 
+                         eval(self.motor1), 
                          self.mot1_s, self.mot1_e, 
                          self.mot1_steps,
-                         self.motor_list[self.motor2], 
+                         eval(self.motor2), 
                          self.mot2_s, 
                          self.mot2_e, 
                          self.mot2_steps, 
                          self.dwell_t))
+                
 
+    def progress_bar_update(self, tot_points, update_interval):
+        
+        tot_pv = "XF:03IDC-ES{Sclr:1}NuseAll"
+        complete_pv = "XF:03IDC-ES{Sclr:1}CurrentChannel"
+        
+        self.pbar_flyscan.setRange(0,tot_points)
+        self.points_update_thread =  updateScanProgress(tot_pv,
+                                                        complete_pv,
+                                                        update_interval)
+        #disable plotting buttons also
+        self.points_update_thread.started.connect(lambda:self.start.setEnabled(False))
+        self.points_update_thread.completed_points.connect(self.pbar_flyscan.setValue)
+        self.points_update_thread.finished.connect(lambda:self.pbar_flyscan.setRange(0,100))
+        self.points_update_thread.finished.connect(lambda:self.pbar_flyscan.setValue(100))
+        self.points_update_thread.finished.connect(self.points_update_thread.terminate)
+        self.points_update_thread.finished.connect(lambda:self.start.setEnabled(True))
+
+        self.points_update_thread.start()
 
     def disableMot2(self):
         self.y_start.setEnabled(False)
@@ -546,18 +604,8 @@ class Ui(QtWidgets.QMainWindow):
         self.y_step.setEnabled(True)
 
 
-    def disable_while_scanning(self):
-
-        while True:
-            if caget("XF:03IDC-ES{Status}ScanRunning-I") == 1:
-                self.HXN_GUI_tabs.setEnabled(False)
-                QtTest.QTest.qWait(500)
-
-            else:
-                self.HXN_GUI_tabs.setEnabled(True)
-                QtTest.QTest.qWait(500)
-
     def fill_common_scan_params(self):
+        #TODO Find a better way
         button_name = self.sender()
         button_names = {'pb_2020': (20, 20, 100, 100, 0.03),
                         'pb_3030': (30, 30, 30, 30, 0.03),
@@ -783,6 +831,9 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_merlinOUT.clicked.connect(lambda:self.merlinOUT())
         self.pb_merlinIN.clicked.connect(lambda:self.merlinIN())
         self.pb_stop_merlin.clicked.connect(lambda:diff.stop())
+        self.pb_merlin_filterIN.clicked.connect(lambda:RE(toggle_merlin_filer(filter_to  = "in")))
+        self.pb_merlin_filterOUT.clicked.connect(lambda:RE(toggle_merlin_filer(filter_to  = "out")))
+
         #fluorescence det
         self.pb_vortexOUT.clicked.connect(lambda:self.vortexOUT())
         self.pb_vortexIN.clicked.connect(lambda:self.vortexIN())
@@ -796,6 +847,19 @@ class Ui(QtWidgets.QMainWindow):
         #cam11
         self.pb_cam11IN.clicked.connect(lambda:self.cam11IN())
         self.pb_stop_cam11.clicked.connect(lambda:diff.stop())
+        self.pb_cam11_flatfield.clicked.connect(lambda:take_cam11_flatfield())
+        self.pb_cam11_disable_flatfield.clicked.connect(lambda:caput("XF:03IDC-ES{CAM:11}Proc1:EnableFlatField",0))
+        
+        #flatfield corrections
+        self.cb_dets_for_ff_corr.addItems(det_and_camera_names_data)
+        
+        
+        #update det positions
+        self.cb_det_names_for_pos.addItems(det_and_camera_names_motion)
+        self.pb_update_dets_pos.clicked.connect(lambda:update_det_pos(self.cb_det_names_for_pos.currentText()))
+        
+        
+        
         #dexela
         self.pb_dexela_IN.clicked.connect(lambda:self.dexela_motion(move_to = 0))
         self.pb_dexela_OUT.clicked.connect(lambda:self.dexela_motion(move_to = 400))
@@ -805,6 +869,9 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_light_ON.clicked.connect(lambda:caput("XF:03IDC-ES{PDU:1}Cmd:Outlet8-Sel", 0))
         self.pb_light_OFF.clicked.connect(lambda:caput("XF:03IDC-ES{PDU:1}Cmd:Outlet8-Sel", 1))
 
+        #move_diff
+        self.pb_pos_to_angle.clicked.connect(lambda:self.calc_and_fill_pos_2angle())
+        self.pb_move_diff.clicked.connect(lambda:self.move_diff_stage())
 
     @show_error_message_box
     def merlinIN(self):
@@ -901,7 +968,38 @@ class Ui(QtWidgets.QMainWindow):
         
         QtTest.QTest.qWait(20000)
         #self.statusbar.showMessage('FS Motion Done!')
+
     
+    #move diff
+    @show_error_message_box
+    def calc_and_fill_pos_2angle(self):
+
+        delta, gamma, two_theta = pos2angle(self.sp_dexela_xpixel.value(),self.sp_dexela_ypixel.value())
+
+        self.sp_diff_det_calc_x.setValue(delta)
+        self.sp_diff_det_calc_y.setValue(gamma)
+        self.sp_diff_det_calc_2theta.setValue(two_theta)
+
+    def move_diff_stage(self):
+        
+        delta = self.sp_diff_det_calc_x.value()
+        gamma = self.sp_diff_det_calc_y.value()
+        dist = self.sp_diff_det_r.value()
+
+        choice = QMessageBox.question(self, "detector stage motion",
+                                      f"You're moving diff stage to {delta, gamma, dist}. \n Proceed?",
+                                      QMessageBox.Yes |
+                                      QMessageBox.No, QMessageBox.No)
+        QtTest.QTest.qWait(500)
+        if choice == QMessageBox.Yes:
+            self.client.open('http://10.66.17.43')
+            QtTest.QTest.qWait(5000)
+            RE(mov_diff(delta, gamma, dist))
+
+        else:
+            pass
+        
+
     @show_error_message_box
     def SSA2_Pos(self, x, y):
         caput('XF:03IDC-OP{Slt:SSA2-Ax:XAp}Mtr.VAL', x)
@@ -991,8 +1089,15 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_osa_in.clicked.connect(lambda:self.ZP_OSA_IN())
 
         #alignment
-        self.pb_ZPZFocusScanStart.clicked.connect(self.zpFocusScan)
-        self.pb_MoveZPZ1AbsPos.clicked.connect(self.zpMoveAbs)
+        self.pb_ZPZFocusScanStart.clicked.connect(lambda:self.zpFocusScan())
+        self.pb_MoveZPZ1AbsPos.clicked.connect(lambda:self.zpMoveAbs())
+        
+        #recover from beamdump
+        self.pb_recover_from_beamdump.clicked.connect(lambda:RE(recover_from_beamdump()))
+        
+        #peak flux
+        self.pb_peakBeamXY.clicked.connect(lambda:RE(peak_the_flux()))
+        
     
     @show_error_message_box
     def zpFocusScan(self):
@@ -1000,7 +1105,7 @@ class Ui(QtWidgets.QMainWindow):
         zpEnd = self.sb_ZPZ1RelativeEnd.value()*0.001
         zpSteps = self.sb_ZPZ1Steps.value()
 
-        scanMotor = self.motor_list[self.cb_foucsScanMotor.currentText()]
+        scanMotor = self.fly_motor_dict[self.cb_foucsScanMotor.currentText()]
         scanStart = self.sb_FocusScanMtrStart.value()
         scanEnd = self.sb_FocusScanMtrEnd.value()
         scanSteps = self.sb_FocusScanMtrStep.value()
@@ -1078,16 +1183,16 @@ class Ui(QtWidgets.QMainWindow):
     def connect_sample_pos_widgets(self):
 
         # zp sample position
-        self.pb_save_pos_zp.clicked.connect(lambda:self.record_sample_pos(self.zp_sample_roi_list_widget))
+        self.pb_save_pos_zp.clicked.connect(lambda:self.record_sample_pos(self.zp_sample_roi_list_widget,zp_flag=True))
         self.pb_roiList_import_zp.clicked.connect(lambda:self.import_list_items_from_json(self.zp_sample_roi_list_widget))
         self.pb_roiList_export_zp.clicked.connect(lambda:self.export_listitems_to_json(self.zp_sample_roi_list_widget,auto = False))
         self.pb_roiList_clear_zp.clicked.connect(lambda:self.clear_list_widget_items(self.zp_sample_roi_list_widget))
         self.pb_move_pos_zp.clicked.connect(lambda:self.move_stage_to_roi(self.zp_sample_roi_list_widget))
         #scan id based
-        self.pb_recover_scan_pos_zp.clicked.connect(self.recover_pos_from_sid_zp)
+        self.pb_recover_scan_pos_zp.clicked.connect(lambda:self.recover_pos_from_sid_zp())
         self.pb_show_scan_pos_zp.clicked.connect(lambda:self.view_scan_id_pos(zp_flag=True))
-        self.pb_print_scan_meta_zp.clicked.connect(self.viewScanMetaData)
-        self.pb_copy_curr_pos_zp.clicked.connect(self.copy_current_pos)
+        self.pb_print_scan_meta_zp.clicked.connect(lambda:self.viewScanMetaData(zp_flag=True))
+        self.pb_copy_curr_pos_zp.clicked.connect(lambda:self.copy_current_pos(zp_flag=True))
 
         # mll sample position
         self.pb_save_pos_mll.clicked.connect(lambda:self.record_sample_pos(self.mll_sample_roi_list_widget, zp_flag=False))
@@ -1096,9 +1201,9 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_roiList_clear_mll.clicked.connect(lambda:self.clear_list_widget_items(self.mll_sample_roi_list_widget))
         self.pb_move_pos_mll.clicked.connect(lambda:self.move_stage_to_roi(self.mll_sample_roi_list_widget))
         #scan id based
-        self.pb_recover_scan_pos_mll.clicked.connect(self.recover_pos_from_sid_zp)
+        self.pb_recover_scan_pos_mll.clicked.connect(self.recover_pos_from_sid_mll)
         self.pb_show_scan_pos_mll.clicked.connect(lambda:self.view_scan_id_pos(zp_flag=False))
-        self.pb_print_scan_meta_mll.clicked.connect(self.viewScanMetaData)
+        self.pb_print_scan_meta_mll.clicked.connect(lambda:self.viewScanMetaData(zp_flag=False))
         self.pb_copy_curr_pos_mll.clicked.connect(lambda:self.copy_current_pos(zp_flag=False))
 
     
@@ -1253,13 +1358,13 @@ class Ui(QtWidgets.QMainWindow):
         list_widget.clear()
         self.export_listitems_to_json(list_widget)
         
-
+    @show_error_message_box
     def recover_pos_from_sid_zp(self):
         current_sid = self.lcd_scanNumber.value()
-        sd = self.le_sid_position_zp.text()
+        sd = db[int(self.le_sid_position_zp.text())].start["scan_id"]
         zp_flag = self.cb_sid_moveZPZ.isChecked()
-
-        if abs(current_sid-int(sd)>100):
+        print(f"{sd = }")
+        if abs(current_sid-int(sd))>100:
                 choice = QMessageBox.question(self, 'Warning',
                 "The requested scan id was done >100 scans ago."
                 "Please confirm the request",
@@ -1280,23 +1385,25 @@ class Ui(QtWidgets.QMainWindow):
 
                             if choice == QMessageBox.Yes:
                                 RE(recover_zp_scan_pos(int(sd), zp_flag, 1))
+                                self.statusbar.showMessage(f'Positions recovered from {sd}')
                             else:
                                 return
                     else:
 
                         RE(recover_zp_scan_pos(int(sd), zp_flag, 1))
 
-                    self.statusbar.showMessage(f'Positions recovered from {sd}')
+                        self.statusbar.showMessage(f'Positions recovered from {sd}')
 
                 else:
+                    self.statusbar.showMessage(f'unable to recover positions from {sd}')
                     return
                 
     def recover_pos_from_sid_mll(self):
         current_sid = self.lcd_scanNumber.value()
-        sd = self.le_sid_position.text()
+        sd = db[int(self.le_sid_position_mll.text())].start["scan_id"]
         base_flag = self.cb_sid_move_base_mll.isChecked()
 
-        if abs(current_sid-int(sd)>100):
+        if abs(current_sid-sd)>100:
                 choice = QMessageBox.question(self, 'Warning',
                 "The requested scan id was done >100 scans ago."
                 "Please confirm the request",
@@ -1317,7 +1424,8 @@ class Ui(QtWidgets.QMainWindow):
 
         if zp_flag:
             
-            scan_id = int(self.le_sid_position_zp.text())
+            #scan_id = int(self.le_sid_position_zp.text())
+            scan_id = db[int(self.le_sid_position_zp.text())].start["scan_id"]
             print(f"{scan_id = }")
             data = db.get_table(db[int(scan_id)],stream_name='baseline')
 
@@ -1334,11 +1442,11 @@ class Ui(QtWidgets.QMainWindow):
             info1 = f"{scan_id =},{zpz1_pos= :.3f},{zpsz_pos= :.3f} \n"
             info2 = f"{smarx_pos = :.3f}, {smary_pos = :.3f}, {smarz_pos = :.3f} \n"
             info3 = f"{zpssx_pos = :.3f}, {zpssy_pos = :.3f}, {zpssz_pos= :.3f} "
-            self.statusbar.showMessage(str(info1+info2+info3))
+            #self.statusbar.showMessage(str(info1+info2+info3))
             QMessageBox.information(self, "Info", str(info1+info2+info3))
 
         else:
-            scan_id = int(self.le_sid_position_mll.text())
+            scan_id = db[int(self.le_sid_position_mll.text())].start["scan_id"]
             print(f"{scan_id = }")
             data = db.get_table(db[int(scan_id)],stream_name='baseline')
             dsx_pos = data.dsx[1]
@@ -1354,12 +1462,17 @@ class Ui(QtWidgets.QMainWindow):
             info1 = f"{scan_id =},{dsx_pos = :.1f},{dsy_pos = :.1f},{dsz_pos = :.1f}, {dsth_pos = :.1f} \n"
             info2 =  f"{sbx_pos = :.1f}, {sbz_pos = :.1f}, {dssx_pos= :.1f}, {dssy_pos= :.1f}, {dssz_pos = :.1f}"
 
-            self.statusbar.showMessage(str(info1+info2))
-            QMessageBox.information(self, "Info", str(info1+info2+info3))
+            #self.statusbar.showMessage(str(info1+info2))
+            QMessageBox.information(self, "Info", str(info1+info2))
 
 
-    def viewScanMetaData(self):
-        sd = self.le_sid_position_zp.text()
+    def viewScanMetaData(self,zp_flag = True):
+        
+        if zp_flag:
+            sd = self.le_sid_position_zp.text()
+        else:
+            sd = self.le_sid_position_mll.text()
+        
         h = db[int(sd)]
         QMessageBox.information(self, "Info", str(h.start))
         #self.statusbar.showMessage(str(h.start))
@@ -1450,7 +1563,10 @@ class Ui(QtWidgets.QMainWindow):
             self.pump_worker_thread.finished.connect(lambda:self.prb_sample_exchange.setValue(100))
             self.pump_worker_thread.finished.connect(self.pump_worker_thread.terminate)
             self.pump_worker_thread.finished.connect(lambda: self.lb_sample_change_action.setText("Pumping finished"))
-            self.pump_worker_thread.finished.connect(lambda:self.he_backfill_in_thread(target_pressure = 250))
+            if self.cb_he_backfill_bool.isChecked():
+                self.pump_worker_thread.finished.connect(lambda:self.he_backfill_in_thread(target_pressure = 250))
+            else:
+                pass
             
             self.pump_worker_thread.start()
 
@@ -1618,6 +1734,12 @@ class Ui(QtWidgets.QMainWindow):
         self.live_plot_worker_thread.current_time_pressure.connect(self.plot_pressure)
         self.live_plot_worker_thread.start()
 
+
+
+    def connect_troubleshooting(self):
+        self.pb_peakBeamXY.clicked.connect(lambda:RE(peak_the_flux()))
+        self.pb_recover_from_beamdump.clicked.connect(lambda:RE(recover_from_beamdump()))
+
 #from FXI--modified
 class liveStatus(QThread):
     current_sts = pyqtSignal(int)
@@ -1659,6 +1781,34 @@ class liveUpdate(QThread):
             #print(list(self.pv_dict.values())[0])
             #print(positions[0])
             QtTest.QTest.qWait(self.update_interval_ms)
+
+
+class updateScanProgress(QThread):
+
+    tot_scan_points = pyqtSignal(int)
+    completed_points = pyqtSignal(int)
+
+    def __init__(self, tot_pv, update_pv, update_interval_ms):
+        super().__init__()
+        self.tot_pv = tot_pv
+        self.update_pv = update_pv
+        self.update_interval_ms = update_interval_ms
+
+    def run(self):
+        #signal total points to collect
+        self.tot_scan_points.emit(caget(self.tot_pv))
+        
+        while True:
+            self.completed_points.emit(caget(self.update_pv))
+            #print(caget(self.update_pv))
+            QtTest.QTest.qWait(self.update_interval_ms)
+            #print(caget(self.update_pv))
+            if caget(self.tot_pv) == caget(self.update_pv):
+                break
+
+        self.finished.emit()
+            
+
 
 #in use
 class PumpingThread(QThread):
@@ -1723,7 +1873,7 @@ class VentingThread(QThread):
         while caget(self.pressure_pv)<self.target_p:
             self.pressure_change.emit(int(caget(self.pressure_pv)))
             QtTest.QTest.qWait(5000)
-            print(f"{self.pressure_change=}")
+            #print(f"{self.pressure_change=}")
 
         self.finished.emit()
 

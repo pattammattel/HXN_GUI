@@ -29,30 +29,62 @@ def show_error_message_box(func):
             pass
     return wrapper
 
+def try_except_pass(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            error_message = f"An error occurred: {str(e)}"
+            print(error_message)
+            pass
+    return wrapper
+
+@try_except_pass
 def run_build_xanes_dict(param_dict):
+
+    save_to_folder = os.path.join(param_dict["cwd"], f'{param_dict["first_sid"]}-{param_dict["last_sid"]}')
+    if not os.path.exists(save_to_folder): 
+        os.makedirs(save_to_folder)
         
-    build_xanes_map(param_dict["first_sid"], param_dict["last_sid"], wd=param_dict["cwd"],
-                    xrf_subdir=param_dict["cwd"], xrf_fitting_param_fln=param_dict["param"],
-                    scaler_name=param_dict["norm"], sequence=param_dict["work_flow"],
-                    ref_file_name=param_dict["ref"], fitting_method=param_dict["fit_method"],
-                    emission_line=param_dict["elem"], emission_line_alignment=param_dict["align_elem"],
+    build_xanes_map(param_dict["first_sid"], 
+                    param_dict["last_sid"], 
+                    wd=save_to_folder,
+                    xrf_subdir=save_to_folder, 
+                    xrf_fitting_param_fln=param_dict["param"],
+                    scaler_name=param_dict["norm"], 
+                    sequence=param_dict["work_flow"],
+                    ref_file_name=param_dict["ref"], 
+                    fitting_method=param_dict["fit_method"],
+                    emission_line=param_dict["elem"], 
+                    emission_line_alignment=param_dict["align_elem"],
                     incident_energy_shift_keV=(param_dict["e_shift"] * 0.001),
                     subtract_pre_edge_baseline = param_dict["pre_edge"],
-                    alignment_enable = param_dict["align"], output_save_all=param_dict["save_all"],
-                    use_incident_energy_from_param_file=True )
+                    alignment_enable = param_dict["align"], 
+                    output_save_all=param_dict["save_all"],
+                    use_incident_energy_from_param_file=True,
+                    skip_scan_types = ['FlyPlan1D'])
 
     plt.close()
 
     if param_dict["align"]:
-        build_xanes_map(param_dict["first_sid"], param_dict["last_sid"], wd=param_dict["cwd"],
-                    xrf_subdir=param_dict["cwd"], xrf_fitting_param_fln=param_dict["param"],
-                    scaler_name=param_dict["norm"], sequence="build_xanes_map",
-                    ref_file_name=param_dict["ref"], fitting_method=param_dict["fit_method"],
-                    emission_line=param_dict["elem"], emission_line_alignment=param_dict["align_elem"],
-                    incident_energy_shift_keV=(param_dict["e_shift"] * 0.001),
-                    subtract_pre_edge_baseline = param_dict["pre_edge"],
-                    alignment_enable = False, output_save_all=param_dict["save_all"],
-                    use_incident_energy_from_param_file=True )
+        build_xanes_map(param_dict["first_sid"], 
+                        param_dict["last_sid"], 
+                        wd=save_to_folder,
+                        xrf_subdir=save_to_folder, 
+                        xrf_fitting_param_fln=param_dict["param"],
+                        scaler_name=param_dict["norm"], 
+                        sequence="build_xanes_map",
+                        ref_file_name=param_dict["ref"], 
+                        fitting_method=param_dict["fit_method"],
+                        emission_line=param_dict["elem"], 
+                        emission_line_alignment=param_dict["align_elem"],
+                        incident_energy_shift_keV=(param_dict["e_shift"] * 0.001),
+                        subtract_pre_edge_baseline = param_dict["pre_edge"],
+                        alignment_enable = False, 
+                        output_save_all=param_dict["save_all"],
+                        use_incident_energy_from_param_file=True, 
+                        skip_scan_types = ['FlyPlan1D'] )
         
         plt.close()
 
@@ -74,7 +106,8 @@ class xrf_3ID(QtWidgets.QMainWindow):
 
         self.pb_start.clicked.connect(self.runSingleXANESJob)
         self.pb_xrf_start.clicked.connect(lambda:self.create_pyxrf_batch_macro())
-        self.pb_live.clicked.connect(self.autoXRFThread)
+        #self.pb_live.clicked.connect(self.autoXRFThread)
+        self.pb_live.clicked.connect(self.autoXRFThreadChunkMode)
         self.pb_stop_live.clicked.connect(self.stopAuto)
         self.pb_xanes_calib.clicked.connect(self.getCalibrationData)
         self.pb_plot_calib.clicked.connect(self.plotCalibration)
@@ -85,6 +118,7 @@ class xrf_3ID(QtWidgets.QMainWindow):
         self.pb_runBatch.clicked.connect(self.runBatchFile)
         self.pb_showBatch.clicked.connect(lambda: self.pte_status.append(str(self.batchJob)))
         self.pb_clear_batch.clicked.connect(lambda: self.batchJob.clear())
+        self.pb_stop_xanes_batch.clicked.connect(lambda:self.batch_xanes_thread.terminate())
 
         self.pb_open_pyxrf.clicked.connect(self.open_pyxrf)
         self.pb_close_plots.clicked.connect(self.close_all_plots)
@@ -241,7 +275,7 @@ class xrf_3ID(QtWidgets.QMainWindow):
 
 
         if self.rb_make_hdf.isChecked():
-            self.h5thread = loadh5(h5Param)
+            self.h5thread = Loadh5AndFit(h5Param)
             self.h5thread.start()
 
         elif not self.rb_make_hdf.isChecked() and self.rb_xrf_fit.isChecked():
@@ -365,7 +399,7 @@ class xrf_3ID(QtWidgets.QMainWindow):
         cwd = self.le_wd.text()
         last_sid = int(self.le_lastid.text())
         first_sid = int(self.le_startid.text())
-        if self.rb_loadh5.isChecked():
+        if self.rb_Loadh5AndFit.isChecked():
             make_hdf(first_sid, last_sid, wd=cwd, file_overwrite_existing=self.rb_h5Overwrite.isChecked())
         else:
             QtTest.QTest.qWait(1)
@@ -429,45 +463,53 @@ class xrf_3ID(QtWidgets.QMainWindow):
 
     def autoXRFThread(self):
 
-        self.scan_thread = liveData(self.sb_buffer_time.value())
+        self.scan_thread = ScanNumberStream(self.sb_buffer_time.value())
         #self.scan_thread.scan_num.connect(self.pyxrf_live_process)
         self.scan_thread.scan_num.connect(self.pyxrf_live_process) #thread this
+        #self.scan_thread.scan_num.connect(self.pyxrf_live_process_batch) #thread this
         self.scan_thread.enableLiveButton.connect(self.liveButtonSts)
         self.scan_thread.start()
         print(f"Auto XRF Thread Running: {self.scan_thread.isRunning()}")
 
-    @show_error_message_box
+    def autoXRFThreadChunkMode(self):
+
+        self.scan_thread = ScanListStream(5)
+        #self.scan_thread.scan_num.connect(self.pyxrf_live_process)
+        #self.scan_thread.scan_num.connect(self.pyxrf_live_process) #thread this
+        self.scan_thread.scan_list.connect(self.pyxrf_live_process_batch) #thread this
+        self.scan_thread.enableLiveButton.connect(self.liveButtonSts)
+        self.scan_thread.start()
+        print(f"Auto XRF Thread Running: {self.scan_thread.isRunning()}")
+
     def make_hdf_live(self,wd,sid, skip1d = True):
 
         if not os.path.exists(os.path.join(wd,f"scan2D_{sid}.h5")):
 
-
             hdr = db[(sid)]
             if bool(hdr.stop):
-                attempt = 0
-                while attempt<5:
-                    if skip1d:
-                        hdr = db[int(sid)]
-                        start_doc = hdr["start"]
-
-                        #skip 1D scans
-                        if not start_doc["plan_type"] in ("FlyPlan1D",):
+                start_doc = hdr["start"]
+                if not start_doc["plan_type"] in ("FlyPlan1D",):
+                    attempt = 0
+                    while attempt<3 and not os.path.exists(os.path.join(wd,f"scan2D_{sid}.h5")):
+                        if skip1d:
                             make_hdf(int(sid), 
                                     wd=wd, 
-                                    file_overwrite_existing=True,
+                                    file_overwrite_existing=False,
                                     skip_scan_types=['FlyPlan1D']
                                     )
-                    else:
-                        make_hdf(int(sid), 
-                                wd=wd, 
-                                file_overwrite_existing=True,
-                                skip_scan_types=[]
-                                )
 
-                    attempt+=1
-                    logger.info(f"Data Not found attempt # {attempt}/6")
-                    QtTest.QTest.qWait(10000)
+                        else:
+                            make_hdf(int(sid), 
+                                    wd=wd, 
+                                    file_overwrite_existing=False,
+                                    skip_scan_types=[]
+                                    )
 
+                        attempt+=1
+                        logger.info(f"Data Not found attempt # {attempt}/3")
+                        QtTest.QTest.qWait(2000)
+
+            else: print("waiting for scan to complete")
 
     def pyxrf_live_process(self, sid):
         print(f"live process started : {sid}")
@@ -479,36 +521,82 @@ class xrf_3ID(QtWidgets.QMainWindow):
         cwd = self.le_wd.text()
         norm = self.le_sclr_2.text()
 
-        for sid_ in (np.arange(sid-4,sid+1)):
+        # for sid_ in (np.arange(sid-4,sid+1)):
 
-            if self.rb_make_hdf.isChecked():
-                self.make_hdf_live(cwd,int(sid_), skip1d=self.rb_skip1d.isChecked())
-                    
-            if self.rb_xrf_fit.isChecked():
-                param = self.le_param.text()
-                fname = f'scan2D_{int(sid_)}.h5'
+        #TODO dont pass the scan if 1D checked unnecessry checkings otherwise
+
+        if self.rb_make_hdf.isChecked():
+            self.make_hdf_live(cwd,int(sid), skip1d=self.rb_skip1d.isChecked())
                 
-                if os.path.exists(os.path.join(cwd,fname)):
+        if self.rb_xrf_fit.isChecked():
+            param = self.le_param.text()
+            fname = f'scan2D_{int(sid)}.h5'
+            
+            if os.path.exists(os.path.join(cwd,fname)):
+                if not os.path.exists(os.path.join(cwd,f"output_tiff_scan2D_{sid}")):
                     fit_pixel_data_and_save(
                             cwd,
                             fname,
                             param_file_name = param,
                             scaler_name = norm,
-                            save_tiff = self.rb_saveXRFTiff.isChecked()
+                            save_tiff = self.rb_saveXRFTiff.isChecked(),
+                            incident_energy = None,
+                            ignore_datafile_metadata = True,
+                            
+
                         )
-
-                    self.pte_status.append(f"{sid} Fitted")
-                    QtTest.QTest.qWait(50)
-
                 else:
-                    print(f"{fname} not found")
                     pass
+
+                self.pte_status.append(f"{sid} Fitted")
+                QtTest.QTest.qWait(50)
+
             else:
-                
+                print(f"{fname} not found")
                 pass
+        else:
             
-            self.sb_lastScanProcessed.setValue(sid)
-            QtTest.QTest.qWait(500)
+            pass
+        
+        self.sb_lastScanProcessed.setValue(sid)
+        QtTest.QTest.qWait(2000)
+    
+    def pyxrf_live_process_batch(self, sid_list):
+        print(f"live process started : {sid_list}")
+        self.pb_live.setToolTip("Disable when live. Clip stop to restart")
+        self.pb_live.setEnabled(False)
+        
+        cwd = self.le_wd.text()
+        norm = self.le_sclr_2.text()
+
+        h5Param = {'sidList':sid_list,
+            'wd':cwd,
+            'file_overwrite_existing':self.rb_h5OverWrite.isChecked(),
+            "xrfParam":self.le_param.text(),
+            "norm" :norm,
+            "saveXRFTiff": self.rb_saveXRFTiff.isChecked(),
+            "XRFfit":self.rb_xrf_fit.isChecked()
+            }
+
+        if self.rb_make_hdf.isChecked():
+                self.h5thread = Loadh5AndFit(h5Param)
+                self.h5thread.start()
+                self.h5thread.last_processed.connect(self.sb_lastScanProcessed.setValue)
+
+        elif not self.rb_make_hdf.isChecked() and self.rb_xrf_fit.isChecked():
+            
+            xrf_batch_param_dict = {"sid_i":sid_list[0],
+                                    "sid_f":sid_list[-1],
+                                    "wd":cwd,
+                                    "xrfParam":self.le_param.text(),
+                                    "norm" :self.le_sclr_2.text(),
+                                    "saveXRFTiff": self.rb_saveXRFTiff.isChecked()}
+            
+            self.pyxrfBatchThread = xrfBatchThread(xrf_batch_param_dict)
+            self.pyxrfBatchThread.start()
+
+        else:
+            pass
 
 
     def open_pyxrf(self):
@@ -602,7 +690,39 @@ class Worker(QRunnable):
         finally:
             self.signals.finished.emit()  # Done
 
-class liveData(QThread):
+
+class ScanListStream(QThread):
+    scan_list = pyqtSignal(list)
+    enableLiveButton = pyqtSignal(bool)
+    def __init__(self, chunk_length):
+        super().__init__()
+        self.chunk_length = chunk_length
+        self.scans_to_process = []
+
+    def run(self):
+        self.enableLiveButton.emit(False)
+        timeout = time.time() + 60*30   # 30 minute intervals
+        timeout_for_live = time.time() + 60*60*24*5 # max 5 days active loop 
+        while True:
+            QtTest.QTest.qWait(500)
+            sid = int(caget('XF:03IDC-ES{Status}ScanID-I'))
+
+            if caget('XF:03IDC-ES{Status}ScanRunning-I') == 0 and not sid in self.scans_to_process:
+                self.scans_to_process.append(sid)
+                logger.info(f"new scan added: {sid}; scan list to process{self.scans_to_process}")
+                print(f"new scan added: {sid}; scan list to process = {self.scans_to_process}")
+            if len(self.scans_to_process) == self.chunk_length or (time.time() > timeout and self.scan_list):
+                self.scan_list.emit(self.scans_to_process)
+                self.scans_to_process = []
+                timeout = time.time()
+                #QtTest.QTest.qWait(1000)
+
+            if time.time() > timeout_for_live:
+                break
+                
+
+
+class ScanNumberStream(QThread):
     scan_num = pyqtSignal(int)
     enableLiveButton = pyqtSignal(bool)
     def __init__(self, buffertime):
@@ -611,16 +731,21 @@ class liveData(QThread):
     
     def run(self):
         self.enableLiveButton.emit(False)
+        sid_sent = 100
         while True:
-            QtTest.QTest.qWait(10)
+            QtTest.QTest.qWait(2000)
             sid = int(caget('XF:03IDC-ES{Status}ScanID-I'))
-            if caget('XF:03IDC-ES{Status}ScanRunning-I') == 0 and caget('XF:03IDC-ES{Sclr:2}_cts1.D')>5000:
-            
-                self.scan_num.emit(sid)
-                logger.info(f"new scan signal sent: {sid}")
-                print(f"new scan signal sent: {sid}")
-                #self.sleep(self.buffertime)
-                QtTest.QTest.qWait(self.buffertime*1000)
+            hdr = db[int(sid)]
+            start_doc = hdr["start"]
+            if not start_doc["plan_type"] in ("FlyPlan1D",):
+                if caget('XF:03IDC-ES{Status}ScanRunning-I') == 0 and not sid==sid_sent:
+                
+                    self.scan_num.emit(sid)
+                    sid_sent = sid
+                    logger.info(f"new scan signal sent: {sid}")
+                    print(f"new scan signal sent: {sid}")
+                    self.sleep(self.buffertime)
+                    #QtTest.QTest.qWait(5000)
                 
 class scanStatus(QThread):
     scan_sts = pyqtSignal(int)
@@ -662,7 +787,6 @@ class XANESBatchProcessing(QThread):
             self.current_iter.emit(n)
 
             try:
-                
                 run_build_xanes_dict(self.paramDict)
                 
                 h = db[int(save_dict["first_sid"])]
@@ -672,7 +796,7 @@ class XANESBatchProcessing(QThread):
                 save_dict["exposure_time_sec"] = start_doc["exposure_time"]
                 save_dict["step_size_um"] = start_doc["per_points"]
 
-                outfile = os.path.join(save_dict["cwd"],f'{save_dict["first_sid"]}_{save_dict["last_sid"]}.json')
+                outfile = os.path.join(f'{save_dict["cwd"]}/{save_dict["first_sid"]}-{save_dict["last_sid"]}',f'{save_dict["first_sid"]}_{save_dict["last_sid"]}.json')
                 with open(outfile, "w") as fp:
                     json.dump(save_dict,fp, indent=6)
             except:
@@ -681,32 +805,28 @@ class XANESBatchProcessing(QThread):
 
 
 
-class loadh5(QThread):
+class Loadh5AndFit(QThread):
     
     h5loaded = pyqtSignal(int)
+    last_processed = pyqtSignal(int)
 
     def __init__(self, paramDict):
         super().__init__()
         self.paramDict = paramDict
+        self.missed_scans = []
 
 
     def run(self):
         logger.info("h5 thread started")
-        
+        QtTest.QTest.qWait(5000)
         for sid in self.paramDict["sidList"]: #filter for 1d
-            
 
-            #try to find the data in the db, except pass
             try:
-                hdr = db[int(sid)]
-                start_doc = hdr["start"]
 
-                #skip 1D scans
-                if not start_doc["plan_type"] in ("FlyPlan1D",):
-                    
-                    
-                    #try to make h5, bypass any errors
-                    try: 
+                if not os.path.exists(os.path.join(self.paramDict["wd"],f"scan2D_{sid}.h5")):
+                    hdr = db[int(sid)]
+                    start_doc = hdr["start"]
+                    if not start_doc["plan_type"] in ("FlyPlan1D",):
 
                         make_hdf(
                             int(sid), 
@@ -715,16 +835,9 @@ class loadh5(QThread):
                             create_each_det = True,
                             skip_scan_types = ['FlyPlan1D']
                             )
-                    
-                           
-                        #self.h5loaded.emit(sid)
-                        QtTest.QTest.qWait(50)
+                            
 
-                    except:
-                        logger.info(f" Failed to load {sid}")
-                        pass
-
-
+                    QtTest.QTest.qWait(2000)
                     if self.paramDict["XRFfit"]:
 
                         fname = f"scan2D_{int(sid)}.h5"
@@ -736,14 +849,18 @@ class loadh5(QThread):
                                     fname,
                                     param_file_name = self.paramDict["xrfParam"],
                                     scaler_name = self.paramDict["norm"],
-                                    save_tiff = self.paramDict["saveXRFTiff"]
+                                    save_tiff = self.paramDict["saveXRFTiff"],
+                                    incident_energy = None,
+                                    ignore_datafile_metadata = True
                                     )
                     else:
                         pass
-            except Exception as e:
-                error_message = f"An error occurred: {str(e)}"
-                QMessageBox.critical(None, "Error", error_message)
-                logger.error("Trouble finding data from data broker")
+
+                self.last_processed.emit(sid)
+
+            except KeyError:
+                print(" Data transfer is not completed; scan number added to next iteration")
+                self.missed_scans.append(sid)
                 pass
 
 class XRFFitThread(QThread):
@@ -764,7 +881,9 @@ class XRFFitThread(QThread):
                 param_file_name = self.paramDict["xrfParam"],
                 scaler_name = self.paramDict["norm"],
                 save_tiff = self.paramDict["saveXRFTiff"],
-                save_txt = False
+                save_txt = False,
+                incident_energy = None,
+                ignore_datafile_metadata = True
                 )
 
         QtTest.QTest.qWait(500)
@@ -789,7 +908,8 @@ class xrfBatchThread(QThread):
             scaler_name=self.paramDict["norm"], 
             save_tiff=self.paramDict["saveXRFTiff"],
             save_txt = False,
-            ignore_datafile_metadata = True
+            ignore_datafile_metadata = True,
+
             )
 
 class EmittingStream(QObject):

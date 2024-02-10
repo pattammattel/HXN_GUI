@@ -9,6 +9,7 @@ import numpy as np
 import pyqtgraph as pg
 import pyqtgraph.exporters
 import tifffile as tf
+import configparser
 
 from PyQt5 import QtWidgets, uic, QtCore, QtGui, QtTest
 from PyQt5.QtWidgets import QMessageBox, QFileDialog, QApplication, QSizePolicy, QErrorMessage
@@ -44,13 +45,12 @@ class ProbePropagationGUI(QtWidgets.QMainWindow):
                                                            self.prb_array.transpose(2, 0, 1)))
                                                    )
     def parse_ptycho_txtfile(self, txt_filename):
+    
+        config.read(txt_filename)
 
-        with open(txt_filename) as f:
-            lines = f.readlines()
-
-        energy = float(lines[51].split("=")[-1].strip('\n'))
-        det_dist = float(lines[52].split("=")[-1].strip('\n'))
-        det_pixel_size = float(lines[66].split("=")[-1].strip('\n'))
+        energy = config.getfloat('GUI','xray_energy_kev',fallback=12.0)
+        det_dist = config.getfloat('GUI','z_m',fallback=2.05)
+        det_pixel_size = config.getfloat('GUI','ccd_pixel_um', fallback=75)
 
         return energy,det_dist,det_pixel_size
 

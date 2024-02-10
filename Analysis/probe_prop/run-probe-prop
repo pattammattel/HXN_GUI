@@ -1,0 +1,4 @@
+export ENV_NAME=$(eval "echo $BS_AN_ENV | rev | cut -d/ -f1 | rev")
+export PYTHONPATH=/nsls2/data/hxn/shared/config/bluesky_overlay/"$ENV_NAME"/lib/python3.9/site-packages:$PYTHONPATH
+source /opt/conda/bin/activate $BS_AN_ENV
+ipython probe_prop_gui.py
