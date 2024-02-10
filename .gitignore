@@ -1,6 +1,8 @@
 *.tiff
+*.tif
 *.txt
 *.pptx
 *.png
 *.pdf
 *.obj
+*.h5
