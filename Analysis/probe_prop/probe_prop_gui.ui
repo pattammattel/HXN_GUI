@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MainWindow</class>
- <widget class="QMainWindow" name="MainWindow">
+ <class>ProbePropagation</class>
+ <widget class="QMainWindow" name="ProbePropagation">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -92,12 +92,25 @@ font: 10pt &quot;Segoe UI&quot;;</string>
     </property>
     <item row="0" column="0">
      <layout class="QGridLayout" name="gridLayout_10">
+      <item row="4" column="3">
+       <widget class="PlotWidget" name="deviation_plot">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+       </widget>
+      </item>
       <item row="0" column="0" colspan="4">
        <widget class="QGroupBox" name="groupBox">
         <property name="title">
          <string/>
         </property>
         <layout class="QGridLayout" name="gridLayout_13">
+         <item row="1" column="0">
+          <widget class="QLineEdit" name="le_probe_file"/>
+         </item>
          <item row="0" column="0">
           <widget class="QWidget" name="widget" native="true">
            <property name="sizePolicy">
@@ -107,7 +120,7 @@ font: 10pt &quot;Segoe UI&quot;;</string>
             </sizepolicy>
            </property>
            <layout class="QGridLayout" name="gridLayout_12">
-            <item row="0" column="0">
+            <item row="1" column="0">
              <layout class="QGridLayout" name="gridLayout_11">
               <item row="1" column="0">
                <widget class="QPushButton" name="pb_plot">
@@ -132,230 +145,7 @@ font: 10pt &quot;Segoe UI&quot;;</string>
               </item>
              </layout>
             </item>
-            <item row="0" column="1">
-             <layout class="QGridLayout" name="gridLayout_9">
-              <item row="0" column="0">
-               <layout class="QGridLayout" name="gridLayout_4">
-                <item row="0" column="0">
-                 <widget class="QLabel" name="label">
-                  <property name="layoutDirection">
-                   <enum>Qt::RightToLeft</enum>
-                  </property>
-                  <property name="text">
-                   <string> Energy:</string>
-                  </property>
-                  <property name="alignment">
-                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="1">
-                 <widget class="QDoubleSpinBox" name="dsb_energy">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="suffix">
-                   <string> keV</string>
-                  </property>
-                  <property name="minimum">
-                   <double>0.100000000000000</double>
-                  </property>
-                  <property name="maximum">
-                   <double>200.000000000000000</double>
-                  </property>
-                  <property name="value">
-                   <double>12.000000000000000</double>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-              <item row="0" column="1">
-               <layout class="QHBoxLayout" name="gridLayout_5">
-                <item>
-                 <widget class="QCheckBox" name="ck_pixel_size">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="layoutDirection">
-                   <enum>Qt::LeftToRight</enum>
-                  </property>
-                  <property name="text">
-                   <string>Pixel Size</string>
-                  </property>
-                  <property name="checked">
-                   <bool>true</bool>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QDoubleSpinBox" name="dsb_calc_pixel_size">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="suffix">
-                   <string> nm</string>
-                  </property>
-                  <property name="decimals">
-                   <number>4</number>
-                  </property>
-                  <property name="value">
-                   <double>10.000000000000000</double>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <spacer name="horizontalSpacer">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                  <property name="sizeType">
-                   <enum>QSizePolicy::Fixed</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>200</width>
-                    <height>20</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-               </layout>
-              </item>
-              <item row="1" column="0">
-               <layout class="QGridLayout" name="gridLayout_7">
-                <item row="0" column="0">
-                 <widget class="QLabel" name="label_6">
-                  <property name="layoutDirection">
-                   <enum>Qt::RightToLeft</enum>
-                  </property>
-                  <property name="text">
-                   <string>    Start:</string>
-                  </property>
-                  <property name="alignment">
-                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="1">
-                 <widget class="QDoubleSpinBox" name="dsb_prop_start">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="suffix">
-                   <string> um</string>
-                  </property>
-                  <property name="decimals">
-                   <number>1</number>
-                  </property>
-                  <property name="minimum">
-                   <double>-9999.000000000000000</double>
-                  </property>
-                  <property name="maximum">
-                   <double>9999.000000000000000</double>
-                  </property>
-                  <property name="value">
-                   <double>-50.000000000000000</double>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-              <item row="1" column="1">
-               <layout class="QGridLayout" name="gridLayout_2">
-                <item row="0" column="2">
-                 <widget class="QLabel" name="label_8">
-                  <property name="layoutDirection">
-                   <enum>Qt::RightToLeft</enum>
-                  </property>
-                  <property name="text">
-                   <string>                Step Size: </string>
-                  </property>
-                  <property name="alignment">
-                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="1">
-                 <widget class="QDoubleSpinBox" name="dsb_prop_end">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="suffix">
-                   <string> um</string>
-                  </property>
-                  <property name="decimals">
-                   <number>1</number>
-                  </property>
-                  <property name="minimum">
-                   <double>-9999.000000000000000</double>
-                  </property>
-                  <property name="maximum">
-                   <double>9999.000000000000000</double>
-                  </property>
-                  <property name="value">
-                   <double>50.000000000000000</double>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="0">
-                 <widget class="QLabel" name="label_7">
-                  <property name="layoutDirection">
-                   <enum>Qt::RightToLeft</enum>
-                  </property>
-                  <property name="text">
-                   <string>                           End:</string>
-                  </property>
-                  <property name="alignment">
-                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="3">
-                 <widget class="QDoubleSpinBox" name="dsb_prop_size">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="suffix">
-                   <string> um</string>
-                  </property>
-                  <property name="decimals">
-                   <number>1</number>
-                  </property>
-                  <property name="minimum">
-                   <double>-9999.000000000000000</double>
-                  </property>
-                  <property name="maximum">
-                   <double>9999.000000000000000</double>
-                  </property>
-                  <property name="value">
-                   <double>1.000000000000000</double>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-             </layout>
-            </item>
-            <item row="0" column="2">
+            <item row="1" column="2">
              <layout class="QGridLayout" name="gridLayout_6">
               <item row="2" column="0">
                <layout class="QGridLayout" name="gridLayout_14">
@@ -458,100 +248,234 @@ font: 10pt &quot;Segoe UI&quot;;</string>
               </item>
              </layout>
             </item>
+            <item row="1" column="1">
+             <layout class="QGridLayout" name="gridLayout_9">
+              <item row="0" column="0">
+               <layout class="QGridLayout" name="gridLayout_4">
+                <item row="0" column="0">
+                 <widget class="QLabel" name="label">
+                  <property name="layoutDirection">
+                   <enum>Qt::RightToLeft</enum>
+                  </property>
+                  <property name="text">
+                   <string> Energy:</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="1">
+                 <widget class="QDoubleSpinBox" name="dsb_energy">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="suffix">
+                   <string> keV</string>
+                  </property>
+                  <property name="minimum">
+                   <double>0.100000000000000</double>
+                  </property>
+                  <property name="maximum">
+                   <double>200.000000000000000</double>
+                  </property>
+                  <property name="value">
+                   <double>12.000000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item row="1" column="0">
+               <layout class="QGridLayout" name="gridLayout_7">
+                <item row="0" column="0">
+                 <widget class="QLabel" name="label_6">
+                  <property name="layoutDirection">
+                   <enum>Qt::RightToLeft</enum>
+                  </property>
+                  <property name="text">
+                   <string>    Start:</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="1">
+                 <widget class="QDoubleSpinBox" name="dsb_prop_start">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="suffix">
+                   <string> um</string>
+                  </property>
+                  <property name="decimals">
+                   <number>1</number>
+                  </property>
+                  <property name="minimum">
+                   <double>-9999.000000000000000</double>
+                  </property>
+                  <property name="maximum">
+                   <double>9999.000000000000000</double>
+                  </property>
+                  <property name="value">
+                   <double>-50.000000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item row="0" column="1">
+               <layout class="QHBoxLayout" name="gridLayout_5">
+                <item>
+                 <widget class="QCheckBox" name="ck_pixel_size">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="layoutDirection">
+                   <enum>Qt::LeftToRight</enum>
+                  </property>
+                  <property name="text">
+                   <string>Pixel Size</string>
+                  </property>
+                  <property name="checked">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QDoubleSpinBox" name="dsb_calc_pixel_size">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="suffix">
+                   <string> nm</string>
+                  </property>
+                  <property name="decimals">
+                   <number>4</number>
+                  </property>
+                  <property name="value">
+                   <double>10.000000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="horizontalSpacer">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeType">
+                   <enum>QSizePolicy::Fixed</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>200</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+               </layout>
+              </item>
+              <item row="1" column="1">
+               <layout class="QGridLayout" name="gridLayout_2">
+                <item row="0" column="2">
+                 <widget class="QLabel" name="label_8">
+                  <property name="layoutDirection">
+                   <enum>Qt::RightToLeft</enum>
+                  </property>
+                  <property name="text">
+                   <string>                Step Size: </string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="1">
+                 <widget class="QDoubleSpinBox" name="dsb_prop_end">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="suffix">
+                   <string> um</string>
+                  </property>
+                  <property name="decimals">
+                   <number>1</number>
+                  </property>
+                  <property name="minimum">
+                   <double>-9999.000000000000000</double>
+                  </property>
+                  <property name="maximum">
+                   <double>9999.000000000000000</double>
+                  </property>
+                  <property name="value">
+                   <double>50.000000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="0">
+                 <widget class="QLabel" name="label_7">
+                  <property name="layoutDirection">
+                   <enum>Qt::RightToLeft</enum>
+                  </property>
+                  <property name="text">
+                   <string>                           End:</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="3">
+                 <widget class="QDoubleSpinBox" name="dsb_prop_size">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="suffix">
+                   <string> um</string>
+                  </property>
+                  <property name="decimals">
+                   <number>1</number>
+                  </property>
+                  <property name="minimum">
+                   <double>-9999.000000000000000</double>
+                  </property>
+                  <property name="maximum">
+                   <double>9999.000000000000000</double>
+                  </property>
+                  <property name="value">
+                   <double>1.000000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </item>
            </layout>
           </widget>
          </item>
         </layout>
        </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QLabel" name="label_10">
-        <property name="styleSheet">
-         <string notr="true">font: 75 oblique 20pt &quot;Cantarell&quot;;</string>
-        </property>
-        <property name="text">
-         <string>X</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="2">
-       <widget class="QLabel" name="label_11">
-        <property name="styleSheet">
-         <string notr="true">font: 75 oblique 20pt &quot;Cantarell&quot;;</string>
-        </property>
-        <property name="text">
-         <string>Y</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <layout class="QGridLayout" name="gridLayout_8">
-        <item row="0" column="0">
-         <widget class="QLabel" name="label_5">
-          <property name="text">
-           <string/>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="ImageView" name="image_view_probe">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item row="2" column="1">
-       <layout class="QGridLayout" name="gridLayout_16">
-        <item row="0" column="0">
-         <widget class="QLabel" name="lbl_xfit">
-          <property name="text">
-           <string>FWHM = , Distance = </string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="PlotWidget" name="plot_xfit">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item row="2" column="2">
-       <layout class="QGridLayout" name="gridLayout_17">
-        <item row="0" column="0">
-         <widget class="QLabel" name="lbl_yfit">
-          <property name="text">
-           <string>FWHM = , Distance = </string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="PlotWidget" name="plot_yfit">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-         </widget>
-        </item>
-       </layout>
       </item>
       <item row="2" column="3">
        <layout class="QVBoxLayout" name="verticalLayout">
@@ -592,8 +516,8 @@ font: 10pt &quot;Segoe UI&quot;;</string>
         </item>
        </layout>
       </item>
-      <item row="4" column="0">
-       <widget class="ImageView" name="image_view_probe_pha">
+      <item row="4" column="2">
+       <widget class="ImageView" name="image_view_yhue">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
           <horstretch>0</horstretch>
@@ -601,6 +525,27 @@ font: 10pt &quot;Segoe UI&quot;;</string>
          </sizepolicy>
         </property>
        </widget>
+      </item>
+      <item row="2" column="1">
+       <layout class="QGridLayout" name="gridLayout_16">
+        <item row="0" column="0">
+         <widget class="QLabel" name="lbl_xfit">
+          <property name="text">
+           <string>FWHM = , Distance = </string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="PlotWidget" name="plot_xfit">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
       <item row="4" column="1">
        <widget class="ImageView" name="image_view_xhue">
@@ -612,8 +557,42 @@ font: 10pt &quot;Segoe UI&quot;;</string>
         </property>
        </widget>
       </item>
-      <item row="4" column="2">
-       <widget class="ImageView" name="image_view_yhue">
+      <item row="2" column="0">
+       <layout class="QGridLayout" name="gridLayout_8">
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_5">
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="ImageView" name="image_view_probe">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="1" column="2">
+       <widget class="QLabel" name="label_11">
+        <property name="styleSheet">
+         <string notr="true">font: 75 oblique 20pt &quot;Cantarell&quot;;</string>
+        </property>
+        <property name="text">
+         <string>Y</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="ImageView" name="image_view_probe_pha">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
           <horstretch>0</horstretch>
@@ -622,13 +601,47 @@ font: 10pt &quot;Segoe UI&quot;;</string>
         </property>
        </widget>
       </item>
-      <item row="4" column="3">
-       <widget class="PlotWidget" name="deviation_plot">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
+      <item row="1" column="1">
+       <widget class="QLabel" name="label_10">
+        <property name="styleSheet">
+         <string notr="true">font: 75 oblique 20pt &quot;Cantarell&quot;;</string>
+        </property>
+        <property name="text">
+         <string>X</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <layout class="QGridLayout" name="gridLayout_17">
+        <item row="0" column="0">
+         <widget class="QLabel" name="lbl_yfit">
+          <property name="text">
+           <string>FWHM = , Distance = </string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="PlotWidget" name="plot_yfit">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_9">
+        <property name="text">
+         <string>Probe Amplitude Image</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
         </property>
        </widget>
       </item>
@@ -650,6 +663,7 @@ font: 10pt &quot;Segoe UI&quot;;</string>
      <string>File</string>
     </property>
     <addaction name="actionSave_All_Plotted_Data"/>
+    <addaction name="actionExport_Parameters"/>
    </widget>
    <addaction name="menusave_all"/>
   </widget>
@@ -657,6 +671,11 @@ font: 10pt &quot;Segoe UI&quot;;</string>
   <action name="actionSave_All_Plotted_Data">
    <property name="text">
     <string>Save All Plotted Data</string>
+   </property>
+  </action>
+  <action name="actionExport_Parameters">
+   <property name="text">
+    <string>Export Parameters</string>
    </property>
   </action>
  </widget>

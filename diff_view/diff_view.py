@@ -19,7 +19,7 @@ warnings.filterwarnings('ignore', category=RuntimeWarning)
 from nanorsm_copy import *
 
 #beamline specific
-detector_list = ["merlin1","merlin2", "eiger1", "eiger2"]
+detector_list = ["merlin1","merlin2", "eiger1", "eiger2_image"]
 scalars_list = ["None", "sclr1_ch1","sclr1_ch2","sclr1_ch3","sclr1_ch4","sclr1_ch5"]
 
 def remove_nan_inf(im):
@@ -188,8 +188,8 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         
         
         QtTest.QTest.qWait(1000)
-        export_single_diff_data(self.load_params)        
-        self.load_from_local_and_display()
+        export_single_diff_data(self.load_params) #saves data to a default folder with sid name        
+        self.load_from_local_and_display() #looks for the filename matching with sid
         #TODO add assertions and exceptions, thread it
 
     def load_from_local_and_display(self):
@@ -472,9 +472,13 @@ class DiffViewWindow(QtWidgets.QMainWindow):
                                 [[0, 0], [0, sz], [sz, sz], [sz, 0]],
                                 pos=(int(roi_x // 2), int(roi_y // 2)),
                                 maxBounds=QtCore.QRectF(0, 0, im_array_dim[1], im_array_dim[0]),
-                                pen=pg.mkPen("r", width=1.3),                                hoverPen=pg.mkPen("w", width=2),
+                                pen=pg.mkPen("r", width=1), 
+                                hoverPen=pg.mkPen("w", width=1),
+                                handlePen = pg.mkPen("m", width=3, ),
                                 closed=True,
                                 removable=True,
+                                snapSize = 1,
+                                translateSnap = True
                                 )
         self.roi.setZValue(10)
         

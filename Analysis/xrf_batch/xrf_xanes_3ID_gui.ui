@@ -7,8 +7,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>884</width>
-    <height>913</height>
+    <width>1332</width>
+    <height>933</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -52,7 +52,7 @@ QCheckBox::indicator:checked {
 }
 
 QPushButton {	
-	background-color: rgb(224, 255, 233);
+	background-color: rgb(175,238,238);
 	padding: 4px;
 }
 QPushButton:hover {
@@ -71,8 +71,8 @@ QGroupBox {
 
 </string>
    </property>
-   <layout class="QGridLayout" name="gridLayout_14">
-    <item row="1" column="0" colspan="2">
+   <layout class="QGridLayout" name="gridLayout_30">
+    <item row="1" column="0" colspan="3">
      <widget class="QTabWidget" name="tabWidget">
       <property name="enabled">
        <bool>true</bool>
@@ -84,7 +84,7 @@ QGroupBox {
        <string notr="true"/>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <property name="documentMode">
        <bool>true</bool>
@@ -100,6 +100,19 @@ QGroupBox {
            <string>XRF Batch Processing</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_36">
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_23">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
            <item row="1" column="0">
             <layout class="QGridLayout" name="gridLayout_11">
              <item row="0" column="0">
@@ -203,18 +216,18 @@ QGroupBox {
              </property>
             </widget>
            </item>
-           <item row="2" column="0" rowspan="2">
+           <item row="4" column="1">
+            <widget class="QPushButton" name="pb_stop_batch_xrf">
+             <property name="text">
+              <string>Stop Batch Processing</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0" rowspan="3">
             <layout class="QGridLayout" name="gridLayout_6">
              <property name="rightMargin">
               <number>0</number>
              </property>
-             <item row="0" column="0">
-              <widget class="QLabel" name="label_10">
-               <property name="text">
-                <string>        Scalar Name:</string>
-               </property>
-              </widget>
-             </item>
              <item row="0" column="1">
               <widget class="QLineEdit" name="le_sclr_2">
                <property name="text">
@@ -225,20 +238,28 @@ QGroupBox {
                </property>
               </widget>
              </item>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_10">
+               <property name="text">
+                <string>        Scalar Name:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_24">
+               <property name="text">
+                <string>Quant Ref Elem (Optional)</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QLineEdit" name="le_qunat_ref_elem">
+               <property name="text">
+                <string>Cu_K</string>
+               </property>
+              </widget>
+             </item>
             </layout>
-           </item>
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_23">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
            </item>
           </layout>
          </widget>
@@ -251,175 +272,7 @@ QGroupBox {
           <property name="title">
            <string>Live XRF Processing</string>
           </property>
-          <layout class="QGridLayout" name="gridLayout_28">
-           <item row="1" column="2">
-            <layout class="QGridLayout" name="gridLayout_26">
-             <item row="0" column="0">
-              <widget class="QLabel" name="label_13">
-               <property name="text">
-                <string>      Buffer time     </string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QSpinBox" name="sb_buffer_time">
-               <property name="suffix">
-                <string> seconds</string>
-               </property>
-               <property name="minimum">
-                <number>1</number>
-               </property>
-               <property name="maximum">
-                <number>100000</number>
-               </property>
-               <property name="singleStep">
-                <number>10</number>
-               </property>
-               <property name="value">
-                <number>30</number>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item row="1" column="3">
-            <widget class="QPushButton" name="pb_stop_live">
-             <property name="text">
-              <string>     Stop Live      </string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1" colspan="3">
-            <layout class="QGridLayout" name="gridLayout_25">
-             <property name="rightMargin">
-              <number>20</number>
-             </property>
-             <item row="0" column="0">
-              <layout class="QGridLayout" name="gridLayout_9">
-               <item row="0" column="0">
-                <widget class="QLabel" name="label_18">
-                 <property name="text">
-                  <string>Current Scan:</string>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                 </property>
-                </widget>
-               </item>
-               <item row="0" column="1">
-                <widget class="QSpinBox" name="sb_scan_number">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">font: 75 20pt &quot;C059&quot;;</string>
-                 </property>
-                 <property name="readOnly">
-                  <bool>true</bool>
-                 </property>
-                 <property name="buttonSymbols">
-                  <enum>QAbstractSpinBox::NoButtons</enum>
-                 </property>
-                 <property name="maximum">
-                  <number>9999999</number>
-                 </property>
-                 <property name="value">
-                  <number>999999</number>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item row="1" column="0">
-              <layout class="QGridLayout" name="gridLayout_24">
-               <item row="0" column="1">
-                <widget class="QSpinBox" name="sb_lastScanProcessed">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">font: 75 20pt &quot;C059&quot;;</string>
-                 </property>
-                 <property name="readOnly">
-                  <bool>true</bool>
-                 </property>
-                 <property name="buttonSymbols">
-                  <enum>QAbstractSpinBox::NoButtons</enum>
-                 </property>
-                 <property name="maximum">
-                  <number>9999999</number>
-                 </property>
-                 <property name="value">
-                  <number>999999</number>
-                 </property>
-                </widget>
-               </item>
-               <item row="0" column="0">
-                <widget class="QLabel" name="label_19">
-                 <property name="text">
-                  <string>Last Processed: </string>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-            </layout>
-           </item>
-           <item row="1" column="0" colspan="2">
-            <widget class="QPushButton" name="pb_live">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
-             <property name="styleSheet">
-              <string notr="true"/>
-             </property>
-             <property name="text">
-              <string>     Start Live    </string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <layout class="QGridLayout" name="gridLayout_27">
-             <item row="0" column="0">
-              <widget class="QLabel" name="lbl_live_sts_msg">
-               <property name="text">
-                <string>    Live is OFF    </string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="0">
-              <widget class="QLabel" name="lbl_scan_status">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="styleSheet">
-                <string notr="true">font: 75 20pt &quot;DejaVu Sans&quot;;</string>
-               </property>
-               <property name="text">
-                <string>idle</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
+          <layout class="QGridLayout" name="gridLayout_34">
            <item row="0" column="0">
             <widget class="QLabel" name="label_21">
              <property name="text">
@@ -427,8 +280,260 @@ QGroupBox {
              </property>
             </widget>
            </item>
+           <item row="1" column="0">
+            <layout class="QHBoxLayout" name="horizontalLayout_9">
+             <item>
+              <widget class="QPushButton" name="pb_load_tracking_file">
+               <property name="text">
+                <string>          Load Live Tracking File           </string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="le_tracking_File"/>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pb_start_tracking">
+               <property name="text">
+                <string>Start Live Tracking</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pb_stop_tracking">
+               <property name="text">
+                <string>Stop LiveTracking</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="2" column="0">
+            <layout class="QGridLayout" name="gridLayout_33">
+             <item row="0" column="0">
+              <widget class="QPushButton" name="pb_load_multiple_tracking">
+               <property name="text">
+                <string>Load Multiple Tracking Files (Offline)</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QLineEdit" name="le_multiple_tracking"/>
+             </item>
+             <item row="0" column="2">
+              <widget class="QPushButton" name="pb_start_multiple_tracking">
+               <property name="text">
+                <string>   Start Processing   </string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="3">
+              <widget class="QPushButton" name="le_stop_multiple_tracking">
+               <property name="text">
+                <string>Stop Processing</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="3" column="0">
+            <layout class="QGridLayout" name="gridLayout_28">
+             <item row="0" column="2">
+              <layout class="QGridLayout" name="gridLayout_26">
+               <item row="0" column="1">
+                <widget class="QSpinBox" name="sb_chunk_size">
+                 <property name="toolTip">
+                  <string>including 1d and 2d</string>
+                 </property>
+                 <property name="suffix">
+                  <string> scans/iter</string>
+                 </property>
+                 <property name="minimum">
+                  <number>1</number>
+                 </property>
+                 <property name="maximum">
+                  <number>99</number>
+                 </property>
+                 <property name="singleStep">
+                  <number>3</number>
+                 </property>
+                 <property name="value">
+                  <number>6</number>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="0">
+                <widget class="QLabel" name="label_13">
+                 <property name="text">
+                  <string>Chunck Size:</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item row="0" column="0">
+              <widget class="QPushButton" name="pb_live">
+               <property name="enabled">
+                <bool>true</bool>
+               </property>
+               <property name="styleSheet">
+                <string notr="true"/>
+               </property>
+               <property name="text">
+                <string>     Start Live    </string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QPushButton" name="pb_stop_live">
+               <property name="text">
+                <string>     Stop Live      </string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="4" column="0">
+            <layout class="QGridLayout" name="gridLayout_37">
+             <item row="0" column="0">
+              <layout class="QGridLayout" name="gridLayout_27">
+               <item row="0" column="0">
+                <widget class="QLabel" name="lbl_live_sts_msg">
+                 <property name="text">
+                  <string>    Live is OFF    </string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="lbl_scan_status">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">font: 75 20pt &quot;DejaVu Sans&quot;;</string>
+                 </property>
+                 <property name="text">
+                  <string>idle</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item row="0" column="1">
+              <layout class="QGridLayout" name="gridLayout_25">
+               <property name="rightMargin">
+                <number>20</number>
+               </property>
+               <item row="0" column="0">
+                <layout class="QGridLayout" name="gridLayout_9">
+                 <item row="0" column="0">
+                  <widget class="QLabel" name="label_18">
+                   <property name="text">
+                    <string>Current Scan:</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="1">
+                  <widget class="QSpinBox" name="sb_scan_number">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">font: 75 20pt &quot;C059&quot;;</string>
+                   </property>
+                   <property name="readOnly">
+                    <bool>true</bool>
+                   </property>
+                   <property name="buttonSymbols">
+                    <enum>QAbstractSpinBox::NoButtons</enum>
+                   </property>
+                   <property name="maximum">
+                    <number>9999999</number>
+                   </property>
+                   <property name="value">
+                    <number>999999</number>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item row="1" column="0">
+                <layout class="QGridLayout" name="gridLayout_24">
+                 <item row="0" column="1">
+                  <widget class="QSpinBox" name="sb_last_sid_processed">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">font: 75 20pt &quot;C059&quot;;</string>
+                   </property>
+                   <property name="readOnly">
+                    <bool>true</bool>
+                   </property>
+                   <property name="buttonSymbols">
+                    <enum>QAbstractSpinBox::NoButtons</enum>
+                   </property>
+                   <property name="maximum">
+                    <number>9999999</number>
+                   </property>
+                   <property name="value">
+                    <number>999999</number>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="0">
+                  <widget class="QLabel" name="label_19">
+                   <property name="text">
+                    <string>Last Processed: </string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </item>
           </layout>
          </widget>
+        </item>
+        <item row="2" column="0">
+         <layout class="QHBoxLayout" name="horizontalLayout_10">
+          <item>
+           <widget class="QLabel" name="label_25">
+            <property name="text">
+             <string>Failed XRF Fits:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="le_failed_scans"/>
+          </item>
+         </layout>
         </item>
        </layout>
       </widget>
@@ -436,249 +541,26 @@ QGroupBox {
        <attribute name="title">
         <string>XANES</string>
        </attribute>
-       <layout class="QGridLayout" name="gridLayout_34">
-        <item row="2" column="0">
-         <spacer name="verticalSpacer">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item row="4" column="0">
-         <widget class="QGroupBox" name="pb_stop_xanes_batch">
-          <property name="title">
-           <string>Batch it</string>
-          </property>
-          <layout class="QGridLayout" name="gridLayout_5">
-           <property name="horizontalSpacing">
-            <number>25</number>
-           </property>
-           <item row="1" column="0">
-            <widget class="QPushButton" name="pb_addTobBatch">
-             <property name="text">
-              <string>Add to Batch Job</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QPushButton" name="pb_showBatch">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
-             <property name="text">
-              <string>Show Batch File</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="3">
-            <widget class="QPushButton" name="pb_runBatch">
-             <property name="text">
-              <string>Run Batch</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_20">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="4">
-            <widget class="QPushButton" name="pb_clear_batch">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
-             <property name="styleSheet">
-              <string notr="true"/>
-             </property>
-             <property name="text">
-              <string>Clear Batch File</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0" colspan="5">
-            <widget class="QProgressBar" name="xanes_batch_progress">
-             <property name="styleSheet">
-              <string notr="true">QProgressBar
-{
-border: solid grey;
-border-radius: 15px;
-color: black;
-}
-QProgressBar::chunk 
-{
-background-color: #05B8CC;
-border-radius :15px;
-}      
-</string>
-             </property>
-             <property name="value">
-              <number>24</number>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="2">
-            <widget class="QPushButton" name="pushButton">
-             <property name="text">
-              <string>Stop Batch</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <layout class="QGridLayout" name="gridLayout_33">
-          <property name="spacing">
-           <number>25</number>
-          </property>
-          <item row="0" column="0" colspan="2">
-           <layout class="QGridLayout" name="gridLayout_31">
-            <item row="0" column="0">
-             <widget class="QPushButton" name="pb_ref">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>Select XANES Reference File</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QLineEdit" name="le_ref">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="placeholderText">
-               <string>C:\Matrix\Blue Pill\Morpheus.csv</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item row="1" column="0">
-           <layout class="QGridLayout" name="gridLayout_32">
-            <property name="horizontalSpacing">
-             <number>50</number>
+       <layout class="QGridLayout" name="gridLayout_32">
+        <item row="1" column="1">
+         <layout class="QHBoxLayout" name="horizontalLayout_5">
+          <item>
+           <widget class="QPushButton" name="pb_log_file">
+            <property name="text">
+             <string>Load a log file</string>
             </property>
-            <property name="verticalSpacing">
-             <number>10</number>
-            </property>
-            <item row="0" column="0">
-             <layout class="QGridLayout" name="gridLayout_23">
-              <item row="0" column="0">
-               <widget class="QLabel" name="label_3">
-                <property name="text">
-                 <string>XANES Element </string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="1">
-               <widget class="QLineEdit" name="xanes_elem">
-                <property name="text">
-                 <string>Fe_K</string>
-                </property>
-                <property name="placeholderText">
-                 <string>Fe_K</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item row="1" column="0">
-             <layout class="QGridLayout" name="gridLayout_29">
-              <item row="0" column="0">
-               <widget class="QLabel" name="label_4">
-                <property name="text">
-                 <string>Alignemnt Element</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="1">
-               <widget class="QLineEdit" name="alignment_elem">
-                <property name="text">
-                 <string>P_K</string>
-                </property>
-                <property name="placeholderText">
-                 <string>Pt_L</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-           </layout>
+           </widget>
           </item>
-          <item row="1" column="1">
-           <layout class="QGridLayout" name="gridLayout_30">
-            <item row="0" column="0" colspan="3">
-             <layout class="QGridLayout" name="gridLayout_3">
-              <item row="0" column="0">
-               <widget class="QLabel" name="label_8">
-                <property name="text">
-                 <string>Scalar Name</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="1">
-               <widget class="QLineEdit" name="le_sclr">
-                <property name="text">
-                 <string>sclr1_ch4</string>
-                </property>
-                <property name="placeholderText">
-                 <string>Fe_K</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item row="1" column="0">
-             <widget class="QCheckBox" name="cb_align">
-              <property name="text">
-               <string>Align</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="QCheckBox" name="ch_b_save_all_tiffs">
-              <property name="text">
-               <string>Save All Elem Stacks</string>
-              </property>
-              <property name="checked">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="2">
-             <widget class="QCheckBox" name="ch_b_baseline">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>Subtract Pre-edge</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
+          <item>
+           <widget class="QLineEdit" name="le_log_file">
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
-        <item row="0" column="0">
+        <item row="1" column="0">
          <layout class="QHBoxLayout" name="horizontalLayout">
           <item>
            <widget class="QLabel" name="label">
@@ -734,308 +616,423 @@ border-radius :15px;
           </item>
          </layout>
         </item>
-        <item row="3" column="0">
-         <layout class="QGridLayout" name="gridLayout">
-          <property name="horizontalSpacing">
-           <number>10</number>
+        <item row="4" column="0" colspan="2">
+         <widget class="QGroupBox" name="pb_stop_xanes_batch">
+          <property name="title">
+           <string>Batch Jobs</string>
           </property>
-          <property name="verticalSpacing">
-           <number>20</number>
-          </property>
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_5">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>Fitting method</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="2" colspan="2">
-           <widget class="QLabel" name="label_7">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>Lambda for ADMM:</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="4">
-           <widget class="QLineEdit" name="nnls_lamda">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="focusPolicy">
-             <enum>Qt::StrongFocus</enum>
-            </property>
-            <property name="text">
-             <string>5</string>
-            </property>
-            <property name="placeholderText">
-             <string>Lambda for ADMM</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QComboBox" name="cb_fittin_method">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <item>
+          <layout class="QGridLayout" name="gridLayout_5">
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_20">
              <property name="text">
-              <string>nnls</string>
+              <string/>
              </property>
-            </item>
-            <item>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QPushButton" name="pb_create_batch_from_log">
              <property name="text">
-              <string>admm</string>
+              <string>Create Batch Job from Log Files</string>
              </property>
-            </item>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_6">
-            <property name="text">
-             <string>Work Flow</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="6">
-           <widget class="QLineEdit" name="energy_shift">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="focusPolicy">
-             <enum>Qt::StrongFocus</enum>
-            </property>
-            <property name="text">
-             <string>0</string>
-            </property>
-            <property name="placeholderText">
-             <string>Lambda for ADMM</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="5">
-           <widget class="QLabel" name="label_9">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>Energy Shift (eV)</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="3" colspan="2">
-           <widget class="QPushButton" name="pb_start">
-            <property name="styleSheet">
-             <string notr="true"/>
-            </property>
-            <property name="text">
-             <string>Go</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="5" colspan="2">
-           <widget class="QPushButton" name="pb_close_plots">
-            <property name="styleSheet">
-             <string notr="true"/>
-            </property>
-            <property name="text">
-             <string>Close All Plots</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1" colspan="2">
-           <widget class="QComboBox" name="cb_process">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <item>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QPushButton" name="pb_addTobBatch">
              <property name="text">
-              <string>load_and_process</string>
+              <string>Add to Batch Job</string>
              </property>
-            </item>
-            <item>
+            </widget>
+           </item>
+           <item row="1" column="2">
+            <widget class="QPushButton" name="pb_runBatch">
              <property name="text">
-              <string>process</string>
+              <string>Run Batch</string>
              </property>
-            </item>
-            <item>
+            </widget>
+           </item>
+           <item row="1" column="3">
+            <widget class="QPushButton" name="pushButton">
              <property name="text">
-              <string>build_xanes_map</string>
+              <string>Stop Batch</string>
              </property>
-            </item>
-           </widget>
-          </item>
-         </layout>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QPushButton" name="pb_showBatch">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="text">
+              <string>Display  Batch File</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QPushButton" name="pb_export_batch_file">
+             <property name="text">
+              <string>Export Batch File</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="2">
+            <widget class="QPushButton" name="pb_import_batch_file">
+             <property name="text">
+              <string>Import Batch File </string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="3">
+            <widget class="QPushButton" name="pb_clear_batch">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="styleSheet">
+              <string notr="true"/>
+             </property>
+             <property name="text">
+              <string>Clear Batch File</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0" colspan="4">
+            <widget class="QProgressBar" name="xanes_batch_progress">
+             <property name="styleSheet">
+              <string notr="true">QProgressBar
+{
+border: solid grey;
+border-radius: 15px;
+color: black;
+}
+QProgressBar::chunk 
+{
+background-color: #05B8CC;
+border-radius :15px;
+}      
+</string>
+             </property>
+             <property name="value">
+              <number>24</number>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
         </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="tab_5">
-       <attribute name="title">
-        <string>Tomography</string>
-       </attribute>
-       <layout class="QGridLayout" name="gridLayout_16">
-        <item row="2" column="1">
-         <spacer name="verticalSpacer_3">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
-          </property>
-         </spacer>
+        <item row="3" column="0" colspan="2">
+         <widget class="QGroupBox" name="groupBox">
+          <layout class="QGridLayout" name="gridLayout_14">
+           <item row="0" column="0">
+            <layout class="QHBoxLayout" name="horizontalLayout_6">
+             <item>
+              <widget class="QLabel" name="label_5">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Fitting method</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="cb_fittin_method">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <item>
+                <property name="text">
+                 <string>nnls</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>admm</string>
+                </property>
+               </item>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="0" column="1">
+            <layout class="QHBoxLayout" name="horizontalLayout_7">
+             <item>
+              <widget class="QLabel" name="label_7">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Lambda for ADMM:</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="nnls_lamda">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="focusPolicy">
+                <enum>Qt::StrongFocus</enum>
+               </property>
+               <property name="text">
+                <string>5</string>
+               </property>
+               <property name="placeholderText">
+                <string>Lambda for ADMM</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="0" column="2">
+            <layout class="QHBoxLayout" name="horizontalLayout_8">
+             <item>
+              <widget class="QLabel" name="label_9">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Energy Shift (eV)</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="energy_shift">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="focusPolicy">
+                <enum>Qt::StrongFocus</enum>
+               </property>
+               <property name="text">
+                <string>0</string>
+               </property>
+               <property name="placeholderText">
+                <string>Lambda for ADMM</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="0" column="3">
+            <layout class="QGridLayout" name="gridLayout">
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_6">
+               <property name="text">
+                <string>Work Flow</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QComboBox" name="cb_process">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <item>
+                <property name="text">
+                 <string>load_and_process</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>process</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>build_xanes_map</string>
+                </property>
+               </item>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="0" column="4">
+            <widget class="QPushButton" name="pb_start">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="styleSheet">
+              <string notr="true"/>
+             </property>
+             <property name="text">
+              <string>Start Processing</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="2" column="0" colspan="2">
+         <widget class="QGroupBox" name="groupBox">
+          <layout class="QGridLayout" name="gridLayout_23">
+           <item row="0" column="0">
+            <layout class="QHBoxLayout" name="horizontalLayout_4">
+             <item>
+              <widget class="QLabel" name="label_3">
+               <property name="text">
+                <string>XANES Elem</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="xanes_elem">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Fe_K</string>
+               </property>
+               <property name="placeholderText">
+                <string>Fe_K</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="0" column="1">
+            <layout class="QGridLayout" name="gridLayout_29">
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_4">
+               <property name="text">
+                <string>Align Elem</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QLineEdit" name="alignment_elem">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>P_K</string>
+               </property>
+               <property name="placeholderText">
+                <string>Pt_L</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="0" column="2">
+            <layout class="QGridLayout" name="gridLayout_3">
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_8">
+               <property name="text">
+                <string>Scalar Name</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QLineEdit" name="le_sclr">
+               <property name="text">
+                <string>sclr1_ch4</string>
+               </property>
+               <property name="placeholderText">
+                <string>Fe_K</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="0" column="3">
+            <widget class="QCheckBox" name="cb_align">
+             <property name="text">
+              <string>Align</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="4">
+            <widget class="QCheckBox" name="ch_b_save_all_tiffs">
+             <property name="text">
+              <string>Save All Elem Stacks</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="5">
+            <widget class="QCheckBox" name="ch_b_baseline">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Subtract Pre-edge</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
         </item>
         <item row="0" column="0" colspan="2">
-         <layout class="QGridLayout" name="gridLayout_12">
+         <layout class="QGridLayout" name="gridLayout_31">
           <item row="0" column="1">
-           <widget class="QLineEdit" name="le_sclr_3">
+           <widget class="QLineEdit" name="le_ref">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
-            <property name="text">
-             <string>sclr1_ch4</string>
-            </property>
             <property name="placeholderText">
-             <string>Fe_K</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="2">
-           <widget class="QRadioButton" name="rb_make_hdf_2">
-            <property name="text">
-             <string>Make HDF</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-            <property name="autoExclusive">
-             <bool>false</bool>
+             <string>C:\Matrix\Blue Pill\Morpheus.csv</string>
             </property>
            </widget>
           </item>
           <item row="0" column="0">
-           <widget class="QLabel" name="label_15">
-            <property name="text">
-             <string>Scalar Name:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="3">
-           <widget class="QRadioButton" name="rb_xrf_fit_2">
-            <property name="text">
-             <string>XRF Fitting</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-            <property name="autoExclusive">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item row="1" column="0" colspan="2">
-         <layout class="QGridLayout" name="gridLayout_8">
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_16">
-            <property name="text">
-             <string>Log File Name</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1" colspan="2">
-           <widget class="QLineEdit" name="lineEdit">
+           <widget class="QPushButton" name="pb_ref">
             <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="placeholderText">
-             <string>tomo_log.dat</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="3" rowspan="2">
-           <widget class="QPushButton" name="pb_xrf_start_2">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="styleSheet">
-             <string notr="true"/>
-            </property>
-            <property name="text">
-             <string>Start</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_17">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
             <property name="text">
-             <string>Tomo h5 Filename</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1" colspan="2">
-           <widget class="QLineEdit" name="lineEdit_2">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-            <property name="placeholderText">
-             <string>xrf_tomo.h5</string>
+             <string>Select XANES Ref. Std. File (optional)</string>
             </property>
            </widget>
           </item>
@@ -1243,94 +1240,151 @@ border-radius :15px;
         </item>
        </layout>
       </widget>
-     </widget>
-    </item>
-    <item row="5" column="0" colspan="2">
-     <widget class="QTextEdit" name="pte_status"/>
-    </item>
-    <item row="2" column="1">
-     <widget class="QPushButton" name="pb_clear_updates">
-      <property name="text">
-       <string>Clear Text</string>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="0" colspan="2">
-     <widget class="QGroupBox" name="groupBox">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="styleSheet">
-       <string notr="true"/>
-      </property>
-      <property name="title">
-       <string/>
-      </property>
-      <layout class="QGridLayout" name="gridLayout_7">
-       <item row="0" column="0">
-        <layout class="QGridLayout" name="gridLayout_4">
-         <item row="0" column="1">
-          <widget class="QLineEdit" name="le_wd">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="placeholderText">
-            <string>C:\Matrix\Blue Pill</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0" rowspan="3">
-          <layout class="QGridLayout" name="gridLayout_2">
-           <item row="0" column="0">
-            <widget class="QPushButton" name="pb_wd">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>Select Working Directory</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QPushButton" name="pb_param">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>Select XRF Paramater File</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item row="1" column="1">
-          <widget class="QLineEdit" name="le_param">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="placeholderText">
-            <string>C:\Matrix\Blue Pill\TheChosenOne.json</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-      </layout>
+      <widget class="QWidget" name="tab_5">
+       <attribute name="title">
+        <string>Tomography</string>
+       </attribute>
+       <layout class="QGridLayout" name="gridLayout_16">
+        <item row="2" column="1">
+         <spacer name="verticalSpacer_3">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="0" column="0" colspan="2">
+         <layout class="QGridLayout" name="gridLayout_12">
+          <item row="0" column="1">
+           <widget class="QLineEdit" name="le_sclr_3">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>sclr1_ch4</string>
+            </property>
+            <property name="placeholderText">
+             <string>Fe_K</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QRadioButton" name="rb_make_hdf_2">
+            <property name="text">
+             <string>Make HDF</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+            <property name="autoExclusive">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_15">
+            <property name="text">
+             <string>Scalar Name:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="3">
+           <widget class="QRadioButton" name="rb_xrf_fit_2">
+            <property name="text">
+             <string>XRF Fitting</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+            <property name="autoExclusive">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item row="1" column="0" colspan="2">
+         <layout class="QGridLayout" name="gridLayout_8">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_16">
+            <property name="text">
+             <string>Log File Name</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1" colspan="2">
+           <widget class="QLineEdit" name="lineEdit">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="placeholderText">
+             <string>tomo_log.dat</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="3" rowspan="2">
+           <widget class="QPushButton" name="pb_xrf_start_2">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="styleSheet">
+             <string notr="true"/>
+            </property>
+            <property name="text">
+             <string>Start</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_17">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Tomo h5 Filename</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1" colspan="2">
+           <widget class="QLineEdit" name="lineEdit_2">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="placeholderText">
+             <string>xrf_tomo.h5</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
     <item row="2" column="0">
@@ -1349,6 +1403,131 @@ border-radius :15px;
       </property>
      </widget>
     </item>
+    <item row="2" column="1">
+     <widget class="QPushButton" name="pb_close_plots">
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+      <property name="text">
+       <string>Close All Plots</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="2">
+     <widget class="QPushButton" name="pb_clear_updates">
+      <property name="text">
+       <string>Clear Text</string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="0" colspan="3">
+     <widget class="QTextEdit" name="pte_status"/>
+    </item>
+    <item row="0" column="0" colspan="3">
+     <widget class="QGroupBox" name="groupBox">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+      <property name="title">
+       <string/>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_7">
+       <item row="0" column="0">
+        <layout class="QGridLayout" name="gridLayout_4">
+         <item row="1" column="1">
+          <widget class="QLineEdit" name="le_param">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="placeholderText">
+            <string>C:\Matrix\blue_pill\TheChosenOne.json</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLineEdit" name="le_wd">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="placeholderText">
+            <string>C:\Matrix\blue_pill</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0" rowspan="3">
+          <layout class="QGridLayout" name="gridLayout_2">
+           <item row="1" column="0">
+            <widget class="QPushButton" name="pb_param">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Select XRF Paramater File</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QPushButton" name="pb_wd">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Select Working Directory</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item row="1" column="0">
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QPushButton" name="pb_select_calib_file">
+           <property name="text">
+            <string>Select Quant. Calib. File (optional)</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="le_quant_calib_file">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="placeholderText">
+            <string>C:\Matrix\blue_pill\real_world.json</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -1356,8 +1535,8 @@ border-radius :15px;
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>884</width>
-     <height>30</height>
+     <width>1332</width>
+     <height>20</height>
     </rect>
    </property>
   </widget>

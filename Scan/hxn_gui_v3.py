@@ -1,7 +1,7 @@
 """
  __Author__: Ajith Pattammattel
  Original Date:06-23-2020
- Last Update: 12-02-2022
+ Last Major Update: 02-16-2024
 
  """
 
@@ -40,7 +40,7 @@ det_and_camera_names_data = ['cam11','merlin1','merlin2','eiger1']
 
 
 class Ui(QtWidgets.QMainWindow):
-   
+
     def __init__(self):
         super(Ui, self).__init__()
 
@@ -48,26 +48,36 @@ class Ui(QtWidgets.QMainWindow):
         uic.loadUi(os.path.join(ui_path,'ui_files/hxn_gui_v3.ui'), self)
         print("UI File loaded")
 
-        # self.fly_motor_dict = {'zpssx': zpssx, 
-        #                        'zpssy': zpssy, 
-        #                        'zpssz': zpssz,
-        #                        'dssx': dssx, 
-        #                        'dssy': dssy, 
-        #                        'dssz': dssz}
+        self.fly_motor_dict = {'zpssx': zpssx,
+                               'zpssy': zpssy,
+                               'zpssz': zpssz,
+                               'dssx': dssx,
+                               'dssy': dssy,
+                               'dssz': dssz}
 
-        self.fly_motor_dict = {'dssx': dssx, 
-                               'dssy': dssy, 
-                               'dssz': dssz, 
-                               'zpssx': zpssx, 
-                               'zpssy': zpssy, 
-                               'zpssz': zpssz,}
+        # self.fly_motor_dict = {'dssx': dssx,
+        #                        'dssy': dssy,
+        #                        'dssz': dssz,
+        #                        'zpssx': zpssx,
+        #                        'zpssy': zpssy,
+        #                        'zpssz': zpssz,}
 
-        self.fly_det_dict = {'dets1': dets1, 
-                             'dets2': dets2, 
-                             'dets3': dets3,
-                             'dets4': dets4, 
-                             'dets_fs': dets_fs}
-        
+        # self.fly_det_dict = {'dets1': dets1,
+        #                      'dets2': dets2,
+        #                      'dets3': dets3,
+        #                      'dets4': dets4,
+        #                      'dets_fs': dets_fs}
+
+        self.fly_det_dict = {'dets_fast': dets_fast,
+                             'dets_fast_merlin': dets_fast_merlin,
+                             'dets_fast_fs': dets_fast_fs}
+
+        # self.fly_det_dict = {'dets1': "[fs,xspress3,eiger2]",
+        #                      'dets2': "[fs,xspress3,merlin1]",
+        #                      'dets3': "[fs,xspress3,eiger2,merlin1]",
+        #                      'dets4': "[fs,xspress3,merlin2]",
+        #                      'dets_fs': "[fs,xspress3]"}
+
         #TODO add a qbox with mll or zp option to set the configs
 
         self.cb_dets.addItems([det_name for det_name in self.fly_det_dict.keys()])
@@ -88,10 +98,13 @@ class Ui(QtWidgets.QMainWindow):
         self.connect_sample_pos_widgets()
         self.connect_advanced_scans()
         self.set_input_validators()
-        
-        # close the application
+        self.connect_troubleshooting()
+
+        # close/reload the application
         self.actionClose_Application.triggered.connect(self.close_application)
-        
+        self.actionRestart.triggered.connect(self.reload_gui)
+        self.actionExit.triggered.connect(self.close_application)
+
         #some initializations
         self.active_folder = "/data/users/current_user"
         self.client = webbrowser.get('firefox')
@@ -102,6 +115,7 @@ class Ui(QtWidgets.QMainWindow):
         self.liveUpdateThread()
         self.scanStatusThread()
         self.pump_update_thread()
+        self.flytube_pressure_status()
         self.show()
 
     def reload_gui(self):
@@ -112,7 +126,7 @@ class Ui(QtWidgets.QMainWindow):
                                                 '--profile=collection',
                                                 '--IPCompleter.use_jedi=False',
                                               sys.argv[0])
-        
+
     def set_input_validators(self):
         #number only validator
         only_int_le = QtGui.QIntValidator(-9999999,9999999)
@@ -125,20 +139,38 @@ class Ui(QtWidgets.QMainWindow):
         only_lett_le = QtGui.QRegularExpressionValidator(reg_ex_xrf)
         #self.le_roi_elems.setValidator(only_lett_le)
         #self.le_live_elems.setValidator(only_lett_le)
-        #self.le_line_elem.setValidator(only_lett_le)    
-        
+        #self.le_line_elem.setValidator(only_lett_le)
+
     def connect_advanced_scans(self):
         #advanced scans
         self.pb_open_mll_tomo_widget.clicked.connect(lambda:self.open_mll_tomo_gui())
 
+    def runTask(self, task, *args, **kwargs):
+        self.pop_up = QMessageBox(self)
+        self.pop_up.setWindowTitle("Please Wait")
+        self.pop_up.setText("Motion is in progress...")
+        self.pop_up.setStandardButtons(QMessageBox.Close)
+        self.pop_up.show()
 
-    @show_error_message_box    
+        self.thread = WorkerThread(task, *args, **kwargs)
+        self.thread.finished.connect(self.onTaskFinished)
+        self.thread.start()
+
+    @pyqtSlot()
+    def onTaskFinished(self):
+        self.pop_up.setText("Done")
+        QtTest.QTest.qWait(1000)
+        self.pop_up.close()
+        print("popup closed")
+        self.thread.quit()
+
+    @show_error_message_box
     def open_mll_tomo_gui(self):
         os.system(f'gnome-terminal -t "MLL TOMO" --tab -e run-mll-tomo --active')
-        
+
         #self.mll_tomo_window = MLLTomoGUI()
         #self.mll_tomo_window.show()
-        
+
 
     #shutters
     def connect_shutters(self):
@@ -149,7 +181,7 @@ class Ui(QtWidgets.QMainWindow):
 
     def create_live_pv_dict(self):
         '''
-        generate a dictionary of slots and signals , 
+        generate a dictionary of slots and signals ,
         later change to a json for flexibity ,; like mll specific?
         '''
 
@@ -178,10 +210,11 @@ class Ui(QtWidgets.QMainWindow):
             self.db_cam06x:"XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.RBV",
             self.db_s5_x:"XF:03IDC-ES{Slt:5-Ax:Vgap}Mtr.RBV",
             self.db_s5_y:"XF:03IDC-ES{Slt:5-Ax:Hgap}Mtr.RBV",
-            self.db_dexela:"XF:03IDC-ES{Stg:FPDet-Ax:Y}Mtr.RBV"
+            self.db_dexela:"XF:03IDC-ES{Stg:FPDet-Ax:Y}Mtr.RBV",
+            self.db_flytube_p:"XF:03IDC-VA{ES:1-TCG:1}P-I"
 
             }
-        
+
     def create_pump_pv_dict(self):
 
         self.pump_PVs = {
@@ -196,15 +229,33 @@ class Ui(QtWidgets.QMainWindow):
         #print ("updating live values")
         livePVs = {key:value for key, value in zip(self.live_PVs.keys(),pv_val_list)}
         for item in livePVs.items():
-                item[0].setValue(item[1])
+                try:
+                    item[0].setValue(item[1])
+                except TypeError:
+                    pass
 
     def handle_bool_signals(self,pv_val_list):
-    
+
         #self.pump_PVs.keys() = pv_val_list (works?)
         livePVs = {key:value for key, value in zip(self.pump_PVs.keys(),pv_val_list)}
         for item in livePVs.items():
                 item[0].setChecked(not bool(item[1]))
-                
+
+
+    def flytube_pressure_status(self):
+
+        self.update_thread = liveThresholdUpdate("XF:03IDC-VA{ES:1-TCG:1}P-I",5)
+        self.update_thread.current_sts.connect(self.handle_threshold)
+        self.update_thread.start()
+
+    def handle_threshold(self, sts):
+
+        if sts:
+            self.db_flytube_p.setStyleSheet("background-color:rgb(255, 255, 0);color:rgb(255,0, 0)")
+
+        else:
+            self.db_flytube_p.setStyleSheet("background-color:rgb(255, 255, 255);color:rgb(0,0, 0)")
+
 
     def scanStatus(self,sts):
 
@@ -250,23 +301,38 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_create_user.clicked.connect(lambda:self.new_user_setup())
         self.pb_update_xrf_elems.clicked.connect(self.apply_xrf_elems)
         self.import_xrf_elem_list(auto = True)
-        self.pb_import_xrf_elem_list.clicked.connect(lambda:self.import_xrf_elem_list(auto = False))
-        self.pb_export_xrf_elem_list.clicked.connect(lambda:self.export_xrf_elem_list(auto = False))
+        self.pb_import_xrf_elem_list.clicked.connect(
+            lambda:self.import_xrf_elem_list(auto = False))
+        self.pb_export_xrf_elem_list.clicked.connect(
+            lambda:self.export_xrf_elem_list(auto = False))
         self.sb_live_elem_num.valueChanged.connect(self.populate_elems_from_combobox)
         self.roi_elements = [cb.currentText() for cb in self.xrf_combo_boxes]
 
 
     @show_error_message_box
     def new_user_setup(self):
-        setup_new_user(name = self.le_username.text(),
-                       experimenters = self.le_experimenters.text(), 
-                       sample = self.le_sample_name.text(), 
-                       sample_image = self.le_image_path.text()
-                       )
-    
+        user_dir, pdf_note_name = setup_new_user(name = self.le_username.text(),
+                            experimenters = self.le_experimenters.text(),
+                            sample = self.le_sample_name.text(),
+                            sample_image = self.le_image_path.text(),
+                            pdf_file_name = self.le_pdf_name.text()
+                            )
+
+        QMessageBox.information(self,
+                                "Info",
+                                f"UUser setup completed. \n {user_dir =} \n {pdf_note_name =}.pdf")
+
+    def existing_user_setup(self):
+        pass
+    def existing_pdf_setup(self):
+        pass
+
+    def create_new_pdf_log(self):
+        pass
+
     @show_error_message_box
     def import_xrf_elem_list(self, auto = False):
-         
+
         if auto:
              json_param_file = "/nsls2/data/hxn/shared/config/bluesky/profile_collection/startup/plot_elems.json"
 
@@ -286,21 +352,24 @@ class Ui(QtWidgets.QMainWindow):
         roi_elems = xrf_elems["roi_elems"]
         live_plot_elems  = xrf_elems["live_plot_elems"]
         line_plot_elem = xrf_elems["line_plot_elem"]
-        
+
         self.sb_live_elem_num.setValue(len(xrf_elems["live_plot_elems"]))
         self.le_roi_elems.setText(str(roi_elems)[1:-1])
         self.le_live_elems.setText(str(live_plot_elems)[1:-1])
         self.le_line_elem.setText(str(line_plot_elem)[1:-1])
 
         for elem,box in zip(roi_elems,self.xrf_combo_boxes):
+            for i in range(box.count()):
+                if elem == box.itemText(i).split(":")[0]:
+                    box.setCurrentIndex(i)
             box.setCurrentText(elem)
             #except:box.setCurrentText("Si")
 
     @show_error_message_box
     def export_xrf_elem_list(self, auto = False):
-        
+
         xrf_elems = {}
-        
+
         if auto:
              json_param_file = "/nsls2/data/hxn/shared/config/bluesky/profile_collection/startup/plot_elems.json"
 
@@ -317,18 +386,18 @@ class Ui(QtWidgets.QMainWindow):
         xrf_elems["roi_elems"] = [re.sub("[^A-Z,_]", '', i,0,re.IGNORECASE) for i in self.le_roi_elems.text().split(",")]
         xrf_elems["live_plot_elems"] = [re.sub("[^A-Z,_]", '', i,0,re.IGNORECASE) for i in self.le_live_elems.text().split(",")]
         xrf_elems["line_plot_elem"] = [re.sub("[^A-Z,_]", '', i,0,re.IGNORECASE) for i in self.le_line_elem.text().split(",")]
-        
+
         with open(json_param_file, "w") as fp:
             json.dump(xrf_elems, fp, indent = 6)
             fp.close()
 
-        
+
 
     def populate_elems_from_combobox(self):
 
         selected_elems = []
         for cb in self.xrf_combo_boxes:
-            selected_elems.append(cb.currentText())
+            selected_elems.append(cb.currentText().split(':')[0])
 
         live_plot_elems = selected_elems[0:self.sb_live_elem_num.value()]
         line_plot_elem = selected_elems[0]
@@ -341,7 +410,7 @@ class Ui(QtWidgets.QMainWindow):
     def apply_xrf_elems(self):
 
         choice = QMessageBox.question(self, 'Info',
-            f"Update the list of elements? The program require reload to update the changes. Proceed?", 
+            f"Update the list of elements? The program require reload to update the changes. Proceed?",
             QMessageBox.Yes |
             QMessageBox.No, QMessageBox.No)
         if choice == QMessageBox.Yes and RE.state == "idle":
@@ -349,8 +418,8 @@ class Ui(QtWidgets.QMainWindow):
             self.reload_gui()
         else:
             QMessageBox.critical(self, "Close Error", "Maybe the scan is in progress")
-            pass      
-        
+            pass
+
     #flyscan
 
     def connect_flyscan_signals(self):
@@ -362,7 +431,7 @@ class Ui(QtWidgets.QMainWindow):
         self.y_start.valueChanged.connect(self.initParams)
         self.x_end.valueChanged.connect(self.initParams)
         self.y_end.valueChanged.connect(self.initParams)
-        self.cb_dets.currentTextChanged.connect(self.initParams)        
+        self.cb_dets.currentTextChanged.connect(self.initParams)
         self.cb_motor1.currentTextChanged.connect(self.initParams)
         self.cb_motor2.currentTextChanged.connect(self.initParams)
         print("Fly Motors Connected")
@@ -373,6 +442,7 @@ class Ui(QtWidgets.QMainWindow):
         self.rb_1d.clicked.connect(self.initParams)
         self.rb_2d.clicked.connect(self.initParams)
         self.start.clicked.connect(lambda:self.run_fly_scan())
+        self.pb_abort_fly.clicked.connect(self.quit_scan)
 
         # Quick fill scan Params
         self.pb_3030.clicked.connect(self.fill_common_scan_params)
@@ -395,7 +465,7 @@ class Ui(QtWidgets.QMainWindow):
 
         for i in range(self.cb_dets.count()):
             self.cb_dets.setItemData(i,str([det.name for det in eval(all_items[i])]),QtCore.Qt.ToolTipRole)
-        
+
     def getScanValues(self):
         self.det = self.cb_dets.currentText()
 
@@ -431,7 +501,7 @@ class Ui(QtWidgets.QMainWindow):
         else:
             self.label_scan_info_calc.setText(f'X: {(cal_res_x * 1000):.2f} nm, Y: {(cal_res_y * 1000):.2f} nm \n'
                                               f'{self.tot_t_2d:.2f} minutes + overhead')
-            self.scan_plan = f'fly2d({self.det}, {self.motor1},{self.mot1_s}, {self.mot1_e}, {self.mot1_steps},' \
+            self.scan_plan = f'fly2dpd({self.det}, {self.motor1},{self.mot1_s}, {self.mot1_e}, {self.mot1_steps},' \
                         f'{self.motor2},{self.mot2_s},{self.mot2_e},{self.mot2_steps},{self.dwell_t:.5f})'
 
         self.text_scan_plan.setText(self.scan_plan)
@@ -453,12 +523,12 @@ class Ui(QtWidgets.QMainWindow):
         scan_name = self.le_qplan_name.text()
 
         if self.rb_1d.isChecked():
-            RM.item_add((BPlan("fly1d", 
-                det_names, 
-                self.motor1, 
-                self.mot1_s, 
-                self.mot1_e, 
-                self.mot1_steps, 
+            RM.item_add((BPlan("fly1dpd",
+                det_names,
+                self.motor1,
+                self.mot1_s,
+                self.mot1_e,
+                self.mot1_steps,
                 self.dwell_t)))
 
         else:
@@ -473,22 +543,22 @@ class Ui(QtWidgets.QMainWindow):
 
             RM.item_add((BPlan("recover_pos_and_scan",
                             scan_name,
-                            roi, 
-                            det_names, 
-                            self.motor1, 
-                            self.mot1_s, 
-                            self.mot1_e, 
-                            self.mot1_steps, 
-                            self.motor2, 
-                            self.mot2_s, 
-                            self.mot2_e, 
-                            self.mot2_steps, 
+                            roi,
+                            det_names,
+                            self.motor1,
+                            self.mot1_s,
+                            self.mot1_e,
+                            self.mot1_steps,
+                            self.motor2,
+                            self.mot2_s,
+                            self.mot2_e,
+                            self.mot2_steps,
                             self.dwell_t,
                             ic1_count = ic,
                             scan_time_min = scan_time)))
 
 
- 
+
 #@show_error_message_box
     def run_fly_scan(self):
         self.getScanValues()
@@ -497,16 +567,16 @@ class Ui(QtWidgets.QMainWindow):
             choice = QMessageBox.question(self, 'Warning',
                 f"Photon shutter is closed, Do you wan to open it before starting?", QMessageBox.Yes |
                 QMessageBox.No, QMessageBox.No)
-            
+
             if choice == QMessageBox.Yes:
                 caput("XF:03IDB-PPS{PSh}Cmd:Opn-Cmd",1)
                 QtTest.QTest.qWait(2000)
 
             else:
                 pass
-        
+
         if self.rb_1d.isChecked():
-            
+
             if self.tot_t_1d>1.0:
                 choice = QMessageBox.question(self, 'Warning',
                                 f"Total scan time is {self.tot_t_1d :.2f}. Continue?", QMessageBox.Yes |
@@ -514,24 +584,38 @@ class Ui(QtWidgets.QMainWindow):
 
                 if choice == QMessageBox.Yes:
                     #self.progress_bar_update(self.mot1_steps,int(self.dwell_t*10000))
-                    RE(fly1d(eval(self.det), 
-                             eval(self.motor1),
-                             self.mot1_s, 
-                             self.mot1_e, 
-                             self.mot1_steps, 
-                             self.dwell_t))
+                    # RE(fly1d(eval(self.det),
+                    #          eval(self.motor1),
+                    #          self.mot1_s,
+                    #          self.mot1_e,
+                    #          self.mot1_steps,
+                    #          self.dwell_t))
+
+                    RE(fly1dpd(eval(self.det),
+                            eval(self.motor1),
+                            self.mot1_s,
+                            self.mot1_e,
+                            self.mot1_steps,
+                            self.dwell_t))
 
                 else:
                     return
 
             else:
                 #self.progress_bar_update(self.mot1_steps,int(self.dwell_t*10000))
-                RE(fly1d(eval(self.det),
-                         eval(self.motor1),
-                         self.mot1_s, 
-                         self.mot1_e, 
-                         self.mot1_steps, 
-                         self.dwell_t))
+                # RE(fly1d(eval(self.det),
+                #          eval(self.motor1),
+                #          self.mot1_s,
+                #          self.mot1_e,
+                #          self.mot1_steps,
+                #          self.dwell_t))
+
+                RE(fly1dpd(eval(self.det),
+                        eval(self.motor1),
+                        self.mot1_s,
+                        self.mot1_e,
+                        self.mot1_steps,
+                        self.dwell_t))
         else:
             if self.fly_motor_dict[self.motor1] == self.fly_motor_dict[self.motor2]:
                 msg = QErrorMessage(self)
@@ -540,45 +624,47 @@ class Ui(QtWidgets.QMainWindow):
                 return
             elif self.tot_t_2d>5.0:
                     choice = QMessageBox.question(self, 'Warning',
-                                f"Total scan time is more than {self.tot_t_2d :.2f}. Continue?", 
+                                f"Total scan time is more than {self.tot_t_2d :.2f}. Continue?",
                                 QMessageBox.Yes |
                                 QMessageBox.No, QMessageBox.No)
 
                     if choice == QMessageBox.Yes:
 
                         #self.progress_bar_update(self.mot1_steps*self.mot2_steps,int(self.dwell_t*10000))
-                        RE(fly2d(eval(self.det), 
-                                 eval(self.motor1), 
-                                 self.mot1_s, self.mot1_e, 
+                        RE(fly2dpd(eval(self.det),
+                                 eval(self.motor1),
+                                 self.mot1_s,
+                                 self.mot1_e,
                                  self.mot1_steps,
-                                 eval(self.motor1), 
-                                 self.mot2_s, 
-                                 self.mot2_e, 
-                                 self.mot2_steps, 
+                                 eval(self.motor2),
+                                 self.mot2_s,
+                                 self.mot2_e,
+                                 self.mot2_steps,
                                  self.dwell_t))
 
                     else:
                         return
 
             else:
-                
+
                 #self.progress_bar_update(self.mot1_steps*self.mot2_steps,int(self.dwell_t*10000))
-                RE(fly2d(eval(self.det), 
-                         eval(self.motor1), 
-                         self.mot1_s, self.mot1_e, 
+                RE(fly2dpd(eval(self.det),
+                         eval(self.motor1),
+                         self.mot1_s,
+                         self.mot1_e,
                          self.mot1_steps,
-                         eval(self.motor2), 
-                         self.mot2_s, 
-                         self.mot2_e, 
-                         self.mot2_steps, 
+                         eval(self.motor2),
+                         self.mot2_s,
+                         self.mot2_e,
+                         self.mot2_steps,
                          self.dwell_t))
-                
+
 
     def progress_bar_update(self, tot_points, update_interval):
-        
+
         tot_pv = "XF:03IDC-ES{Sclr:1}NuseAll"
         complete_pv = "XF:03IDC-ES{Sclr:1}CurrentChannel"
-        
+
         self.pbar_flyscan.setRange(0,tot_points)
         self.points_update_thread =  updateScanProgress(tot_pv,
                                                         complete_pv,
@@ -607,10 +693,10 @@ class Ui(QtWidgets.QMainWindow):
     def fill_common_scan_params(self):
         #TODO Find a better way
         button_name = self.sender()
-        button_names = {'pb_2020': (20, 20, 100, 100, 0.03),
-                        'pb_3030': (30, 30, 30, 30, 0.03),
-                        'pb_66': (6, 6, 100, 100, 0.05),
-                        'pb_22': (2, 2, 100, 100, 0.03)
+        button_names = {'pb_2020': (20, 20, 100, 100, 0.005),
+                        'pb_3030': (28, 28, 56, 56, 0.005),
+                        'pb_66': (6, 6, 100, 100, 0.005),
+                        'pb_22': (2, 2, 100, 100, 0.005)
                         }
         if button_name.objectName() in button_names.keys():
             valsToFill = button_names[button_name.objectName()]
@@ -621,6 +707,18 @@ class Ui(QtWidgets.QMainWindow):
             self.x_step.setValue(valsToFill[2])
             self.y_step.setValue(valsToFill[3])
             self.dwell.setValue(valsToFill[4])
+
+    def quit_scan(self):
+        
+        RE.request_pause(True)
+        QtTest.QTest.qWait(5000)
+        plt.close()
+        RE.abort()
+        QtTest.QTest.qWait(2000)
+        self.mbox1 = QMessageBox.information(self, "info","Scan aborted")
+        
+        #self.mbox1.setText("Scan aborted")
+        
 
     def requestScanPause(self):
         RE.request_pause(True)
@@ -636,7 +734,7 @@ class Ui(QtWidgets.QMainWindow):
         RE.resume()
         self.pb_REAbort.setEnabled(False)
         self.pb_REResume.setEnabled(False)
-    
+
     #TODO change to PV based
     @show_error_message_box
     def moveAMotor(self, val_box, mot_name, unit_conv_factor= 1, neg=False):
@@ -667,7 +765,7 @@ class Ui(QtWidgets.QMainWindow):
 
         caput(pv_name, position+move_by * unit_conv_factor)
         self.statusbar.showMessage(f'{mot_name.name} moved by {move_by} um ')
-    
+
     def connect_zp_stages(self):
         #zp navigation
         self.pb_move_smarx_pos.clicked.connect(lambda:self.move_smarx())
@@ -719,6 +817,16 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_move_dth_pos_neg.clicked.connect(lambda: self.move_dsth(neg_=True))
         self.pb_move_sbz_neg.clicked.connect(lambda: self.move_zpz1(neg_=True))
         self.pb_mll_stop_all_sample.clicked.connect(lambda:stop_all_mll_motion())
+        self.pb_mll_osa_out.clicked.connect(lambda: self.runTask(lambda:RE(mll_osa_out())))
+        self.pb_mll_osa_in.clicked.connect(lambda: self.runTask(lambda:RE(mll_osa_in())))
+        self.pb_mll_bs_out.clicked.connect(lambda: self.runTask(lambda:mll_bs_out_move()))
+        self.pb_mll_bs_in.clicked.connect(lambda: self.runTask(lambda:RE(mll_bs_in())))
+        self.pb_mll_lens_out.clicked.connect(lambda: self.runTask(lambda:RE(mll_lens_out())))
+        self.pb_mll_lens_in.clicked.connect(lambda: self.runTask(lambda:RE(mll_lens_in())))
+        self.pb_mlls_to_upstream.clicked.connect(lambda: self.runTask(lambda:RE(mll_to_upstream())))
+        self.pb_mlls_to_downstream.clicked.connect(lambda: self.runTask(lambda:RE(mll_to_downstream())))
+        self.pb_mll_sample_in.clicked.connect(lambda: self.runTask(lambda:RE(mll_sample_in())))
+        self.pb_mll_sample_out.clicked.connect(lambda: self.runTask(lambda:RE(mll_sample_out())))
 
     def move_dsx(self, neg_=False):
         self.move_motor_with_pv(self.db_move_dsx, dsx, 1, neg=neg_)
@@ -735,7 +843,7 @@ class Ui(QtWidgets.QMainWindow):
 
     #Energy change ui
 
-    
+
     #energy change
     def connect_energy_change(self):
         #print("energy_change")
@@ -743,7 +851,7 @@ class Ui(QtWidgets.QMainWindow):
         self.dsb_target_e.valueChanged.connect(lambda:self.update_energy_calc(self.dsb_target_e.value()))
         self.sb_harmonic.valueChanged.connect(lambda:self.update_energy_calc(self.dsb_target_e.value()))
 
-    
+
     def update_energy_calc(self, target_energy):
 
         print("calculating energy values")
@@ -768,16 +876,83 @@ class Ui(QtWidgets.QMainWindow):
         self.dsb_hfm_target_pitch.setValue(hfm_p)
 
         return ugap,hrm,dcm_p,dcm_r,hfm_p,mirror_coating
+    
+    @show_error_message_box
+    def move_to_user_input_pos():
+        
+        targetE = self.dsb_target_e.value()
+        gap_ = self.dsb_target_ugap.value()
+        dcm_p_ = self.dsb_target_pitch.value()
+        mirror_ = self.cb_target_coating.text()
+        hram_ = self.sb_calc_harmonic.value()
+        dcm_r_ = self.dsb_target_roll.value()
+        hfm_p_ = self.dsb_hfm_target_pitch.value()
+
+        RE(bps.mov(ugap, gap_))
+        logger.info("Gap moved")
+    
+        logger.info(f"Mono Energy Target = {targetE}")
+        
+        try:
+            RE(bps.mov(e,targetE, timeout = 180))
+        except FailedStatus:
+            RE(bps.mov(e,targetE, timeout = 180))
+        except: raise Error("Mono motio failed")
+
+
+            
+        logger.info(f"Moving {dcm_p_ = :4f}")
+        if abs(dcm_p_)>2 or abs(dcm_r_)>2 or abs(hfm_p)>2:
+            raise ValueError("Incorrect calculation of dcm_p, dcm_r ot hfm_p positions; aborting")
+        else:
+            RE(bps.mov(dcm.p,dcm_p_))
+
+        logger.info(f"Moving {dcm_r_target = :4f}")
+        RE(bps.mov(dcm.r,dcm_r_))
+
+        logger.info(f"Moving {hfm_p_target = :4f}")
+        RE(bps.mov(m2.p, hfm_p_))
+
+        #change merlin energy
+        caput("XF:03IDC-ES{Merlin:1}cam1:Acquire",0)
+        caput("XF:03IDC-ES{Merlin:1}cam1:OperatingEnergy", targetE)
+        
+        #change merlin energy
+        caput("XF:03IDC-ES{Merlin:2}cam1:Acquire",0)
+        caput("XF:03IDC-ES{Merlin:2}cam1:OperatingEnergy", targetE)
+        
+        MirrorPos = {'Si':(21,-4),'Cr':(5,15),'Rh':(30,-12),'Pt':(13.5,4)}  
+        positions = MirrorPos[mirror_]
+        RE(bps.mov(m1.y, positions[0], m2.y, positions[1] ))
+            
+        logger.info("Energy change completed")
+
+
+    def move_energy_with_scan_num(sid):
+        h = db[-1]
+        bl = h.table('baseline')
+        target_ugap = bl['ugap_readback'][1]
+        taget_e = bl['energy'][1]
+        target_p = bl['dcm_p'][1]
+        target_m2_p = bl['m2_p'][1]
+        target_r = bl['dcm_r'][1]
+        target_zpz1 = bl['zpz1'][1]
+        target_m1_y = bl['m1_y'][1]
+        target_m2_y = bl['m2_y'][1]
+
+        print(f"{target_ugap = }, {taget_e =}, {target_p =} \n {target_m2_p = },{target_r=}, {target_zpz1=}")
+
+
 
 
     @show_error_message_box
     def change_energy(self,target_energy):
-    
+
         target_energy = self.dsb_target_e.value()
-        if not caget('XF:03IDA-OP{FS:1-Ax:Y}Mtr.VAL')<-50: 
+        if not caget('XF:03IDA-OP{FS:1-Ax:Y}Mtr.VAL')<-50:
 
             fs_choice = QMessageBox.question(self, 'Info',
-            f"Do you want to insert front end fluorescence camera?", 
+            f"Do you want to insert front end fluorescence camera?",
             QMessageBox.Yes |
             QMessageBox.No, QMessageBox.No)
             if fs_choice == QMessageBox.Yes:
@@ -786,53 +961,115 @@ class Ui(QtWidgets.QMainWindow):
                 caput("XF:03IDA-BI{FS:1-CAM:1}cam1:Acquire",1)
 
             else:
-                pass      
+                pass
 
         choice = QMessageBox.question(self, 'Info',
-        f"{target_energy = :.2f}, Continue?", 
+        f"{target_energy = :.2f}, move mirrors = self.cb_change_energy_only.isChecked(), Continue?",
         QMessageBox.Yes |
         QMessageBox.No, QMessageBox.No)
 
         if choice == QMessageBox.Yes:
 
-            RE(Energy.move(target_energy, self.sb_harmonic.value()))
+            if self.cb_change_energy_only.isChecked():
+
+                #qmsg = QMessageBox.information(self, "info","Energy change in progress")
+
+                RE(Energy.move(target_energy, 
+                               self.sb_harmonic.value(),
+                               moveMonoPitch = False,
+                               moveMirror = "ignore",
+                               move_dcm_roll = False,
+                               move_hfm_pitch = False
+                               ))
+
+            else:
+                RE(Energy.move(target_energy, self.sb_harmonic.value()))
 
             if self.cb_beam_at_ssa2.isChecked():
                 RE(find_beam_at_ssa2(max_iter = self.sb_max_iter.value()))
 
+            #qmsg.done
+
         else:
-            return 
+            return
+
+    @show_error_message_box
+    def zp_to_cam11_view_(self):
+        RE(zp_to_cam11_view())
+
+    @show_error_message_box
+    def zp_to_nanobeam_(self):
+        RE(zp_to_nanobeam())
+
 
     @show_error_message_box
     def ZP_OSA_OUT(self):
-        curr_pos = caget("XF:03IDC-ES{ANC350:5-Ax:1}Mtr.VAL")
-        if curr_pos >2000:
-            self.statusbar.showMessage('OSAY is out of IN range')
-        else:
-            caput("XF:03IDC-ES{ANC350:5-Ax:1}Mtr.VAL",curr_pos+2700)
 
+        curr_pos = caget("XF:03IDC-ES{ANC350:5-Ax:1}Mtr.RBV")
+        if curr_pos >2000:
+            raise ValueError('OSAY is out of IN range')
+        else:
+            # qmsg = QMessageBox.information(self, "info","OSAY is moving")
+            # qmsg.setAutoClose(True)
+            # qmsg.exec()
+            caput("XF:03IDC-ES{ANC350:5-Ax:1}Mtr.VAL",curr_pos+2700)
+            
+        QtTest.QTest.qWait(5000)
         self.statusbar.showMessage('OSA Y moved OUT')
-    
+
+
     @show_error_message_box
     def ZP_OSA_IN(self):
-        curr_pos = caget("XF:03IDC-ES{ANC350:5-Ax:1}Mtr.VAL")
+        curr_pos = caget("XF:03IDC-ES{ANC350:5-Ax:1}Mtr.RBV")
 
-        if curr_pos > 2500:
+        if curr_pos < 2500:
+            raise ValueError('OSAY is already close to IN position')
+        else:
             caput("XF:03IDC-ES{ANC350:5-Ax:1}Mtr.VAL",curr_pos-2700)
+
+        QtTest.QTest.qWait(5000)
+        self.statusbar.showMessage('OSA Y is IN')
+
+        
+
+    @show_error_message_box
+    def ZP_BS_OUT(self):
+
+        curr_pos = caget("XF:03IDC-ES{ANC350:8-Ax:1}Mtr.RBV")
+        if abs(curr_pos)>10:
+            raise ValueError('BSY is out of IN range')
+        else:
+            # qmsg = QMessageBox.information(self, "info","OSAY is moving")
+            # qmsg.setAutoClose(True)
+            # qmsg.exec()
+            caput("XF:03IDC-ES{ANC350:8-Ax:1}Mtr.VAL",curr_pos+100)
+            
+        QtTest.QTest.qWait(5000)
+        self.statusbar.showMessage('OSA Y moved OUT')
+
+
+    @show_error_message_box
+    def ZP_BS_IN(self):
+        curr_pos = caget("XF:03IDC-ES{ANC350:8-Ax:1}Mtr.RBV")
+
+        if abs(curr_pos) > 100:
+            caput("XF:03IDC-ES{ANC350:8-Ax:1}Mtr.VAL",curr_pos-100)
+            QtTest.QTest.qWait(5000)
             self.statusbar.showMessage('OSA Y is IN')
         else:
-            self.statusbar.showMessage('OSA Y is close to IN position')
-            pass
-    
+            raise ValueError('BSY is already close to IN position')
+            
+
     def connect_detectors_and_cameras(self):
-    
+
         # Detector/Camera Motions
         #Merlin
         self.pb_merlinOUT.clicked.connect(lambda:self.merlinOUT())
         self.pb_merlinIN.clicked.connect(lambda:self.merlinIN())
+        self.pb_eiger_in.clicked.connect(lambda:self.eigerIN())
         self.pb_stop_merlin.clicked.connect(lambda:diff.stop())
-        self.pb_merlin_filterIN.clicked.connect(lambda:RE(toggle_merlin_filer(filter_to  = "in")))
-        self.pb_merlin_filterOUT.clicked.connect(lambda:RE(toggle_merlin_filer(filter_to  = "out")))
+        self.pb_merlin_filterIN.clicked.connect(lambda:RE(toggle_merlin_filter(filter_to  = "in")))
+        self.pb_merlin_filterOUT.clicked.connect(lambda:RE(toggle_merlin_filter(filter_to  = "out")))
 
         #fluorescence det
         self.pb_vortexOUT.clicked.connect(lambda:self.vortexOUT())
@@ -844,22 +1081,25 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_cam6OUT.clicked.connect(lambda:self.cam6OUT())
         self.pb_CAM6_IN.clicked.connect(lambda:self.cam6IN())
         self.pb_CAM6_OUT.clicked.connect(lambda:self.cam6OUT())
+        self.pb_CAM6_LASER.clicked.connect(lambda:self.cam6LASER())
+        self.pb_laser_in.clicked.connect(lambda:RE(self.cam06_laser_in))
         #cam11
         self.pb_cam11IN.clicked.connect(lambda:self.cam11IN())
         self.pb_stop_cam11.clicked.connect(lambda:diff.stop())
         self.pb_cam11_flatfield.clicked.connect(lambda:take_cam11_flatfield())
         self.pb_cam11_disable_flatfield.clicked.connect(lambda:caput("XF:03IDC-ES{CAM:11}Proc1:EnableFlatField",0))
-        
+
         #flatfield corrections
         self.cb_dets_for_ff_corr.addItems(det_and_camera_names_data)
-        
-        
+
+
         #update det positions
         self.cb_det_names_for_pos.addItems(det_and_camera_names_motion)
-        self.pb_update_dets_pos.clicked.connect(lambda:update_det_pos(self.cb_det_names_for_pos.currentText()))
-        
-        
-        
+        #self.pb_update_dets_pos.clicked.connect(lambda:update_det_pos(self.cb_det_names_for_pos.currentText()))
+        self.pb_update_dets_pos.clicked.connect(lambda:QMessageBox.warning(self,"Button disabled","Update detector position from button is disabled. Edit ~/.ipython/profile_collecton/startup/diff_det_pos.json to modify detector positions.\nAborting..."))
+
+
+
         #dexela
         self.pb_dexela_IN.clicked.connect(lambda:self.dexela_motion(move_to = 0))
         self.pb_dexela_OUT.clicked.connect(lambda:self.dexela_motion(move_to = 400))
@@ -870,8 +1110,11 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_light_OFF.clicked.connect(lambda:caput("XF:03IDC-ES{PDU:1}Cmd:Outlet8-Sel", 1))
 
         #move_diff
+        self.pb_read_dexela_ROI1.clicked.connect(lambda:self.read_dexela_ROI1())
+        self.pb_reset_dexela_ROI1.clicked.connect(lambda:self.reset_dexela_ROI1())
         self.pb_pos_to_angle.clicked.connect(lambda:self.calc_and_fill_pos_2angle())
         self.pb_move_diff.clicked.connect(lambda:self.move_diff_stage())
+        self.pb_copy_pos2angle.clicked.connect(lambda:self.copy_pos2angle_results())
 
     @show_error_message_box
     def merlinIN(self):
@@ -884,7 +1127,7 @@ class Ui(QtWidgets.QMainWindow):
             RE(go_det('merlin'))
         else:
             pass
-    
+
     @show_error_message_box
     def merlinOUT(self):
         self.client.open('http://10.66.17.43')
@@ -897,10 +1140,24 @@ class Ui(QtWidgets.QMainWindow):
             RE(go_det("out"))
         else:
             pass
-    
+
+    @show_error_message_box
+    def eigerIN(self):
+        self.client.open('http://10.66.17.43')
+        QtTest.QTest.qWait(2000)
+        choice = QMessageBox.question(self, 'Detector Motion Warning',
+                                      "Make sure this motion is safe. \n Move?", QMessageBox.Yes |
+                                      QMessageBox.No, QMessageBox.No)
+
+        if choice == QMessageBox.Yes:
+            RE(go_det("eiger"))
+            QMessageBox.information(self, "info","Eiger motion completed")
+        else:
+            pass
+
     @show_error_message_box
     def dexela_motion(self, move_to = 0):
-        
+
         self.client.open('http://10.66.17.48')
         self.client.open('http://10.66.17.43')
         QtTest.QTest.qWait(2000)
@@ -910,22 +1167,24 @@ class Ui(QtWidgets.QMainWindow):
 
         if choice == QMessageBox.Yes:
             caput("XF:03IDC-ES{Stg:FPDet-Ax:Y}Mtr.VAL",move_to)
+            QMessageBox.information(self, "info","Dexela motion completed")
         else:
             pass
-    
+
     @show_error_message_box
     @show_confirm_box
     def vortexIN(self):
         #RE(bps.mov(fdet1.x, -7))
         caput("XF:03IDC-ES{Det:Vort-Ax:X}Mtr.VAL", self.dsb_flur_in_pos.value())
         self.statusbar.showMessage('FS det Moving')
-    
+        QMessageBox.information(self, "info","Fluor. Det motion completed")
+
     @show_error_message_box
     def vortexOUT(self):
         #RE(bps.mov(fdet1.x, -107))
         caput("XF:03IDC-ES{Det:Vort-Ax:X}Mtr.VAL", -107)
         self.statusbar.showMessage('FS det Moving')
-    
+
     @show_error_message_box
     def cam11IN(self):
         self.client.open('http://10.66.17.43')
@@ -937,6 +1196,7 @@ class Ui(QtWidgets.QMainWindow):
         if choice == QMessageBox.Yes:
             RE(go_det('cam11'))
             self.statusbar.showMessage('CAM11 is IN')
+            QMessageBox.information(self, "info","CAM11 motion completed")
         else:
             pass
 
@@ -944,33 +1204,56 @@ class Ui(QtWidgets.QMainWindow):
     def cam6IN(self):
         caput("XF:03IDC-ES{CAM:06}cam1:Acquire",1)
         caput('XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.VAL', 0)
+        caput('XF:03IDC-OP{Stg:CAM6-Ax:Y}Mtr.VAL', 0)
         QtTest.QTest.qWait(1000)
         self.statusbar.showMessage('CAM6 Moving!')
 
     @show_error_message_box
     def cam6OUT(self):
         caput("XF:03IDC-ES{CAM:06}cam1:Acquire",0)
-        caput('XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.VAL', -50)
+        caput('XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.VAL', -60)
+        caput('XF:03IDC-OP{Stg:CAM6-Ax:Y}Mtr.VAL', 0)
         QtTest.QTest.qWait(1000)
         self.statusbar.showMessage('CAM6 Moving!')
-    
+
+    @show_error_message_box
+    def cam6LASER(self):
+        caput("XF:03IDC-ES{CAM:06}cam1:Acquire",0)
+        caput('XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.VAL', -32.5)
+        caput('XF:03IDC-OP{Stg:CAM6-Ax:Y}Mtr.VAL', 1.5)
+        QtTest.QTest.qWait(1000)
+        self.statusbar.showMessage('CAM6 Moving!')
+
     @show_error_message_box
     def FS_IN(self):
         caput('XF:03IDA-OP{FS:1-Ax:Y}Mtr.VAL', -57.)
         caput("XF:03IDA-BI{FS:1-CAM:1}cam1:Acquire",1)
         QtTest.QTest.qWait(20000)
         #self.statusbar.showMessage('FS Motion Done!')
-    
+
     @show_error_message_box
     def FS_OUT(self):
         caput("XF:03IDA-BI{FS:1-CAM:1}cam1:Acquire",0)
         caput('XF:03IDA-OP{FS:1-Ax:Y}Mtr.VAL', -20.)
-        
+
         QtTest.QTest.qWait(20000)
         #self.statusbar.showMessage('FS Motion Done!')
 
-    
+
     #move diff
+    @show_error_message_box
+    def read_dexela_ROI1(self):
+        self.sp_dexela_xpixel.setValue(int(caget("XF:03IDC-ES{Dexela:1}ROI1:MinX")+caget("XF:03IDC-ES{Dexela:1}ROI1:SizeX")))
+        self.sp_dexela_ypixel.setValue(int(1536-caget("XF:03IDC-ES{Dexela:1}ROI1:MinY")))
+        self.calc_and_fill_pos_2angle()
+
+    @show_error_message_box
+    def reset_dexela_ROI1(self):
+        caput("XF:03IDC-ES{Dexela:1}ROI1:MinX",0)
+        caput("XF:03IDC-ES{Dexela:1}ROI1:SizeX",1944//2)
+        caput("XF:03IDC-ES{Dexela:1}ROI1:MinY",1536//2)
+        caput("XF:03IDC-ES{Dexela:1}ROI1:SizeY",1536//2)
+
     @show_error_message_box
     def calc_and_fill_pos_2angle(self):
 
@@ -979,9 +1262,27 @@ class Ui(QtWidgets.QMainWindow):
         self.sp_diff_det_calc_x.setValue(delta)
         self.sp_diff_det_calc_y.setValue(gamma)
         self.sp_diff_det_calc_2theta.setValue(two_theta)
+    
+    @show_error_message_box
+    def copy_pos2angle_results(self):
 
+        cb = QApplication.clipboard()
+        cb.clear()
+        if self.cb_mll_theta_for_diff.isChecked():
+            sample_theta = dsth.position
+        else:
+            sample_theta = zpsth.position
+        gamma = self.sp_diff_det_calc_x.value()
+        delta= self.sp_diff_det_calc_y.value()
+        two_theta = self.sp_diff_det_calc_2theta.value()
+        dexela_xy = f'{self.sp_dexela_xpixel.value()},{self.sp_dexela_ypixel.value()}'
+        results_string = f'{gamma = }, {delta = }, {two_theta = }'
+        cb.setText(f'{sample_theta = }: {dexela_xy = } : {results_string}')
+
+
+    @show_error_message_box
     def move_diff_stage(self):
-        
+
         delta = self.sp_diff_det_calc_x.value()
         gamma = self.sp_diff_det_calc_y.value()
         dist = self.sp_diff_det_r.value()
@@ -998,14 +1299,14 @@ class Ui(QtWidgets.QMainWindow):
 
         else:
             pass
-        
+
 
     @show_error_message_box
     def SSA2_Pos(self, x, y):
         caput('XF:03IDC-OP{Slt:SSA2-Ax:XAp}Mtr.VAL', x)
         caput('XF:03IDC-OP{Slt:SSA2-Ax:YAp}Mtr.VAL', y)
         QtTest.QTest.qWait(15000)
-    
+
     @show_error_message_box
     def S5_Pos(self, x, y):
         caput('XF:03IDC-ES{Slt:5-Ax:Vgap}Mtr.VAL', x) #PV names seems flipped
@@ -1025,11 +1326,11 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_erf_fit.clicked.connect(lambda:self.plot_erf_fit())
         self.pb_plot_line_center.clicked.connect(lambda:self.plot_line_center())
 
-    
+
     @show_error_message_box
     def plot_me(self):
         sd = self.le_plot_sd.text()
-        elem = self.cb_plot_elem.currentText()
+        elem = self.cb_plot_elem.currentText().split(':')[0]
 
         if ',' in sd:
             slist_s, slist_e = sd.split(",")
@@ -1044,19 +1345,19 @@ class Ui(QtWidgets.QMainWindow):
 
         else:
             plot_data(int(sd), elem, 'sclr1_ch4')
-    
+
     @show_error_message_box
     def plot_erf_fit(self):
         sd = self.le_plot_sd.text()
-        elem = self.cb_plot_elem.currentText()
+        elem = self.cb_plot_elem.currentText().split(':')[0]
         erf_fit(int(sd), elem, linear_flag=self.cb_erf_linear_flag.isChecked())
-    
+
     @show_error_message_box
     def plot_line_center(self):
         sd = self.le_plot_sd.text()
-        elem = self.cb_plot_elem.currentText()
+        elem = self.cb_plot_elem.currentText().split(':')[0]
         line_center = return_line_center(int(sd), elem, threshold=self.dsb_line_center_thre.value())
-        
+
 
     def close_all_plots(self):
         plt.close('all')
@@ -1085,20 +1386,31 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_FS_OUT.clicked.connect(lambda:self.FS_OUT())
 
         #OSA Y Pos
-        self.pb_osa_out.clicked.connect(lambda:self.ZP_OSA_OUT())
-        self.pb_osa_in.clicked.connect(lambda:self.ZP_OSA_IN())
+        self.pb_osa_out.clicked.connect(lambda: self.runTask(lambda:self.ZP_OSA_OUT()))
+        #self.pb_osa_out.clicked.connect(lambda:self.ZP_OSA_OUT())
+        self.pb_osa_in.clicked.connect(lambda: self.runTask(lambda:self.ZP_OSA_IN()))
+        self.pb_zpbsy_in.clicked.connect(lambda: self.runTask(lambda:self.ZP_BS_IN()))
+        self.pb_zpbsy_out.clicked.connect(lambda: self.runTask(lambda:self.ZP_BS_OUT()))
+
+        self.pb_zp_cam11_view.clicked.connect(lambda:self.zp_to_cam11_view_())
+        self.pb_zp_nanobeam.clicked.connect(lambda:self.zp_to_nanobeam_())
+
+
+        # self.pb_zp_cam11_view.clicked.connect(lambda: self.runTask(lambda:self.zp_to_cam11_view_()))
+        # self.pb_zp_nanobeam.clicked.connect(lambda: self.runTask(lambda:self.zp_to_nanobeam_()))
+
 
         #alignment
         self.pb_ZPZFocusScanStart.clicked.connect(lambda:self.zpFocusScan())
         self.pb_MoveZPZ1AbsPos.clicked.connect(lambda:self.zpMoveAbs())
-        
+
         #recover from beamdump
-        self.pb_recover_from_beamdump.clicked.connect(lambda:RE(recover_from_beamdump()))
-        
+        #self.pb_recover_from_beamdump.clicked.connect(lambda:RE(recover_from_beamdump()))
+
         #peak flux
-        self.pb_peakBeamXY.clicked.connect(lambda:RE(peak_the_flux()))
-        
-    
+        #self.pb_peakBeamXY.clicked.connect(lambda:RE(peak_the_flux()))
+
+
     @show_error_message_box
     def zpFocusScan(self):
         zpStart = self.sb_ZPZ1RelativeStart.value()*0.001
@@ -1111,7 +1423,7 @@ class Ui(QtWidgets.QMainWindow):
         scanSteps = self.sb_FocusScanMtrStep.value()
         scanDwell = self.dsb_FocusScanDwell.value()
 
-        fitElem = self.cb_zp_focus_elem.currentText()
+        fitElem = self.cb_zp_focus_elem.currentText().split(':')[0]
         linFlag = self.cb_linearFlag_zpFocus.isChecked()
 
         RE(zp_z_alignment(zpStart,zpEnd,zpSteps,scanMotor,scanStart,scanEnd,scanSteps,scanDwell,
@@ -1206,7 +1518,7 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_print_scan_meta_mll.clicked.connect(lambda:self.viewScanMetaData(zp_flag=False))
         self.pb_copy_curr_pos_mll.clicked.connect(lambda:self.copy_current_pos(zp_flag=False))
 
-    
+
     # Sample Stage Navigation
     def get_current_position(self,zp_flag = True):
         self.roi = {}
@@ -1217,7 +1529,7 @@ class Ui(QtWidgets.QMainWindow):
             zpz1_pos = zp.zpz1.position
             zp_sx, zp_sz = zps.zpsx.position, zps.zpsz.position
             th = zpsth.position
-            
+
             self.roi = {
                 "zpssx": fx, "zpssy": fy, "zpssz": fz,
                 "smarx": cx, "smary": cy, "smarz": cz,
@@ -1231,7 +1543,7 @@ class Ui(QtWidgets.QMainWindow):
             sbz_pos = sbz.position
             th = dsth.position
             self.roi = {
-                "dssx": fx, "dsy": fy, "dsz": fz,
+                "dssx": fx, "dssy": fy, "dssz": fz,
                 "dsx": cx, "dsy": cy, "dsz": cz,
                 "sbz": sbz_pos, "dsth": th,
             }
@@ -1239,12 +1551,12 @@ class Ui(QtWidgets.QMainWindow):
     def print_roi_position(self, list_widget):
         item_num = list_widget.currentRow()
         # Getting the data embedded in each item from the listWidget
-        item_data = list_widget.item(item_num).data(QtCore.Qt.UserRole) 
+        item_data = list_widget.item(item_num).data(QtCore.Qt.UserRole)
         print(item_data)
 
 
     def copy_current_pos(self,zp_flag = True):
-        
+
         self.get_current_position(zp_flag=zp_flag)
         stringToCopy = ' '
         for item in self.roi.items():
@@ -1260,13 +1572,13 @@ class Ui(QtWidgets.QMainWindow):
         roi_name = 'ROI' + str(list_widget.count())
         # Creates a QListWidgetItem
         item_to_add = QtWidgets.QListWidgetItem()
-        item_to_add.setFlags(item_to_add.flags() | QtCore.Qt.ItemIsEditable)        
+        item_to_add.setFlags(item_to_add.flags() | QtCore.Qt.ItemIsEditable)
 
 
-        # Setting your QListWidgetItem Text          
-        item_to_add.setText(roi_name)  
+        # Setting your QListWidgetItem Text
+        item_to_add.setText(roi_name)
 
-        # Setting your QListWidgetItem Data  
+        # Setting your QListWidgetItem Data
         item_to_add.setData(QtCore.Qt.UserRole, self.roi)
 
         # Add the new rule to the QListWidget
@@ -1275,40 +1587,43 @@ class Ui(QtWidgets.QMainWindow):
 
 
     def export_listitems_to_json(self, list_widget,auto = True):
-        
+
         self.sample_pos_roi_dict = {}
 
             # Looping through items
-        for item_index in range(list_widget.count()):  
+        for item_index in range(list_widget.count()):
 
             # Getting the data embedded in each item from the listWidget
-            item_data = list_widget.item(item_index).data(QtCore.Qt.UserRole)  
+            item_data = list_widget.item(item_index).data(QtCore.Qt.UserRole)
 
             # Getting the datatext of each item from the listWidget
-            item_text = list_widget.item(item_index).text()  
+            item_text = list_widget.item(item_index).text()
 
             self.sample_pos_roi_dict[item_text] = item_data
-        
+
         if auto:
             save_file_path = os.path.join(ui_path,"temp_files/gui_roi_positions.json")
             # write the data to the temp location as JSON
 
         else:
-            file_path = QFileDialog().getSaveFileName(self,"Save JSON file", self.active_folder, "JSON Files (*.json)")
+            file_path = QFileDialog().getSaveFileName(self,
+                                                      "Save Positions",
+                                                      os.path.join(self.active_folder, "sample_positions.json"),
+                                                      "JSON Files (*.json)")
             save_file_path = file_path[0]
             self.active_folder = save_file_path
-            
+
         if save_file_path:
 
             with open(save_file_path, 'w') as outfile:
                 json.dump(self.sample_pos_roi_dict, outfile, indent=6)
 
         else:
-            return 
-    
+            return
+
 
     def import_list_items_from_json(self,list_widget, auto=False):
-        
+
         list_widget.clear()
 
         if auto:
@@ -1326,12 +1641,12 @@ class Ui(QtWidgets.QMainWindow):
                 # Creates a QListWidgetItem
                 item_to_add = QtWidgets.QListWidgetItem()
 
-                # Setting your QListWidgetItem Text          
-                item_to_add.setText(key)  
+                # Setting your QListWidgetItem Text
+                item_to_add.setText(key)
 
-                # Setting your QListWidgetItem Data  
+                # Setting your QListWidgetItem Data
                 item_to_add.setData(QtCore.Qt.UserRole, value)
-                item_to_add.setFlags(item_to_add.flags() | QtCore.Qt.ItemIsEditable) 
+                item_to_add.setFlags(item_to_add.flags() | QtCore.Qt.ItemIsEditable)
 
                 # Add the new rule to the QListWidget
                 list_widget.addItem(item_to_add)
@@ -1339,28 +1654,34 @@ class Ui(QtWidgets.QMainWindow):
         else:
             return
 
-        
+
     def move_stage_to_roi(self,list_widget):
         roi_num = list_widget.currentRow()
-        roi_positions = list_widget.item(roi_num).data(QtCore.Qt.UserRole) 
+        roi_positions = list_widget.item(roi_num).data(QtCore.Qt.UserRole)
         for key, value in roi_positions.items():
             if not key == "zp.zpz1":
                 RE(bps.mov(eval(key), value))
-                
+
             elif key == "zp.zpz1":
                 RE(mov_zpz1(value))
 
             print(f"{key} moved to {value :.3f}")
-            #self.statusbar.showMessage(f'Sample moved to {key.name}:{value:.4f} ')
+            self.statusbar.showMessage(f'Sample moved')
 
 
     def clear_list_widget_items(self,list_widget):
         list_widget.clear()
         self.export_listitems_to_json(list_widget)
-        
-    @show_error_message_box
+
+    #@show_error_message_box
     def recover_pos_from_sid_zp(self):
         current_sid = self.lcd_scanNumber.value()
+        zp_flag = self.cb_sid_moveZPZ.isChecked()
+        sd = db[int(self.le_sid_position_zp.text())].start["scan_id"]
+        RE(recover_zp_scan_pos(int(sd), zp_flag, 1))
+        print("moved to new position")
+        
+        '''
         sd = db[int(self.le_sid_position_zp.text())].start["scan_id"]
         zp_flag = self.cb_sid_moveZPZ.isChecked()
         print(f"{sd = }")
@@ -1397,7 +1718,9 @@ class Ui(QtWidgets.QMainWindow):
                 else:
                     self.statusbar.showMessage(f'unable to recover positions from {sd}')
                     return
-                
+
+        '''
+
     def recover_pos_from_sid_mll(self):
         current_sid = self.lcd_scanNumber.value()
         sd = db[int(self.le_sid_position_mll.text())].start["scan_id"]
@@ -1414,7 +1737,7 @@ class Ui(QtWidgets.QMainWindow):
 
                 else:
                     return
-                
+
         else:
             RE(recover_mll_scan_pos(int(sd),moveflag=True,base_moveflag=base_flag))
 
@@ -1423,7 +1746,7 @@ class Ui(QtWidgets.QMainWindow):
 
 
         if zp_flag:
-            
+
             #scan_id = int(self.le_sid_position_zp.text())
             scan_id = db[int(self.le_sid_position_zp.text())].start["scan_id"]
             print(f"{scan_id = }")
@@ -1467,12 +1790,12 @@ class Ui(QtWidgets.QMainWindow):
 
 
     def viewScanMetaData(self,zp_flag = True):
-        
+
         if zp_flag:
             sd = self.le_sid_position_zp.text()
         else:
             sd = self.le_sid_position_mll.text()
-        
+
         h = db[int(sd)]
         QMessageBox.information(self, "Info", str(h.start))
         #self.statusbar.showMessage(str(h.start))
@@ -1513,10 +1836,10 @@ class Ui(QtWidgets.QMainWindow):
         else:
             QMessageBox.critical(self, "Close Error", "You cannot close the GUI while scan is in progress")
             pass
-    
+
     def connect_sample_exchange(self):
         #sample exchange
-        self.pb_start_vent.clicked.connect(lambda:self.vent_in_thread(target_pressure = 755))
+        self.pb_start_vent.clicked.connect(lambda:self.vent_in_thread(target_pressure = 750))
         self.pb_stop_vent.clicked.connect(HXNSampleExchanger.stop_vending) #need fix
         self.pb_start_pump.clicked.connect(lambda:self.start_pumping_in_thread(350))
         self.pb_stop_pump.clicked.connect(self.pumping_stop)
@@ -1539,7 +1862,7 @@ class Ui(QtWidgets.QMainWindow):
 
         if choice == QMessageBox.Yes:
 
-            # reset the progress bar 
+            # reset the progress bar
             self.prb_sample_exchange.reset()
 
             #set min/max for the progress bar- by default the max-min>0 and pressure here is decreasing
@@ -1548,11 +1871,11 @@ class Ui(QtWidgets.QMainWindow):
 
             self.lb_sample_change_action.setText("Pumping in progress")
 
-            self.pump_worker_thread = PumpingThread("XF:03IDC-VA{VT:Chm-CM:1}P-I", 
-                                             fast_pump_start, 
+            self.pump_worker_thread = PumpingThread("XF:03IDC-VA{VT:Chm-CM:1}P-I",
+                                             fast_pump_start,
                                              user_target_pressure
                                             )
-            
+
             #thread connections
             self.pump_worker_thread.start_slow_pump.connect(HXNSampleExchanger.start_slow_pumps)
             self.pump_worker_thread.start_fast_pump.connect(HXNSampleExchanger.start_fast_pumps)
@@ -1567,13 +1890,13 @@ class Ui(QtWidgets.QMainWindow):
                 self.pump_worker_thread.finished.connect(lambda:self.he_backfill_in_thread(target_pressure = 250))
             else:
                 pass
-            
+
             self.pump_worker_thread.start()
 
         else:
             return
 
-   
+
     def vent_in_thread(self, target_pressure = 745):
 
         choice = QMessageBox.question(self, 'Start Venting',
@@ -1582,7 +1905,7 @@ class Ui(QtWidgets.QMainWindow):
 
         if choice == QMessageBox.Yes:
 
-            # reset the progress bar 
+            # reset the progress bar
             self.prb_sample_exchange.reset()
 
             self.lb_sample_change_action.setText("Venting in progress")
@@ -1591,9 +1914,9 @@ class Ui(QtWidgets.QMainWindow):
             self.prb_sample_exchange.setRange(0,  int(target_pressure))
 
             self.vent_thread = VentingThread("XF:03IDC-VA{VT:Chm-CM:1}P-I", target_pressure)
-            
+
             self.vent_thread.open_vent.connect(HXNSampleExchanger.start_venting)
-            
+
             if self.cb_sample_ex_det_out.isChecked():
                 self.vent_thread.started.connect(lambda:RE(diff_to_home(move_out_later = True)))
             self.vent_thread.started.connect(lambda:self.live_pressure_plot_thread(time_delay=10000))
@@ -1602,9 +1925,10 @@ class Ui(QtWidgets.QMainWindow):
             self.vent_thread.finished.connect(lambda:self.prb_sample_exchange.setValue(100))
             self.vent_thread.finished.connect(self.vent_thread.terminate)
             self.vent_thread.finished.connect(lambda: self.lb_sample_change_action.setText("Venting finished"))
+            self.vent_thread.finished.connect(lambda: QMessageBox.about(self, "Vent", "Ready for sample exchange"))
             self.vent_thread.finished.connect(lambda:self.live_plot_worker_thread.terminate())
             self.vent_thread.start()
-    
+
     def he_backfill_in_thread(self,target_pressure = 250):
 
         QtTest.QTest.qWait(10000)
@@ -1612,12 +1936,12 @@ class Ui(QtWidgets.QMainWindow):
         #open he valve
         caput('XF:03IDC-ES{IO:1}DO:4-Cmd',1)
 
-        # reset the progress bar 
+        # reset the progress bar
         self.prb_sample_exchange.reset()
 
         #set min/max for the progress bar
         self.prb_sample_exchange.setRange(0,  249)
-        
+
         self.lb_sample_change_action.setText("He-backfill in progress")
 
         self.he_backfill_worker_thread = HeBackFillThread("XF:03IDC-VA{VT:Chm-CM:1}P-I",
@@ -1638,7 +1962,7 @@ class Ui(QtWidgets.QMainWindow):
 
             if diff_status()=="diff_pos":
                 logger.Warning("Detector stage probably in a diffraction position;Motion Aborted")
-                QMessageBox.about(self, "Detector stage probably in a diffraction position", 
+                QMessageBox.about(self, "Detector stage probably in a diffraction position",
                                   "Motion Aborted")
 
             else:
@@ -1657,61 +1981,68 @@ class Ui(QtWidgets.QMainWindow):
                                       QMessageBox.No, QMessageBox.No)
 
         if choice == QMessageBox.Yes:
-        
+
             HXNSampleExchanger.stop_pumping()
             QtTest.QTest.qWait(3000)
             self.pump_worker_thread.terminate()
         else:
             return
-        
+
 
     def plot_pressure(self, time_n_pressure):
-        
+
         self.live_time_list.append(time_n_pressure[0])
         self.live_pressure_list.append(time_n_pressure[1])
         pen=pg.mkPen(color='#80d5d5', style=QtCore.Qt.DashLine)
 
         vent_line = pg.InfiniteLine(pos = 765,
-                                    angle = 0, 
-                                    label = "Vented (ready to open)", 
+                                    angle = 0,
+                                    label = "Vented (ready to open)",
                                     pen= pen)
         he_line = pg.InfiniteLine(pos = 250, angle = 0,
                                   label = "He-back-filled (experiment in progress)",
                                   pen= pen)
         vac_line = pg.InfiniteLine(pos = 1.2,
-                                   angle = 0, 
+                                   angle = 0,
                                    label = "Vaccum (pumping in progress)",
                                    pen= pen)
+        
+        fast_pump_line = pg.InfiniteLine(pos = 350,
+                                   angle = 0,
+                                   label = "Fast pump start",
+                                   pen= pen)
         high_vac_line = pg.InfiniteLine(pos = 1.e-5,
-                                        angle = 0, 
+                                        angle = 0,
                                         label = "HV state (custom)",
                                         pen= pen)
 
 
-        self.pressure_plot.plot(np.array(self.live_time_list)/60_000, 
+        self.pressure_plot.plot(np.array(self.live_time_list)/60_000,
                                 np.array(self.live_pressure_list),
                                 clear = True,
-                                pen='y', 
-                                symbol='o', 
-                                symbolPen='r', 
-                                symbolSize=10, 
+                                pen='y',
+                                symbol='o',
+                                symbolPen='r',
+                                symbolSize=10,
                                 symbolBrush=(255, 0, 0, 0))
-        
+
         self.pressure_plot.addItem(vent_line)
         self.pressure_plot.addItem(he_line)
         self.pressure_plot.addItem(vac_line)
-        #self.pressure_plot.addItem(high_vac_line)
-        
-    
+        self.pressure_plot.addItem(fast_pump_line)
 
-        
+        #self.pressure_plot.addItem(high_vac_line)
+
+
+
+
     def live_pressure_plot_thread(self, time_delay=5000):
 
         if self.live_plot_worker_thread.isRunning():
            self.live_plot_worker_thread.terminate()
            self.pressure_plot.clear()
            self.pressure_plot_canvas.removeItem(self.pressure_plot)
-        
+
         else:
             try:
                 self.pressure_plot.clear()
@@ -1720,7 +2051,7 @@ class Ui(QtWidgets.QMainWindow):
                 pass
 
 
-                
+
         self.live_pressure_list = deque(maxlen=350)
         self.live_time_list = deque(maxlen=350)
         self.pressure_plot = pg.PlotItem(title= "Chamber Pressure Monitor")
@@ -1750,12 +2081,15 @@ class liveStatus(QThread):
     def run(self):
 
         while True:
-            self.current_sts.emit(caget(self.PV))
-            #print("New positions")
-            QtTest.QTest.qWait(500)
+            try:
+                self.current_sts.emit(caget(self.PV))
+                #print("New positions")
+                QtTest.QTest.qWait(500)
+            except:
+                pass
 
 class liveUpdate(QThread):
-    
+
     current_positions = pyqtSignal(list)
 
     def __init__(self, pv_dict, update_interval_ms = 500):
@@ -1766,7 +2100,7 @@ class liveUpdate(QThread):
     def return_values(self):
         readings = []
         for i in self.pv_dict.values():
-            
+
             readings.append(caget(i))
 
         return readings
@@ -1775,13 +2109,37 @@ class liveUpdate(QThread):
     def run(self):
 
         while True:
-            positions = self.return_values()
-            #self.pv_list = list(self.pv_dict.values())
-            self.current_positions.emit(positions)
-            #print(list(self.pv_dict.values())[0])
-            #print(positions[0])
-            QtTest.QTest.qWait(self.update_interval_ms)
+            try:
+                positions = self.return_values()
+                #self.pv_list = list(self.pv_dict.values())
+                self.current_positions.emit(positions)
+                #print(list(self.pv_dict.values())[0])
+                #print(positions[0])
+                QtTest.QTest.qWait(self.update_interval_ms)
 
+            except:
+                pass
+
+
+class liveThresholdUpdate(QThread):
+
+    current_sts = pyqtSignal(bool)
+    def __init__(self, PV, threshold):
+        super().__init__()
+        self.PV = PV
+        self.threshold = threshold
+
+    def run(self):
+
+        while True:
+
+            if caget(self.PV)>self.threshold:
+                self.current_sts.emit(True)
+                #print("New positions")
+            else:
+                pass
+
+            QtTest.QTest.qWait(60000)
 
 class updateScanProgress(QThread):
 
@@ -1797,7 +2155,7 @@ class updateScanProgress(QThread):
     def run(self):
         #signal total points to collect
         self.tot_scan_points.emit(caget(self.tot_pv))
-        
+
         while True:
             self.completed_points.emit(caget(self.update_pv))
             #print(caget(self.update_pv))
@@ -1807,7 +2165,7 @@ class updateScanProgress(QThread):
                 break
 
         self.finished.emit()
-            
+
 
 
 #in use
@@ -1821,7 +2179,7 @@ class PumpingThread(QThread):
 
 
     def __init__(self, pressure_pv, fast_pump_start_p, target_p):
-        
+
         super().__init__()
         self.pressure_pv = pressure_pv
         self.fast_pump_start_p = fast_pump_start_p
@@ -1841,9 +2199,9 @@ class PumpingThread(QThread):
 
             self.start_fast_pump.emit()
             print("fast_triggered")
-        
+
         while caget(self.pressure_pv)>self.target_p:
-            
+
             #if pressure is below threshold open fast
             self.pressure_change.emit(int((760-caget(self.pressure_pv))/7.6))
             QtTest.QTest.qWait(5000)
@@ -1852,7 +2210,7 @@ class PumpingThread(QThread):
 
 
 class VentingThread(QThread):
-    
+
     pressure_change = pyqtSignal(int)
     open_vent = pyqtSignal()
     finished = pyqtSignal()
@@ -1860,16 +2218,16 @@ class VentingThread(QThread):
     def __init__(self, pressure_pv, target_p):
 
         #make edits to trigger fast vent open from here
-        
+
         super().__init__()
         self.pressure_pv = pressure_pv
         self.target_p = target_p
         print(self.target_p)
-    
+
     def run(self):
 
         self.open_vent.emit()
-        
+
         while caget(self.pressure_pv)<self.target_p:
             self.pressure_change.emit(int(caget(self.pressure_pv)))
             QtTest.QTest.qWait(5000)
@@ -1885,7 +2243,7 @@ class HeBackFillThread(QThread):
     finished = pyqtSignal()
 
     def __init__(self, pressure_pv, target_p):
-    
+
         super().__init__()
         self.pressure_pv = pressure_pv
         self.target_p = target_p
@@ -1897,30 +2255,100 @@ class HeBackFillThread(QThread):
         while caget(self.pressure_pv)<248.0:
             QtTest.QTest.qWait(1000)
             self.pressure_change.emit(int(caget(self.pressure_pv)))
-            
+
 
         self.finished.emit()
 
 
 class LivePressureValueThread(QThread):
-    
+
     current_time_pressure = pyqtSignal(tuple)
 
     def __init__(self, pressure_pv, wait_time):
 
         #make edits to trigger fast vent open from here
-        
+
         super().__init__()
         self.pressure_pv = pressure_pv
         self.wait_time = wait_time
-    
+
     def run(self):
         start_time = 0
         while True:
             self.current_time_pressure.emit((start_time,caget(self.pressure_pv)))
             QtTest.QTest.qWait(int(self.wait_time))
-            start_time += self.wait_time 
-        
+            start_time += self.wait_time
+
+
+class WorkerThread(QThread):
+    finished = pyqtSignal()
+
+    def __init__(self, task, *args, **kwargs):
+        super().__init__()
+        self.task = task
+        self.args = args
+        self.kwargs = kwargs
+
+    def run(self):
+        print("task try")
+        self.task(*self.args, **self.kwargs)
+        print("task done")
+        self.finished.emit()
+        print("finish emitted")
+
+
+
+'''
+
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.initUI()
+
+    def initUI(self):
+        self.setWindowTitle("Task Runner")
+        self.setGeometry(100, 100, 300, 200)
+
+        self.button1 = QPushButton("Run Task 1", self)
+        self.button1.clicked.connect(lambda: self.runTask(self.longRunningTask, 5))
+
+        self.button2 = QPushButton("Run Task 2", self)
+        self.button2.clicked.connect(lambda: self.runTask(self.anotherTask, "Hello", 3))
+
+        layout = QVBoxLayout()
+        layout.addWidget(self.button1)
+        layout.addWidget(self.button2)
+
+        container = QWidget()
+        container.setLayout(layout)
+        self.setCentralWidget(container)
+
+    def runTask(self, task, *args, **kwargs):
+        self.pop_up = QMessageBox(self)
+        self.pop_up.setWindowTitle("Please Wait")
+        self.pop_up.setText("Task is in progress...")
+        self.pop_up.setStandardButtons(QMessageBox.NoButton)
+        self.pop_up.show()
+
+        self.thread = WorkerThread(task, *args, **kwargs)
+        self.thread.finished.connect(self.onTaskFinished)
+        self.thread.start()
+
+    @pyqtSlot()
+    def onTaskFinished(self):
+        self.pop_up.close()
+        self.thread.quit()
+
+    def longRunningTask(self, duration):
+        import time
+        time.sleep(duration)
+
+    def anotherTask(self, message, duration):
+        import time
+        for _ in range(duration):
+            print(message)
+            time.sleep(1)
+'''
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)

@@ -14,6 +14,10 @@ energy_K_list = np.array([1040,1254,1487,1740,2011,2310,2622,2958,3314,3692,4093
                           81516,83785,86106,88478,90884,34720,36027,37361,38725,40118,41542,42996,44482,45999,
                           47547,49128,50742,52388,54070,93351,95868,98440,101059,103734,106472,109271,112121,115032])
 
+elem_K_tooltip = list(elem_K_list)
+for i in range(len(elem_K_list)):
+    elem_K_tooltip[i] = elem_K_tooltip[i] + ':%d'%(energy_K_list[i])
+
 elem_L_list = np.array(['Zn_L','Ga_L','Ge_L','AS_L','Se_L','Br_L','Kr_L','Rb_L','Sr_L','Y_L','Zr_L','Nb_L',
                         'Mo_L','Tc_L','Ru_L','Rh_L','Pd_L','Ag_L','Cd_L','In_L','Sn_L','Sb_L','Te_L','I_L',
                         'Xe_L','Cs_L','Ba_L','La_L','Hf_L','Ta_L','W_L','Re_L','Os_L','Ir_L','Pt_L','Au_L',
@@ -27,10 +31,21 @@ energy_L_list = np.array([1012,1098,1186,1282,1379,1481,1585,1692,1806,1924,2044
                           4839,5035,5228,5432,5633,5850,6053,6273,6498,6720,6949,7180,7416,7655,12968,13291,
                           13614,13946,14282,14620,14961,15308,15660])
 
+elem_L_tooltip = list(elem_L_list)
+for i in range(len(elem_L_list)):
+    elem_L_tooltip[i] = elem_L_tooltip[i] + ':%d'%(energy_L_list[i])
+
 elem_M_list = np.array(['Hf_M','Ta_M','W_M','Re_M','Os_M','Ir_M','Pt_M','Au_M','Hg_M','Tl_M',
                         'Pb_M','Bi_M','Po_M','At_M','Rn_M','Fr_M','Ra_M','Ac_M','Ce_M','Pr_M',
                         'Nd_M','Pm_M','Sm_M','Eu_M','Gd_M','Tb_M','Dy_M','Ho_M','Er_M','Tm_M',
-                        'Yb_M','Lu_M','Th_M','Pa_M','U_M','Np_M','Pu_M','Am_M','Cm_M','Bk_M','Cf_M']) 
+                        'Yb_M','Lu_M','Th_M','Pa_M','U_M','Np_M','Pu_M','Am_M','Cm_M','Bk_M','Cf_M'])
 
+energy_M_list = np.array([1646,1712,1775,1840,1907,1976,2048,2118,2191,2267,2342,2418,2499,2577,
+                          2654,2732,2806,2900,884,927,979,1023,1078,1122,1181,1233,1284,1342,1404,
+                          1463,1526,1580,2990,3071,3164,3250,3339,3429,3525,3616,3709])
 
-all_elem_lines = np.concatenate((elem_K_list,elem_L_list,elem_M_list))
+elem_M_tooltip = list(elem_M_list)
+for i in range(len(elem_M_list)):
+    elem_M_tooltip[i] = elem_M_tooltip[i] + ':%d'%(energy_M_list[i])
+
+all_elem_lines = np.concatenate((elem_K_tooltip,elem_L_tooltip,elem_M_tooltip))

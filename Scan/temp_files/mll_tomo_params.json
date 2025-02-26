@@ -1,65 +1,76 @@
 {
+      "flying_panda": true,
       "angle_info": {
-            "start": 0,
-            "end": 10,
-            "num": 3
+            "start": -90,
+            "end": 90,
+            "angle_step": 2
       },
       "fly2d_scan": {
             "det": "dets1",
-            "x_start": -1.0,
-            "x_end": 1.0,
-            "x_num": 10,
-            "y_start": -1.0,
-            "y_end": 1.0,
-            "y_num": 10,
+            "x_start": -1,
+            "x_end": 1,
+            "x_num": 100,
+            "y_start": -1,
+            "y_end": 1,
+            "y_num": 100,
             "exposure": 0.03
       },
       "xalign": {
-            "do_align": false,
-            "start": -2.0,
-            "end": 2.0,
+            "do_align": true,
+            "start": -2,
+            "end": 2,
             "num": 100,
             "exposure": 0.03,
             "elem": "Fe",
             "center_with": "line_center",
             "threshold": 0.5,
-            "offset": 0.0
+            "move_coarse": false,
+            "offset": 0
       },
       "yalign": {
-            "do_align": false,
-            "start": -2.0,
-            "end": 2.0,
+            "do_align": true,
+            "start": -2,
+            "end": 2,
             "num": 100,
             "exposure": 0.03,
             "elem": "Fe",
-            "center_with": "edge",
+            "center_with": "line_center",
             "threshold": 0.5,
-            "offset": 0.0
+            "move_coarse": false,
+            "offset": 0
       },
       "align_2d_com": {
             "do_align": false,
-            "x_start": -2.0,
-            "x_end": 2.0,
-            "x_num": 10,
-            "y_start": -2.0,
-            "y_end": 2.0,
-            "y_num": 10,
+            "x_start": -2,
+            "x_end": 2,
+            "x_num": 100,
+            "y_start": -2,
+            "y_end": 2,
+            "y_num": 100,
             "exposure": 0.03,
             "elem": "Fe",
             "threshold": 0.5,
             "move_x": true,
-            "move_y": true
+            "move_y": true,
+            "x_offest": 0,
+            "y_offset": 0
       },
       "stop_iter": false,
-      "add_angles": [
-            null
-      ],
+      "add_angles": [],
       "remove_angles": [
-            null
+            -90,
+            -91
       ],
       "stop_pdf": false,
+      "pdf_elems": [
+            "Au_L"
+      ],
       "pause_scan": false,
-      "test": true,
-      "th_init": -0.003205,
-      "y_init": 0.29504
+      "test": false,
+      "do_y_offset": true,
+      "ic_threshold": 0.9,
+      "th_init": 58.99987099999999,
+      "y_init": -0.18154,
+      "scan_label": "HXN_Tomo_Scan",
+      "Notes": "My sample # 10"
 }

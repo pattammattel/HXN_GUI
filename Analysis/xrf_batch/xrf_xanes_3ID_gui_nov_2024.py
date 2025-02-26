@@ -15,7 +15,6 @@ from PyQt5.QtWidgets import QMessageBox, QFileDialog
 from pyxrf.api import *
 from epics import caget
 from calcs import *
-from pyxrf_tiffs_to_images import *
 
 logger = logging.getLogger()
 ui_path = os.path.dirname(os.path.abspath(__file__))
@@ -76,7 +75,7 @@ def run_build_xanes_dict(param_dict):
                     alignment_enable = param_dict["align"], 
                     output_save_all=param_dict["save_all"],
                     use_incident_energy_from_param_file=True,
-                    skip_scan_types = ['FlyPlan1D','1D_FLY_PANDA' ])
+                    skip_scan_types = ['FlyPlan1D'])
 
     plt.close()
 
@@ -97,7 +96,7 @@ def run_build_xanes_dict(param_dict):
                         alignment_enable = False, 
                         output_save_all=param_dict["save_all"],
                         use_incident_energy_from_param_file=True, 
-                        skip_scan_types = ['FlyPlan1D','1D_FLY_PANDA'])
+                        skip_scan_types = ['FlyPlan1D'] )
         
         plt.close()
 
@@ -427,17 +426,8 @@ class xrf_3ID(QtWidgets.QMainWindow):
                                              "csv file (*.csv)")
         if fname:
             self.le_log_file.setText(fname)
-            log = pd.read_csv(fname)
-            if "scan_id" in log.columns:
-                sid_list = log['scan_id'].dropna().to_numpy(dtype='int')
-            else:
-                # Find columns starting with "scan" (case-insensitive)
-                matching_columns = [col for col in log.columns if col.lower().startswith("scan")]
-                if matching_columns:
-                    print(f"No 'scan_id' found. Matching columns: {matching_columns}")
-                    sid_list = log[str(matching_columns[0])].dropna().to_numpy(dtype='int')
-                else:
-                    print("No matching columns found.")
+            df = pd.read_csv(fname)
+            sid_list = df["Scan ID"].dropna().to_numpy(dtype = int)
             self.le_startid.setText(str(sid_list[0]))
             self.le_lastid.setText(str(sid_list[-1]))
             new_batch_job = {}
@@ -469,7 +459,7 @@ class xrf_3ID(QtWidgets.QMainWindow):
         if fname:
             new_batch_job = {}
             df = pd.read_csv(fname)
-            sid_list = df["scan_id"].dropna().to_numpy(dtype = int)
+            sid_list = df["Scan ID"].dropna().to_numpy(dtype = int)
 
             temp_batch_file = self.createParamDictXANES()
             temp_batch_file['last_sid'] = int(sid_list[-1])
@@ -522,17 +512,8 @@ class xrf_3ID(QtWidgets.QMainWindow):
         if choice == QMessageBox.Yes:
             new_batch_job = {}
             for fname in sorted(logfiles):
-                log = pd.read_csv(fname)
-                if "scan_id" in log.columns:
-                    sid_list = log['scan_id'].dropna().to_numpy(dtype='int')
-                else:
-                    # Find columns starting with "scan" (case-insensitive)
-                    matching_columns = [col for col in log.columns if col.lower().startswith("scan")]
-                    if matching_columns:
-                        print(f"No 'scan_id' found. Matching columns: {matching_columns}")
-                        sid_list = log[str(matching_columns[0])].dropna().to_numpy(dtype='int')
-                    else:
-                        print("No matching columns found.")
+                df = pd.read_csv(fname)
+                sid_list = df["Scan ID"].dropna().to_numpy(dtype = int)
 
                 temp_batch_file = self.createParamDictXANES()
                 temp_batch_file['last_sid'] = int(sid_list[-1])
@@ -748,8 +729,6 @@ class xrf_3ID(QtWidgets.QMainWindow):
     def stop_file_tracking(self):
         self.trackfile_thread.requestInterruption()
         self.trackfile_thread.terminate()
-        self.xrf_batch_tracking_thread.requestInterruption()
-        self.xrf_batch_tracking_thread.terminate()
 
     def pyxrf_track_file_mode(self, sid_list):
         print(f"live process started : {sid_list}")
@@ -787,33 +766,26 @@ class xrf_3ID(QtWidgets.QMainWindow):
         for tracking_file in eval(file_list):
             if tracking_file.endswith(".csv"):
                 log = pd.read_csv(tracking_file).dropna()
-                if "scan_id" in log.columns:
-                    self.scan_list = log['scan_id'].dropna().to_numpy(dtype='int')
-                else:
-                    # Find columns starting with "scan" (case-insensitive)
-                    matching_columns = [col for col in log.columns if col.lower().startswith("scan")]
-                    if matching_columns:
-                        print(f"No 'scan_id' found. Matching columns: {matching_columns}")
-                        self.scan_list = log[str(matching_columns[0])].dropna().to_numpy(dtype='int')
-                    else:
-                        print("No matching columns found.")
-
-            elif tracking_file.endswith(".txt"):
+                self.scan_list = list(log['scan_id'])
+            else:
+                tracking_file.endswith(".txt")
                 log = np.loadtxt(tracking_file, dtype = int)
                 self.scan_list = list(log[:,0])
 
-            self.pte_status.append(f"scans to process {self.scan_list}")
-
             self.pyxrf_track_file_mode(self.scan_list)
-
-            QMessageBox.info(None, "Done!", "XRF Fitting completed")
             
 
     def stop_multipling_tracking(self):
 
-        if self.trackfile_thread.isRunning():
-            self.trackfile_thread.requestInterruption()
-            self.trackfile_thread.terminate()
+        count = 0
+        while self.trackfile_thread_multi.isRunning():
+            self.trackfile_thread_multi.requestInterruption()
+            self.trackfile_thread_multi.terminate()
+            QtTest.QTest.qWait(3000)
+            count+=1
+
+            if count > 20:
+                break
 
     #not using
     def pyxrf_live_collector_mode(self, sid_list):
@@ -1093,20 +1065,19 @@ class Loadh5AndFitFromList(QThread):
     def run(self):
 
         for sid in self.scan_list_requested:
-            fname = os.path.join(self.paramDict["wd"],f"scan2D_{int(sid)}.h5")
-            print(f"{fname} exists")
+            h = db[int(sid)]
+            if bool(h.stop):
+                if h.start['plan_type'] != 'FlyPlan1D':
+                    print(f"{sid = }, processing")
+                    fname = os.path.join(self.paramDict["wd"],f"scan2D_{sid}.h5")
+                    if not os.path.exists(fname):
 
-            if not os.path.exists(fname):
-                h = db[int(sid)]
-                if bool(h.stop):
-                    if h.start['plan_type'] != 'FlyPlan1D' or '1D_FLY_PANDA':
-                        print(f"{sid = }, processing")
                         try:
                             make_hdf(int(sid),
                                     wd = self.paramDict["wd"],
-                                    file_overwrite_existing = False,
+                                    file_overwrite_existing = True,
                                     create_each_det = True,
-                                    skip_scan_types = ['FlyPlan1D', '1D_FLY_PANDA']
+                                    skip_scan_types = ['FlyPlan1D']
                                     )
                             
                         except:
@@ -1117,27 +1088,6 @@ class Loadh5AndFitFromList(QThread):
 
                 else:
                     print(f"{fname} exists; skipped")
-        '''
-        for sid in self.scan_list_requested:
-            fitted_file_present = os.path.exists(os.path.join(self.paramDict["wd"],f"output_tiff_scan2D_{sid}"))
-            h5_present = os.path.exists(os.path.join(self.paramDict["wd"],f"scan2D_{sid}.h5"))
-            if not fitted_file_present and h5_present:
-
-                try:
-                    pyxrf_batch(int(sid), 
-                                int(sid), 
-                                wd=self.paramDict["wd"], 
-                                param_file_name=self.paramDict["xrfParam"], 
-                                scaler_name=self.paramDict["norm"], 
-                                save_tiff=self.paramDict["saveXRFTiff"],
-                                save_txt = False,
-                                ignore_datafile_metadata = True,
-                                fln_quant_calib_data = self.paramDict.get("quant_calib_file",''),
-                                quant_ref_eline = self.paramDict.get("quant_calib_elem",'')
-                                )
-    
-                except : pass
-        '''
 
         try:
             pyxrf_batch(int(self.scan_list_requested[0]), 
@@ -1151,8 +1101,8 @@ class Loadh5AndFitFromList(QThread):
                         fln_quant_calib_data = self.paramDict.get("quant_calib_file",''),
                         quant_ref_eline = self.paramDict.get("quant_calib_elem",'')
                         )
-            QtTest.QTest.qWait(5000)
-    
+            
+
         except : pass
 
 
@@ -1207,7 +1157,7 @@ class Loadh5AndFitFromListLive(QThread):
                                     wd = self.paramDict["wd"],
                                     file_overwrite_existing = True,
                                     create_each_det = True,
-                                    skip_scan_types = ['FlyPlan1D','1D_FLY_PANDA']
+                                    skip_scan_types = ['FlyPlan1D']
                                     )
                             
                         except: 
@@ -1221,28 +1171,20 @@ class Loadh5AndFitFromListLive(QThread):
                        if sid not in self.skipped_1d:
                            self.skipped_1d.append(int(sid))
 
+        try:
+            pyxrf_batch(int(self.scan_list_requested[0]), 
+                        int(self.scan_list_requested[-1]), 
+                        wd=self.paramDict["wd"], 
+                        param_file_name=self.paramDict["xrfParam"], 
+                        scaler_name=self.paramDict["norm"], 
+                        save_tiff=self.paramDict["saveXRFTiff"],
+                        save_txt = False,
+                        ignore_datafile_metadata = True,
+                        fln_quant_calib_data = self.paramDict.get("quant_calib_file",''),
+                        quant_ref_eline = self.paramDict.get("quant_calib_elem",'')
+                        )
         
-        for sid in self.scan_list_requested:
-            fitted_file_present = os.path.exists(os.path.join(self.paramDict["wd"],f"output_tiff_scan2D_{sid}"))
-            h5_present = os.path.exists(os.path.join(self.paramDict["wd"],f"scan2D_{sid}.h5"))
-            
-            if not fitted_file_present and h5_present:
-                try:
-                    pyxrf_batch(int(sid), 
-                                int(sid), 
-                                wd=self.paramDict["wd"], 
-                                param_file_name=self.paramDict["xrfParam"], 
-                                scaler_name=self.paramDict["norm"], 
-                                save_tiff=self.paramDict["saveXRFTiff"],
-                                save_txt = False,
-                                ignore_datafile_metadata = True,
-                                fln_quant_calib_data = self.paramDict.get("quant_calib_file",''),
-                                quant_ref_eline = self.paramDict.get("quant_calib_elem",'')
-                                )
-                    print(f"{self.paramDict['wd']}/output_tiff_scan2D_{sid} created")
-                except: pass
-        
-        
+        except : pass
         print(f"failed to process {self.failed_scans}")
         
         # for sid in self.scan_list_requested:    
@@ -1309,7 +1251,7 @@ def xrf_load_and_fit_from_list(sid_list, param_dict):
                     wd = param_dict["wd"],
                     file_overwrite_existing = param_dict['file_overwrite_existing'],
                     create_each_det = True,
-                    skip_scan_types = ['FlyPlan1D','1D_FLY_PANDA']
+                    skip_scan_types = ['FlyPlan1D']
                     )
             
             QtTest.QTest.qWait(1000)
@@ -1347,16 +1289,14 @@ class Loadh5AndFit(QThread):
     def run(self):
         logger.info("h5 thread started")
         QtTest.QTest.qWait(500)
-
-        #print(f"{self.paramDict['file_overwrite_existing'] = }")
-        print(f"Process: make hdf in batch,then,xrf fitting in batch" )
         for sid in self.paramDict["sidList"]: #filter for 1d
+
+            # if self.paramDict['file_overwrite_existing']:
+            #     os.remove(os.path.join(self.paramDict["wd"],f"scan2D_{sid}.h5"))
 
             hdr = db[int(sid)]
             start_doc = hdr["start"]
             if not start_doc["plan_type"] in ("FlyPlan1D",):
-
-                print(f"Loading h5 data of {sid = }")
 
                 try:
 
@@ -1365,11 +1305,8 @@ class Loadh5AndFit(QThread):
                         wd = self.paramDict["wd"],
                         file_overwrite_existing = self.paramDict['file_overwrite_existing'],
                         create_each_det = True,
-                        skip_scan_types = ['FlyPlan1D','1D_FLY_PANDA']
+                        skip_scan_types = ['FlyPlan1D']
                         )
-                    
-                    print(f"Pyxrf h5 for {sid = } is created ")
-                    
                 except:
                     if sid not in self.failed_scans: 
                         self.failed_scans.append(sid)
@@ -1378,47 +1315,47 @@ class Loadh5AndFit(QThread):
             QtTest.QTest.qWait(1000)
 
 
-        try:
-            pyxrf_batch(int(self.paramDict["sidList"][0]), 
-                        int(self.paramDict["sidList"][-1]), 
-                        wd=self.paramDict["wd"], 
-                        param_file_name=self.paramDict["xrfParam"], 
-                        scaler_name=self.paramDict["norm"], 
-                        save_tiff=self.paramDict["saveXRFTiff"],
-                        save_txt = False,
-                        ignore_datafile_metadata = True,
-                        fln_quant_calib_data = self.paramDict.get("quant_calib_file",''),
-                        quant_ref_eline = self.paramDict.get("quant_calib_elem",'')
-                        )
-        
-
-        except : pass
-
-        # for sid in self.paramDict["sidList"]:
-        #     h5_present = os.path.exists(os.path.join(self.paramDict["wd"],f"scan2D_{sid}.h5"))
-        #     fitted_file_present = os.path.exists(os.path.join(self.paramDict["wd"],f"output_tiff_scan2D_{sid}"))
-        #     if self.paramDict["XRFfit"] and h5_present:
-        #         try:
-        #             pyxrf_batch(int(sid), 
-        #                         int(sid), 
-        #                         wd=self.paramDict["wd"], 
-        #                         param_file_name=self.paramDict["xrfParam"], 
-        #                         scaler_name=self.paramDict["norm"], 
-        #                         save_tiff=self.paramDict["saveXRFTiff"],
-        #                         save_txt = False,
-        #                         ignore_datafile_metadata = True,
-        #                         fln_quant_calib_data = self.paramDict.get("quant_calib_file",''),
-        #                         quant_ref_eline = self.paramDict.get("quant_calib_elem",'')
-        #                         )
+            # try:
+            #     pyxrf_batch(int(self.paramDict["sidList"][0]), 
+            #                 int(self.paramDict["sidList"][-1]), 
+            #                 wd=self.paramDict["wd"], 
+            #                 param_file_name=self.paramDict["xrfParam"], 
+            #                 scaler_name=self.paramDict["norm"], 
+            #                 save_tiff=self.paramDict["saveXRFTiff"],
+            #                 save_txt = False,
+            #                 ignore_datafile_metadata = True,
+            #                 fln_quant_calib_data = self.paramDict.get("quant_calib_file",''),
+            #                 quant_ref_eline = self.paramDict.get("quant_calib_elem",'')
+            #                 )
             
 
-                # except :
-                #     if sid not in self.failed_scans: 
-                #         self.failed_scans.append(sid)
-                #         #self.le_failed_scans.setText(self.failed_scans)                       
-                #     print(f" Fit not completed; {sid = }")
-                #     self.missed_scans.append(sid)
-                #     pass
+            # except : pass
+
+            for sid in self.paramDict["sidList"]:
+                h5_present = os.path.exists(os.path.join(self.paramDict["wd"],f"scan2D_{sid}.h5"))
+                fitted_file_present = os.path.exists(os.path.join(self.paramDict["wd"],f"output_tiff_scan2D_{sid}"))
+                if self.paramDict["XRFfit"] and h5_present:
+                    try:
+                        pyxrf_batch(int(sid), 
+                                    int(sid), 
+                                    wd=self.paramDict["wd"], 
+                                    param_file_name=self.paramDict["xrfParam"], 
+                                    scaler_name=self.paramDict["norm"], 
+                                    save_tiff=self.paramDict["saveXRFTiff"],
+                                    save_txt = False,
+                                    ignore_datafile_metadata = True,
+                                    fln_quant_calib_data = self.paramDict.get("quant_calib_file",''),
+                                    quant_ref_eline = self.paramDict.get("quant_calib_elem",'')
+                                    )
+                
+
+                    except :
+                        if sid not in self.failed_scans: 
+                            self.failed_scans.append(sid)
+                            #self.le_failed_scans.setText(self.failed_scans)                       
+                        print(f" Fit not completed; {sid = }")
+                        self.missed_scans.append(sid)
+                        pass
 
         
 class xrfBatchThread(QThread):
@@ -1460,16 +1397,7 @@ class TrackingFileToScanNumerThreadLive(QThread):
 
             if self.tracking_file_name.endswith(".csv"):
                 log = pd.read_csv(self.tracking_file_name).dropna()
-                if "scan_id" in log.columns:
-                    self.scan_list = list(log['scan_id'].to_numpy(dtype = 'int'))
-                else:
-                    # Find columns starting with "scan" (case-insensitive)
-                    matching_columns = [col for col in log.columns if col.lower().startswith("scan")]
-                    if matching_columns:
-                        print(f"No 'scan_id' found. Matching columns: {matching_columns}")
-                        self.scan_list = list(log[str(matching_columns[0])])
-                    else:
-                        print("No matching columns found.")
+                self.scan_list = list(log['scan_id'])
             else:
                 self.tracking_file_name.endswith(".txt")
                 log = np.loadtxt(self.tracking_file_name, dtype = int)
@@ -1480,13 +1408,11 @@ class TrackingFileToScanNumerThreadLive(QThread):
             if self.scan_list != self.previous_list: 
                 self.scan_list_sig.emit(self.scan_list)
                 self.previous_list = self.scan_list
-                QtTest.QTest.qWait(30*1000)
+                QtTest.QTest.qWait(1000)
                 self.repeated_attempt = 0
 
             else:
                 self.repeated_attempt += 1
-                print(f"{self.repeated_attempt = }")
-                QtTest.QTest.qWait(30*1000)
 
             if self.repeated_attempt >3600:
                 break

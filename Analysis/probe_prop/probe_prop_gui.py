@@ -48,6 +48,8 @@ class ProbePropagationGUI(QtWidgets.QMainWindow):
                                                    )
         
         self.actionSave_All_Plotted_Data.triggered.connect(self.export_current_data)
+        self.actionExport_Parameters.triggered.connect(self.export_params)
+    
     def parse_ptycho_txtfile(self, txt_filename):
     
         config.read(txt_filename)
@@ -77,6 +79,7 @@ class ProbePropagationGUI(QtWidgets.QMainWindow):
 
         if filename[0]:
             self.probe_file = filename[0]
+            self.le_probe_file.setText(self.probe_file)
 
             #image here
             self.image_view_probe.setImage(np.abs(np.load(filename[0])))
@@ -99,7 +102,15 @@ class ProbePropagationGUI(QtWidgets.QMainWindow):
             det_dist,\
             det_pixel_size = self.parse_ptycho_txtfile(os.path.join(folder,txtfile))
 
-            nx, ny = np.shape(np.abs(np.load(self.probe_file)))
+            shape = np.shape(np.abs(np.load(self.probe_file)))
+            if len(shape) == 2:
+                nx = shape[0]
+                ny = shape[1]
+            else:
+                nx = shape[1]
+                ny = shape[2]
+
+            #nx, ny = np.shape(np.abs(np.load(self.probe_file)))
             self.dsb_energy.setValue(energy)
             self.dsb_det_dist.setValue(det_dist)
             self.dsb_det_pixel_size.setValue(det_pixel_size)
@@ -217,12 +228,15 @@ class ProbePropagationGUI(QtWidgets.QMainWindow):
         self.plot_linefit(self.yfit, self.plot_yfit, self.slider_for_index.value())
         self.slider_label.setText(f'{self.slider_for_index.value()} of {self.slider_for_index.maximum()}')
 
+        self.prop_distance = self.sigma[0,self.slider_for_index.value()]
+        self.xfwhm = self.sigma[1,self.slider_for_index.value()]*2.35482*self.pixel_size*1.e9
+        self.yfwhm = self.sigma[2, self.slider_for_index.value()] * 2.35482*self.pixel_size*1.e9
         # calculate pixel size late, setting to 7nm
-        self.lbl_xfit.setText(f' FWHM = {self.sigma[1,self.slider_for_index.value()]*2.35482*self.pixel_size*1.e9 :.2f} nm,'
-                              f'Distance  = {self.sigma[0,self.slider_for_index.value()] :.2f}' )
+        self.lbl_xfit.setText(f' FWHM = { self.xfwhm :.2f} nm,'
+                              f'Distance  = {self.prop_distance :.2f}' )
 
-        self.lbl_yfit.setText(f' FWHM = {self.sigma[2, self.slider_for_index.value()] * 2.35482*self.pixel_size*1.e9 :.2f} nm,'
-                              f'Distance  = {self.sigma[0, self.slider_for_index.value()] :.2f}')
+        self.lbl_yfit.setText(f' FWHM = {self.yfwhm :.2f} nm,'
+                              f'Distance  = {self.prop_distance :.2f}')
 
         self.sigma_selection_line.setPos(self.sigma[0][self.slider_for_index.value()])
         self.deviation_selection_line.setPos(self.deviation[0][self.slider_for_index.value()])
@@ -241,11 +255,11 @@ class ProbePropagationGUI(QtWidgets.QMainWindow):
         except:
             pass
 
-        x_hue = np.squeeze(im_stack.mean(2))
-        self.image_view_xhue.setImage(x_hue)
+        self.x_hue = np.squeeze(im_stack.mean(2))
+        self.image_view_xhue.setImage(self.x_hue)
 
-        y_hue = np.squeeze(im_stack.mean(1))
-        self.image_view_yhue.setImage(y_hue)
+        self.y_hue = np.squeeze(im_stack.mean(1))
+        self.image_view_yhue.setImage(self.y_hue)
 
         self.image_view_xhue.setPredefinedGradient("bipolar")
         self.image_view_yhue.setPredefinedGradient("bipolar")
@@ -342,22 +356,33 @@ class ProbePropagationGUI(QtWidgets.QMainWindow):
 
             self.deviation_plot.addItem(self.deviation_selection_line)
 
+    def prep_export_params(self):
+        paramas = {"probe_file":self.probe_file,
+            "energy_kev":self.dsb_energy.value(),
+            "recon_pixel_size_nm":self.dsb_calc_pixel_size.value(),
+            "det_distance_m":self.dsb_det_dist.value(),
+            "det_pixel_size_um":self.dsb_det_pixel_size.value(),
+            "prop_start_um":self.dsb_prop_start.value(),
+            "prop_end_um":self.dsb_prop_end.value(),
+            "prop_step_size_um":self.dsb_prop_size.value(),
+            "xfit_fwhm":self.xfwhm,
+            "yfit_fwhm":self.yfwhm,
+            "prop_distance":self.prop_distance
+            }
+        
+        return paramas
+
 
     def export_current_data(self):
 
-        file_name = QFileDialog.getSaveFileName(self,
+        save_path = os.path.abspath(self.probe_file).split(('.'))[0]
+
+        export_file_name = QFileDialog.getSaveFileName(self,
                                                 "save_all_live_data",
-                                                os.path.dirname(self.probe_file)+"prop_data",
+                                                save_path+"_prop_data",
                                                 "All Files (*)")
         
-        paramas = {"energy_kev":self.dsb_energy.value(),
-                   "recon_pixel_size_nm":self.dsb_calc_pixel_size.value(),
-                   "det_distance_m":self.dsb_det_dist.value(),
-                   "det_pixel_size_um":self.dsb_det_pixel_size.value(),
-                   "prop_start_um":self.dsb_prop_start.value(),
-                   "prop_end_um":self.dsb_prop_end.value(),
-                   "prop_step_size_um":self.dsb_prop_size.value()
-                   }
+        paramas = self.prep_export_params()
 
         exporter_csv_xfit = pg.exporters.CSVExporter(self.plot_xfit.plotItem)
         exporter_csv_xfit.parameters()["columnMode"] = '(x,y) per plot'
@@ -390,27 +415,48 @@ class ProbePropagationGUI(QtWidgets.QMainWindow):
         exporter_png_sigma.parameters()['height'] = 600
         exporter_png_sigma.parameters()['antialias'] = True
 
-        if file_name[0]:
+        if export_file_name[0]:
 
-            tf.imwrite(file_name[0]+"_propagated_stack.tiff", 
+            tf.imwrite(export_file_name[0]+"_propagated_stack.tiff", 
                       np.float32(np.abs(self.prb_array.transpose(2,0,1))),
                       imagej = True)
-            exporter_csv_xfit.export(file_name[0]+"_xfit_data.csv")
-            exporter_csv_yfit.export(file_name[0]+"_yfit_data.csv")
-            exporter_csv_sigma.export(file_name[0]+"_sigma_data.csv")
-            exporter_png_xfit.export(file_name[0]+"_xfit_image.png")
-            exporter_png_yfit.export(file_name[0]+"_yfit_image.png")
-            exporter_png_sigma.export(file_name[0]+"_sigma_image.png")
-            exporter_png_xhue.export(file_name[0]+"_xhue_image.png")
-            exporter_png_yhue.export(file_name[0]+"_yhue_image.png")
-            exporter_png_probe.export(file_name[0]+"_probe_image.png")
+            exporter_csv_xfit.export(export_file_name[0]+"_xfit_data.csv")
+            exporter_csv_yfit.export(export_file_name[0]+"_yfit_data.csv")
+            exporter_csv_sigma.export(export_file_name[0]+"_sigma_data.csv")
+            exporter_png_xfit.export(export_file_name[0]+"_xfit_image.png")
+            exporter_png_yfit.export(export_file_name[0]+"_yfit_image.png")
+            exporter_png_sigma.export(export_file_name[0]+"_sigma_image.png")
+            exporter_png_xhue.export(export_file_name[0]+"_xhue_image.png")
+            exporter_png_yhue.export(export_file_name[0]+"_yhue_image.png")
+            exporter_png_probe.export(export_file_name[0]+"_probe_image.png")
 
-            with open(file_name[0]+"_paramters.json", 'w') as fp:
+            tf.imwrite(export_file_name[0]+"_xhue.tiff", 
+                      np.float32(self.x_hue),
+                      imagej = True)
+            
+            tf.imwrite(export_file_name[0]+"_yhue.tiff", 
+                      np.float32(self.y_hue),
+                      imagej = True)
+
+            with open(export_file_name[0]+"_paramters.json", 'w') as fp:
                 json.dump(paramas, fp, indent=6)
 
+    def export_params(self):
+        
+        save_path = os.path.abspath(self.probe_file).split(('.'))[0]+"_prop_params.json"
+
+        export_file_name = QFileDialog.getSaveFileName(self,
+                                                "save_all_live_data",
+                                                save_path,
+                                                "All Files (*)")
+
+        paramas = self.prep_export_params()
+
+        with open(export_file_name[0], 'w') as fp:
+            json.dump(paramas, fp, indent=6)
 
 
-
+        
 if __name__ == '__main__':
     try:
         QApplication.setAttribute(QtCore.Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)

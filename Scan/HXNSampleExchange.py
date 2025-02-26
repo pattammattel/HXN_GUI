@@ -60,8 +60,6 @@ class SampleExchangeProtocol():
         QtTest.QTest.qWait(2000)
 
 
-        
-
     def start_slow_pumps(self):
 
         #make sure vents are closed
@@ -73,6 +71,65 @@ class SampleExchangeProtocol():
 
             #turn pumps on and open slow valves
             [self.triggerPV(pv) for pv in [self.pumpAON,self.pumpASlowOpen,self.pumpBON,self.pumpBSlowOpen]]
+
+
+    def start_slow_pumps_target_p(self, target_p = 500, wait_time_min = 1):
+
+        #make sure vents are closed
+        [self.triggerPV(pv) for pv in [self.fastVentClose,self.slowVentClose]]
+
+        #turn on pumps 
+        #make sure vents are closed
+        if caget(self.fastVentStatus)==1 and caget(self.slowVentStatus)==1:
+
+            #turn pumps on and open slow valves
+            [self.triggerPV(pv) for pv in [self.pumpAON,self.pumpASlowOpen,self.pumpBON,self.pumpBSlowOpen]]
+
+
+        while True:
+
+            QtTest.QTest.qWait(2000)
+
+            if caget("XF:03IDC-VA{VT:Chm-CM:1}P-I")<target_p:
+
+                QtTest.QTest.qWait(5000)
+                print('closing valves')
+                #close pump valves
+                [self.triggerPV(pv) for pv in [self.pumpBFastClose,self.pumpAFastClose,
+                                        self.pumpBSlowClose,self.pumpASlowClose]]
+                print('turning pumps off')
+                #tun off the pumps
+                [self.triggerPV(pv) for pv in [self.pumpAOFF,self.pumpBOFF]]
+                break
+        
+        print(f"Waiting for {wait_time_min}")
+        time.sleep(wait_time_min*60)
+
+        return 
+    
+
+
+    def start_slow_vent_target_p(self, target_p = 500, wait_time_min = 1):
+        
+        self.triggerPV(self.slowVentOpen)
+        while True:
+            QtTest.QTest.qWait(2000)
+        
+            if caget("XF:03IDC-VA{VT:Chm-CM:1}P-I")>target_p:
+                print(f"exceeded target p")
+
+                QtTest.QTest.qWait(5000)
+                #print(f'waiting for threshold pressure {caget("XF:03IDC-VA{VT:Chm-CM:1}P-I")}<550')
+
+                #make sure vents are closed
+                [self.triggerPV(pv) for pv in [self.fastVentClose,self.slowVentClose]]
+                break
+
+        print(f"Waiting for {wait_time_min} minute")
+        time.sleep(wait_time_min*60)
+
+        return 
+            
 
     
     def start_fast_pumps(self):
@@ -110,7 +167,7 @@ class SampleExchangeProtocol():
 
             
 
-    def start_pumps(self, fast_pump_start_pressure = 400, target_pressure = 1.2 ):
+    def start_pumps(self, fast_pump_start_pressure = 400, target_pressure = 1.2):
         
         #while lopp end after 1 hour
 

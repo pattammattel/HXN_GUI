@@ -20,13 +20,8 @@ from tqdm.auto import tqdm
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import pickle
 import os
-#from databroker import db
+from databroker import db
 from load_xrf import *
-
-import sys
-sys.path.insert(0,'/nsls2/data2/hxn/shared/config/bluesky_overlay/2023-1.0-py310-tiled/lib/python3.10/site-packages')
-from hxntools.CompositeBroker import db
-from hxntools.scan_info import get_scan_positions
 
 
 def get_sid_list(str_list, interval):
@@ -222,7 +217,7 @@ def load_h5_data(file_list, roi, mask):
         print("Assume it is a rocking curve scan; number of angles = {}".format(diff_data.shape[0]))
     return diff_data  
 
-def export_diff_data_as_tiff(first_sid,last_sid, det="eiger2_image", mon="sclr1_ch4", roi=None, mask=None, threshold=None, wd = '.', norm_with_ic = True):
+def export_diff_data_as_tiff(first_sid,last_sid, det="eiger1", mon="sclr1_ch4", roi=None, mask=None, threshold=None, wd = '.', norm_with_ic = True):
     # load diffraction data of a list of scans through databroker, with data being stacked at the first axis
     # roi[row_start,col_start,row_size,col_size]
     # mask has to be the same size of the image data, which corresponds to the last two axes
@@ -313,126 +308,11 @@ def export_diff_data_as_tiff(first_sid,last_sid, det="eiger2_image", mon="sclr1_
             scan_table.to_csv(os.path.join(save_folder,f"{sid}_scan_table.csv"))
             print(f"{saved_as =}")
             
-def export_diff_data_as_h5(sid_list, 
-                           det="eiger2_image", roi=None, 
-                           mask=None, threshold=None,
-                           norm_with = 'sclr1_ch4',
-                           wd = '.', compression = None):
-    # load diffraction data of a list of scans through databroker, with data being stacked at the first axis
-    # roi[row_start,col_start,row_size,col_size]
-    # mask has to be the same size of the image data, which corresponds to the last two axes
-    
-    data_type = 'float32'
-  
-    num_scans = np.size(sid_list)
-    data_name = '/entry/instrument/detector/data'
-    for i in tqdm(range(num_scans),desc="Progress"):
-        sid = int(sid_list[i])
-        print(f"{sid = }")
-
-        #skip 1d
-
-        hdr = db[int(sid)]
-        start_doc = hdr["start"]
-        sid = start_doc["scan_id"]
-        
-        if 'num1' and 'num2' in start_doc:
-            dim1,dim2 = start_doc['num1'],start_doc['num2']
-        elif 'shape' in start_doc:
-            dim1,dim2 = start_doc.shape
-        try:
-            xy_scan_positions = list(np.array(df[mots[0]]),np.array(df[mots[1]]))
-        except:
-            xy_scan_positions = list(get_scan_positions(hdr))
-
-        scan_table = get_scan_metadata(int(sid))
-        if not start_doc["plan_type"] in ("FlyPlan1D",):
-
-            file_name = get_path(sid,det)
-            num_subscan = len(file_name)
             
-            if num_subscan == 1:
-                f = h5py.File(file_name[0],'r') 
-                data = np.asarray(f[data_name],dtype=data_type)
-            else:
-                sorted_files = sort_files_by_creation_time(file_name)
-                ind = 0
-                for name in sorted_files:
-                    f = h5py.File(name,'r')
-                    if ind == 0:
-                        data = np.asarray(f[data_name],dtype=data_type)
-                    else:   
-                        data = np.concatenate([data,np.asarray(f[data_name],dtype=data_type)],0)
-                    ind = ind + 1
-                #data = list(db[sid].data(det))
-                #data = np.asarray(np.squeeze(data),dtype=data_type)
-            _, roi1,roi2 = np.shape(data)
-
-            if threshold is not None:
-                data[data<threshold[0]] = 0
-                data[data>threshold[1]] = 0
-
-            if norm_with is not None:
-                #mon_array = np.stack(hdr.table(fill=True)[norm_with])
-                mon_array = np.array(list(hdr.data(str(norm_with)))).squeeze()
-                norm_data = data/mon_array[:,np.newaxis,np.newaxis]
-                print(f"data normalized with {norm_with} ")
-
-            
-            if mask is not None:     
-                #sz = data.shape
-                data = data*mask
-            if roi is None:
-                data = np.flip(data[:,:,:],axis = 1)
-            else:
-                data = np.flip(data[:,roi[0]:roi[0]+roi[2],roi[1]:roi[1]+roi[3]],axis = 1)
-                
-            print(f"data size = {data.size/1_073_741_824 :.2f} GB")
-
-            #save_folder =  os.path.join(wd,f"{sid}_diff_data")   
-
-            #if not os.path.exists(save_folder):
-                #os.makedirs(save_folder)
-
-            if wd:
-                save_folder = wd
-                
-            saved_as = os.path.join(save_folder,f"scan_{sid}_{det}")
-
-            f.close()
-
-            
-            with h5py.File(saved_as+'.h5','w') as f:
-
-                #data_group = f.create_group(f'{det}_raw_data')
-                data_group = f.create_group(f'/diff_data/{det}/')
-                data_group.create_dataset('raw_data',
-                                           data=data.reshape(dim1,dim2,roi1,roi2), 
-                                           compression = compression )
-                data_group.create_dataset('norm_data',
-                                           data=norm_data.reshape(dim1,dim2,roi1,roi2), 
-                                           compression = compression )
-                data_group.create_dataset('Io',
-                                           data=mon_array.reshape(dim1,dim2),
-                                           compression = compression )
-
-                data_group = f.create_group(f'/diff_data/scan/')
-                data_group.create_dataset('scan_positions',
-                            data=xy_scan_positions,
-                            compression = 'gzip')
-                scan_table.to_csv(saved_as+'_meta_data.csv')
-
-                # xrf_group = f.create_group('xrf_roi_data')
-                # names, xrf_2d = get_xrf_data(sid)
-                # xrf_group.create_dataset('xrf_roi_array', data = xrf_2d)
-                # xrf_group.create_dataset('xrf_elem_names', data = names)
-
-            f.close()
-            print(f"{saved_as =}")
 
 
 def export_diff_data_logfile(logfile_csv, 
-                           det="eiger2_image", roi=None, 
+                           det="eiger1", roi=None, 
                            mask=None, threshold=None, wd = '.'):
     # load diffraction data of a list of scans through databroker, with data being stacked at the first axis
     # roi[row_start,col_start,row_size,col_size]
@@ -503,8 +383,8 @@ def export_diff_data_logfile(logfile_csv,
             
             with h5py.File(saved_as+'.h5','w') as f:
 
-                data_group = f.create_group(f'{det}_raw_data')
-                #data_group = f.create_group(data_name)
+                #data_group = f.create_group(f'{det}_raw_data')
+                data_group = f.create_group(data_name)
                 data_group.create_dataset(det,data=data, compression = 'gzip')
                 scan_table.to_csv(saved_as+'_meta_data.csv')
 
@@ -516,134 +396,7 @@ def export_diff_data_logfile(logfile_csv,
             f.close()
             print(f"{saved_as =}")
 
-
-
 def export_single_diff_data(param_dict):
-    
-    '''
-    load diffraction data of a single scan through databroker
-    roi[row_start,col_start,row_size,col_size]
-    mask has to be the same size of the image data, which corresponds to the last two axes
-    
-    param_dict = {wd:'.', 
-                 "sid":-1, 
-                 "det":"merlin1", 
-                 "mon":"sclr1_ch4", 
-                 "roi":None, 
-                 "mask":None, 
-                 "threshold":None}
-    '''
-
-    det=param_dict["det"]
-    mon=param_dict["mon"]
-    roi=param_dict["roi"]
-    mask=param_dict["mask"]
-    threshold=param_dict["threshold"]
-    wd = param_dict["wd"]
-
-
-    data_type = 'float32'
-    data_name = '/entry/instrument/detector/data'
-    sid = param_dict["sid"]
-    start_doc = db[int(sid)].start
-    sid = start_doc["scan_id"]
-    param_dict["sid"] = sid
-    file_name = get_path(sid,det)
-    num_subscan = len(file_name)
-    scan_table = db[sid].table()
-
-    #print(f"Loading{sid} please wait...")
-        
-
-    hdr = db[int(sid)]
-    start_doc = hdr["start"]
-    sid = start_doc["scan_id"]
-    
-    if 'num1' and 'num2' in start_doc:
-        dim1,dim2 = start_doc['num1'],start_doc['num2']
-    elif 'shape' in start_doc:
-        dim1,dim2 = start_doc.shape
-    try:
-        xy_scan_positions = list(np.array(df[mots[0]]),np.array(df[mots[1]]))
-    except:
-        xy_scan_positions = list(get_scan_positions(hdr))
-
-    scan_table = get_scan_metadata(int(sid))
-    if not start_doc["plan_type"] in ("FlyPlan1D",):
-
-        file_name = get_path(sid,det)
-        num_subscan = len(file_name)
-        
-        if num_subscan == 1:
-            f = h5py.File(file_name[0],'r') 
-            data = np.asarray(f[data_name],dtype=data_type)
-        else:
-            sorted_files = sort_files_by_creation_time(file_name)
-            ind = 0
-            for name in sorted_files:
-                f = h5py.File(name,'r')
-                if ind == 0:
-                    data = np.asarray(f[data_name],dtype=data_type)
-                else:   
-                    data = np.concatenate([data,np.asarray(f[data_name],dtype=data_type)],0)
-                ind = ind + 1
-            #data = list(db[sid].data(det))
-            #data = np.asarray(np.squeeze(data),dtype=data_type)
-        _, roi1,roi2 = np.shape(data)
-
-        if threshold is not None:
-            data[data<threshold[0]] = 0
-            data[data>threshold[1]] = 0
-
-        norm_with = mon
-
-        if norm_with is not None:
-            #mon_array = np.stack(hdr.table(fill=True)[norm_with])
-            mon_array = np.array(list(hdr.data(str(norm_with)))).squeeze()
-            norm_data = data/mon_array[:,np.newaxis,np.newaxis]
-            print(f"data normalized with {norm_with} ")
-
-        
-        if mask is not None:     
-            #sz = data.shape
-            data = data*mask
-        if roi is None:
-            data = np.flip(data[:,:,:],axis = 1)
-        else:
-            data = np.flip(data[:,roi[0]:roi[0]+roi[2],roi[1]:roi[1]+roi[3]],axis = 1)
-            
-        print(f"data size = {data.size/1_073_741_824 :.2f} GB")
-
-        #save_folder =  os.path.join(wd,f"{sid}_diff_data")   
-
-        #if not os.path.exists(save_folder):
-            #os.makedirs(save_folder)
-
-        if wd:
-            save_folder = wd
-            
-        saved_as = os.path.join(save_folder,f"scan_{sid}_{det}")
-
-        f.close()
-
-    print(f"data reshaped to {data.shape}")
-
-    save_folder =  os.path.join(wd,f"{sid}_diff_data")
-    if not os.path.exists(save_folder):
-        os.makedirs(save_folder)
-
-    saved_as = os.path.join(save_folder,f"{sid}_diff_{det}.tiff")
-    if mon is not None:
-        tf.imwrite(saved_as, data.reshape(dim1,dim2,roi1,roi2), dtype = np.float32)
-
-    else:
-        tf.imwrite(saved_as, data.reshape(dim1,dim2,roi1,roi2).astype('uint16'), imagej=True)
-
-    export_scan_metadata(sid,save_folder)
-    scan_table.to_csv(os.path.join(save_folder,f"{sid}_scan_table.csv"))
-    print(f"{saved_as =}")
-
-def export_single_diff_data_old_scan(param_dict):
     
     '''
     load diffraction data of a single scan through databroker
@@ -839,10 +592,6 @@ def load_h5_data_db(sid_list, det, mon=None, roi=None, mask=None, threshold=None
     return diff_data  
 
 
-
-
-
-
 def load_xrf_rois(sid, wd, norm = None):
 
     h = db[int(sid)]
@@ -866,6 +615,11 @@ def load_xrf_rois(sid, wd, norm = None):
         spectrum = spectrum/(monitor)
 
     nx, ny = start_doc["shape"]
+    
+
+
+
+
 
     pass
 
