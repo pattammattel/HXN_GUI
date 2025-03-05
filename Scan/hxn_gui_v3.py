@@ -48,19 +48,19 @@ class Ui(QtWidgets.QMainWindow):
         uic.loadUi(os.path.join(ui_path,'ui_files/hxn_gui_v3.ui'), self)
         print("UI File loaded")
 
-        self.fly_motor_dict = {'zpssx': zpssx,
-                               'zpssy': zpssy,
-                               'zpssz': zpssz,
-                               'dssx': dssx,
-                               'dssy': dssy,
-                               'dssz': dssz}
-
-        # self.fly_motor_dict = {'dssx': dssx,
-        #                        'dssy': dssy,
-        #                        'dssz': dssz,
-        #                        'zpssx': zpssx,
+        # self.fly_motor_dict = {'zpssx': zpssx,
         #                        'zpssy': zpssy,
-        #                        'zpssz': zpssz,}
+        #                        'zpssz': zpssz,
+        #                        'dssx': dssx,
+        #                        'dssy': dssy,
+        #                        'dssz': dssz}
+
+        self.fly_motor_dict = {'dssx': dssx,
+                               'dssy': dssy,
+                               'dssz': dssz,
+                               'zpssx': zpssx,
+                               'zpssy': zpssy,
+                               'zpssz': zpssz,}
 
         # self.fly_det_dict = {'dets1': dets1,
         #                      'dets2': dets2,
@@ -424,23 +424,23 @@ class Ui(QtWidgets.QMainWindow):
 
     def connect_flyscan_signals(self):
 
-        self.dwell.valueChanged.connect(self.initParams)
-        self.x_step.valueChanged.connect(self.initParams)
-        self.y_step.valueChanged.connect(self.initParams)
-        self.x_start.valueChanged.connect(self.initParams)
-        self.y_start.valueChanged.connect(self.initParams)
-        self.x_end.valueChanged.connect(self.initParams)
-        self.y_end.valueChanged.connect(self.initParams)
-        self.cb_dets.currentTextChanged.connect(self.initParams)
-        self.cb_motor1.currentTextChanged.connect(self.initParams)
-        self.cb_motor2.currentTextChanged.connect(self.initParams)
+        self.dwell.valueChanged.connect(lambda:self.initParams())
+        self.x_step.valueChanged.connect(lambda:self.initParams())
+        self.y_step.valueChanged.connect(lambda:self.initParams())
+        self.x_start.valueChanged.connect(lambda:self.initParams())
+        self.y_start.valueChanged.connect(lambda:self.initParams())
+        self.x_end.valueChanged.connect(lambda:self.initParams())
+        self.y_end.valueChanged.connect(lambda:self.initParams())
+        self.cb_dets.currentTextChanged.connect(lambda:self.initParams())
+        self.cb_motor1.currentTextChanged.connect(lambda:self.initParams())
+        self.cb_motor2.currentTextChanged.connect(lambda:self.initParams())
         print("Fly Motors Connected")
 
         # logic control for 1d or 2d scan selection
-        self.rb_1d.clicked.connect(self.disableMot2)
-        self.rb_2d.clicked.connect(self.enableMot2)
-        self.rb_1d.clicked.connect(self.initParams)
-        self.rb_2d.clicked.connect(self.initParams)
+        self.rb_1d.clicked.connect(lambda:self.disableMot2())
+        self.rb_2d.clicked.connect(lambda:self.enableMot2())
+        self.rb_1d.clicked.connect(lambda:self.initParams())
+        self.rb_2d.clicked.connect(lambda:self.initParams())
         self.start.clicked.connect(lambda:self.run_fly_scan())
         self.pb_abort_fly.clicked.connect(self.quit_scan)
 
@@ -481,7 +481,8 @@ class Ui(QtWidgets.QMainWindow):
 
         self.motor1 = self.cb_motor1.currentText()
         self.motor2 = self.cb_motor2.currentText()
-
+    
+    @show_error_message_box
     def initParams(self):
         self.getScanValues()
 
@@ -493,18 +494,22 @@ class Ui(QtWidgets.QMainWindow):
         if self.rb_1d.isChecked():
             self.label_scan_info_calc.setText(f'X: {(cal_res_x * 1000):.2f} nm, Y: {(cal_res_y * 1000):.2f} nm \n'
                                               f'{self.tot_t_1d:.2f} minutes + overhead')
-            self.scan_plan = f'fly1d({self.det},{self.motor1}, {self.mot1_s},{self.mot1_e}, ' \
+            self.scan_plan = f'fly1dpd({self.det},{self.motor1}, {self.mot1_s},{self.mot1_e}, ' \
                         f'{self.mot1_steps}, {self.dwell_t:.5f})'
 
-
-
         else:
+
+
+            
             self.label_scan_info_calc.setText(f'X: {(cal_res_x * 1000):.2f} nm, Y: {(cal_res_y * 1000):.2f} nm \n'
                                               f'{self.tot_t_2d:.2f} minutes + overhead')
             self.scan_plan = f'fly2dpd({self.det}, {self.motor1},{self.mot1_s}, {self.mot1_e}, {self.mot1_steps},' \
                         f'{self.motor2},{self.mot2_s},{self.mot2_e},{self.mot2_steps},{self.dwell_t:.5f})'
 
         self.text_scan_plan.setText(self.scan_plan)
+
+        if self.mot1_steps * self.mot2_steps >64000:
+                raise ValueError ("scan points cannot exceed 64k")
 
     def copyForBatch(self):
         self.text_scan_plan.setText('yield from '+self.scan_plan)
@@ -521,6 +526,7 @@ class Ui(QtWidgets.QMainWindow):
         self.getScanValues()
         det_names = [d.name for d in eval(self.det)]
         scan_name = self.le_qplan_name.text()
+
 
         if self.rb_1d.isChecked():
             RM.item_add((BPlan("fly1dpd",
@@ -540,6 +546,10 @@ class Ui(QtWidgets.QMainWindow):
 
             ic = sclr2_ch2.get()
             scan_time = self.mot1_steps * self.mot2_steps * self.dwell_t / 60
+
+            
+            if self.mot1_steps * self.mot2_steps >64000:
+                raise ValueError ("scan points cannot exceed 64k")
 
             RM.item_add((BPlan("recover_pos_and_scan",
                             scan_name,
@@ -809,17 +819,17 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_move_dsy_pos.clicked.connect(lambda:self.move_dsy())
         self.pb_move_dsz_pos.clicked.connect(lambda:self.move_dsz())
         self.pb_move_dth_pos.clicked.connect(lambda:self.move_dsth())
-        self.pb_move_sbz_pos.clicked.connect(lambda:self.move_zpz1())
-
+        self.pb_move_sbz_pos.clicked.connect(lambda:self.move_sbz())
         self.pb_move_dsx_neg.clicked.connect(lambda: self.move_dsx(neg_=True))
         self.pb_move_dsy_neg.clicked.connect(lambda: self.move_dsy(neg_=True))
         self.pb_move_dsz_neg.clicked.connect(lambda: self.move_dsz(neg_=True))
         self.pb_move_dth_pos_neg.clicked.connect(lambda: self.move_dsth(neg_=True))
-        self.pb_move_sbz_neg.clicked.connect(lambda: self.move_zpz1(neg_=True))
+        self.pb_move_sbz_neg.clicked.connect(lambda: self.move_sbz(neg_=True))
         self.pb_mll_stop_all_sample.clicked.connect(lambda:stop_all_mll_motion())
-        self.pb_mll_osa_out.clicked.connect(lambda: self.runTask(lambda:RE(mll_osa_out())))
-        self.pb_mll_osa_in.clicked.connect(lambda: self.runTask(lambda:RE(mll_osa_in())))
-        self.pb_mll_bs_out.clicked.connect(lambda: self.runTask(lambda:mll_bs_out_move()))
+        #self.pb_osa_out.clicked.connect(lambda: self.runTask(lambda:self.ZP_OSA_OUT()))
+        self.pb_mll_osa_out.clicked.connect(lambda:self.mll_osa_OUT())
+        self.pb_mll_osa_in.clicked.connect(lambda:self.mll_osa_IN())
+        self.pb_mll_bs_out.clicked.connect(lambda: self.runTask(lambda:RE(mll_bs_in())))
         self.pb_mll_bs_in.clicked.connect(lambda: self.runTask(lambda:RE(mll_bs_in())))
         self.pb_mll_lens_out.clicked.connect(lambda: self.runTask(lambda:RE(mll_lens_out())))
         self.pb_mll_lens_in.clicked.connect(lambda: self.runTask(lambda:RE(mll_lens_in())))
@@ -839,6 +849,9 @@ class Ui(QtWidgets.QMainWindow):
 
     def move_dsth(self, neg_=False):
         self.moveAMotor(self.db_move_dsth, dsth, neg=neg_)
+
+    def move_sbz(self, neg_=False):
+        self.moveAMotor(self.db_move_sbz, sbz, neg=neg_)
 
 
     #Energy change ui
@@ -1030,6 +1043,26 @@ class Ui(QtWidgets.QMainWindow):
         QtTest.QTest.qWait(5000)
         self.statusbar.showMessage('OSA Y is IN')
 
+    @show_error_message_box
+    def mll_osa_IN(self):
+
+        if not abs(mllosa.osax.position)<10:
+            caput(mllosa.osax.prefix,caget(mllosa.osax.prefix)-2600)
+            QtTest.QTest.qWait(5000)
+
+        else:
+            raise ValueError(f"OSA_X position not close to zero osax = {mllosa.osax.position :.1f}")
+    
+    @show_error_message_box
+    def mll_osa_OUT(self):
+
+        if abs(mllosa.osax.position)<50:
+            caput(mllosa.osax.prefix,caget(mllosa.osax.prefix)+2600)
+            QtTest.QTest.qWait(5000)
+
+        else:
+            raise ValueError(f"OSA_X position not close to zero osax = {mllosa.osax.position :.1f}")
+
         
 
     @show_error_message_box
@@ -1167,7 +1200,8 @@ class Ui(QtWidgets.QMainWindow):
 
         if choice == QMessageBox.Yes:
             caput("XF:03IDC-ES{Stg:FPDet-Ax:Y}Mtr.VAL",move_to)
-            QMessageBox.information(self, "info","Dexela motion completed")
+
+            QMessageBox.information(self, "info","Dexela motion in progress")
         else:
             pass
 
@@ -1177,7 +1211,7 @@ class Ui(QtWidgets.QMainWindow):
         #RE(bps.mov(fdet1.x, -7))
         caput("XF:03IDC-ES{Det:Vort-Ax:X}Mtr.VAL", self.dsb_flur_in_pos.value())
         self.statusbar.showMessage('FS det Moving')
-        QMessageBox.information(self, "info","Fluor. Det motion completed")
+        QMessageBox.information(self, "info","Fluor. Det motion in progress")
 
     @show_error_message_box
     def vortexOUT(self):
@@ -1196,7 +1230,7 @@ class Ui(QtWidgets.QMainWindow):
         if choice == QMessageBox.Yes:
             RE(go_det('cam11'))
             self.statusbar.showMessage('CAM11 is IN')
-            QMessageBox.information(self, "info","CAM11 motion completed")
+            QMessageBox.information(self, "info","CAM11 motion in progress")
         else:
             pass
 
@@ -1404,6 +1438,11 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_ZPZFocusScanStart.clicked.connect(lambda:self.zpFocusScan())
         self.pb_MoveZPZ1AbsPos.clicked.connect(lambda:self.zpMoveAbs())
 
+        self.pb_mll_z_focus_start.clicked.connect(lambda:self.mll_focus_scan())
+
+        self.pb_mll_z_focus_move.clicked.connect(lambda:RE(bps.mov(sbz, self.dsb_mll_z_target_pos.value())))
+        #self.pb_mll_z_focus_move.clicked.connect(lambda:RE(self.move_with_confirmation(sbz, self.dsb_mll_z_target_pos.value()))) #not tested
+
         #recover from beamdump
         #self.pb_recover_from_beamdump.clicked.connect(lambda:RE(recover_from_beamdump()))
 
@@ -1428,6 +1467,36 @@ class Ui(QtWidgets.QMainWindow):
 
         RE(zp_z_alignment(zpStart,zpEnd,zpSteps,scanMotor,scanStart,scanEnd,scanSteps,scanDwell,
                           elem= fitElem, linFlag = linFlag))
+        
+
+    @show_error_message_box
+    def mll_focus_scan(self):
+        z_motor = eval(self.cb_mll_z_motor.currentText())
+        z_start = self.sb_mll_z_start.value()
+        z_end = self.sb_mll_z_end.value()
+        z_end = self.sb_mll_z_steps.value()
+
+        scanMotor = eval(self.cb_mll_foucs_mtr.currentText())
+        scanStart = self.dsb_mll_foucs_mtr_start.value()
+        scanEnd = self.dsb_mll_foucs_mtr_end.value()
+        scanSteps = self.dsb_mll_foucs_mtr_steps.value()
+        scanDwell = self.dsb_mll_foucs_mtr_exp_time.value()
+
+        fitElem = self.cb_mll_focus_elem.currentText().split(':')[0]
+        linFlag = self.cb_linearflag_mll_focus.isChecked()
+
+        RE(mll_z_alignment(z_motor,
+                           z_start,
+                           z_end,
+                           z_end,
+                           scanMotor,
+                           scanStart,
+                           scanEnd,
+                           scanSteps,
+                           scanDwell,
+                           elem= fitElem, 
+                           lin_flag = linFlag))
+
 
     def zpMoveAbs(self):
         zpTarget = self.dsb_ZPZ1TargetPos.value()
@@ -1438,6 +1507,24 @@ class Ui(QtWidgets.QMainWindow):
         QtTest.QTest.qWait(500)
         if choice == QMessageBox.Yes:
             RE(mov_zpz1(zpTarget))
+
+        else:
+            pass
+
+    
+    def move_with_confirmation(self, mtr, value):
+        
+        choice = QMessageBox.question(self, f"{mtr.name} Motion",
+                                      f"You're making an Absolute motion of {mtr.name} to {value}. \n Proceed?",
+                                      QMessageBox.Yes |
+                                      QMessageBox.No, QMessageBox.No)
+        QtTest.QTest.qWait(500)
+        if choice == QMessageBox.Yes:
+            #RE(bps.mov(mtr, value))
+            mtr.move(value)
+
+            QMessageBox.info(self, f"{mtr.name} Motion",
+                                f"{mtr.name} moved to {value}; current position = {mtr.position :.2f}",)
 
         else:
             pass

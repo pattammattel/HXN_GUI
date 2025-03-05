@@ -1719,7 +1719,7 @@ p, li { white-space: pre-wrap; }
                       </sizepolicy>
                      </property>
                      <property name="text">
-                      <string>  30:30, 30:30, 0.03  </string>
+                      <string>  28umx28um, 30:30 steps, 0.005 sec</string>
                      </property>
                     </widget>
                    </item>
@@ -1732,7 +1732,7 @@ p, li { white-space: pre-wrap; }
                       </sizepolicy>
                      </property>
                      <property name="text">
-                      <string>  6:6, 100:100, 0.05  </string>
+                      <string> 6umx6um, 100:100 steps, 0.005 sec</string>
                      </property>
                     </widget>
                    </item>
@@ -1749,7 +1749,7 @@ p, li { white-space: pre-wrap; }
                       </sizepolicy>
                      </property>
                      <property name="text">
-                      <string>  20:20, 100:100, 0.03  </string>
+                      <string> 20umx20um, 100:100 steps, 0.005 sec</string>
                      </property>
                     </widget>
                    </item>
@@ -1762,7 +1762,7 @@ p, li { white-space: pre-wrap; }
                       </sizepolicy>
                      </property>
                      <property name="text">
-                      <string>  2:2, 100:100, 0.03  </string>
+                      <string> 2umx2um, 100:100 steps, 0.005 sec</string>
                      </property>
                     </widget>
                    </item>
@@ -5826,7 +5826,7 @@ color:rgb(51, 184, 141)</string>
            <bool>true</bool>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>1</number>
           </property>
           <widget class="QWidget" name="tab_5">
            <attribute name="title">
@@ -7204,25 +7204,12 @@ Move dsz by
             <item row="2" column="0" colspan="2">
              <widget class="QGroupBox" name="groupBox_40">
               <property name="enabled">
-               <bool>false</bool>
+               <bool>true</bool>
               </property>
               <property name="title">
                <string>MLL Focusing </string>
               </property>
               <layout class="QGridLayout" name="gridLayout_17">
-               <item row="0" column="0">
-                <widget class="QLabel" name="label_137">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                </widget>
-               </item>
                <item row="1" column="0">
                 <layout class="QGridLayout" name="gridLayout_131">
                  <item row="2" column="0">
@@ -7230,6 +7217,91 @@ Move dsz by
                    <item row="0" column="0">
                     <widget class="QWidget" name="widget_9" native="true">
                      <layout class="QGridLayout" name="gridLayout_15">
+                      <item row="4" column="0" colspan="2">
+                       <layout class="QHBoxLayout" name="horizontalLayout_88">
+                        <item>
+                         <widget class="QLabel" name="label_121">
+                          <property name="text">
+                           <string>Elem:</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QComboBox" name="cb_mll_focus_elem"/>
+                        </item>
+                        <item>
+                         <widget class="QCheckBox" name="cb_linearflag_mll_focus">
+                          <property name="text">
+                           <string>Linear Flag</string>
+                          </property>
+                         </widget>
+                        </item>
+                       </layout>
+                      </item>
+                      <item row="6" column="1" colspan="2">
+                       <layout class="QHBoxLayout" name="horizontalLayout_82">
+                        <property name="leftMargin">
+                         <number>20</number>
+                        </property>
+                        <item>
+                         <widget class="QComboBox" name="cb_mll_z_motor_move">
+                          <item>
+                           <property name="text">
+                            <string>sbz</string>
+                           </property>
+                          </item>
+                          <item>
+                           <property name="text">
+                            <string>hz</string>
+                           </property>
+                          </item>
+                          <item>
+                           <property name="text">
+                            <string>vz</string>
+                           </property>
+                          </item>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QLabel" name="label_4">
+                          <property name="sizePolicy">
+                           <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                           </sizepolicy>
+                          </property>
+                          <property name="text">
+                           <string>to</string>
+                          </property>
+                          <property name="alignment">
+                           <set>Qt::AlignCenter</set>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QDoubleSpinBox" name="dsb_mll_z_target_pos">
+                          <property name="suffix">
+                           <string> um</string>
+                          </property>
+                          <property name="decimals">
+                           <number>1</number>
+                          </property>
+                          <property name="minimum">
+                           <double>-200.000000000000000</double>
+                          </property>
+                          <property name="maximum">
+                           <double>7000.000000000000000</double>
+                          </property>
+                          <property name="singleStep">
+                           <double>5.000000000000000</double>
+                          </property>
+                          <property name="value">
+                           <double>0.000000000000000</double>
+                          </property>
+                         </widget>
+                        </item>
+                       </layout>
+                      </item>
                       <item row="0" column="2" rowspan="5">
                        <layout class="QVBoxLayout" name="verticalLayout_45">
                         <item>
@@ -7243,7 +7315,10 @@ Move dsz by
                          </widget>
                         </item>
                         <item>
-                         <widget class="QComboBox" name="cb_foucsScanMotor_2">
+                         <widget class="QComboBox" name="cb_mll_foucs_mtr">
+                          <property name="currentText">
+                           <string>dssy</string>
+                          </property>
                           <item>
                            <property name="text">
                             <string>dssx</string>
@@ -7274,7 +7349,7 @@ Move dsz by
                            </widget>
                           </item>
                           <item>
-                           <widget class="QSpinBox" name="sb_FocusScanMtrStart_2">
+                           <widget class="QDoubleSpinBox" name="dsb_mll_foucs_mtr_start">
                             <property name="sizePolicy">
                              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                               <horstretch>0</horstretch>
@@ -7285,16 +7360,13 @@ Move dsz by
                              <string> um</string>
                             </property>
                             <property name="minimum">
-                             <number>-15</number>
+                             <double>-15.000000000000000</double>
                             </property>
                             <property name="maximum">
-                             <number>15</number>
-                            </property>
-                            <property name="singleStep">
-                             <number>2</number>
+                             <double>15.000000000000000</double>
                             </property>
                             <property name="value">
-                             <number>-2</number>
+                             <double>-1.000000000000000</double>
                             </property>
                            </widget>
                           </item>
@@ -7313,7 +7385,7 @@ Move dsz by
                            </widget>
                           </item>
                           <item>
-                           <widget class="QSpinBox" name="sb_FocusScanMtrEnd_2">
+                           <widget class="QDoubleSpinBox" name="dsb_mll_foucs_mtr_end">
                             <property name="sizePolicy">
                              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                               <horstretch>0</horstretch>
@@ -7324,16 +7396,13 @@ Move dsz by
                              <string> um</string>
                             </property>
                             <property name="minimum">
-                             <number>-15</number>
+                             <double>-15.000000000000000</double>
                             </property>
                             <property name="maximum">
-                             <number>15</number>
-                            </property>
-                            <property name="singleStep">
-                             <number>2</number>
+                             <double>15.000000000000000</double>
                             </property>
                             <property name="value">
-                             <number>2</number>
+                             <double>1.000000000000000</double>
                             </property>
                            </widget>
                           </item>
@@ -7352,7 +7421,7 @@ Move dsz by
                            </widget>
                           </item>
                           <item>
-                           <widget class="QSpinBox" name="sb_FocusScanMtrStep_2">
+                           <widget class="QSpinBox" name="dsb_mll_foucs_mtr_steps">
                             <property name="sizePolicy">
                              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                               <horstretch>0</horstretch>
@@ -7391,7 +7460,7 @@ Move dsz by
                            </widget>
                           </item>
                           <item>
-                           <widget class="QDoubleSpinBox" name="dsb_FocusScanDwell_2">
+                           <widget class="QDoubleSpinBox" name="dsb_mll_foucs_mtr_exp_time">
                             <property name="sizePolicy">
                              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                               <horstretch>0</horstretch>
@@ -7419,110 +7488,6 @@ Move dsz by
                         </item>
                        </layout>
                       </item>
-                      <item row="4" column="0" colspan="2">
-                       <layout class="QHBoxLayout" name="horizontalLayout_88">
-                        <item>
-                         <widget class="QLabel" name="label_121">
-                          <property name="text">
-                           <string>Elem:</string>
-                          </property>
-                         </widget>
-                        </item>
-                        <item>
-                         <widget class="QComboBox" name="cb_mll_focus_elem"/>
-                        </item>
-                        <item>
-                         <widget class="QCheckBox" name="cb_linearFlag_zpFocus_2">
-                          <property name="text">
-                           <string>Linear Flag</string>
-                          </property>
-                         </widget>
-                        </item>
-                       </layout>
-                      </item>
-                      <item row="5" column="0">
-                       <widget class="QPushButton" name="pb_mll_z_focus_start">
-                        <property name="sizePolicy">
-                         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                          <horstretch>0</horstretch>
-                          <verstretch>0</verstretch>
-                         </sizepolicy>
-                        </property>
-                        <property name="text">
-                         <string>
-Start 
-</string>
-                        </property>
-                       </widget>
-                      </item>
-                      <item row="5" column="1" colspan="2">
-                       <layout class="QHBoxLayout" name="horizontalLayout_82">
-                        <property name="leftMargin">
-                         <number>20</number>
-                        </property>
-                        <item>
-                         <widget class="QPushButton" name="pb_mll_z_focus_move">
-                          <property name="sizePolicy">
-                           <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                            <horstretch>0</horstretch>
-                            <verstretch>0</verstretch>
-                           </sizepolicy>
-                          </property>
-                          <property name="text">
-                           <string>      Move    </string>
-                          </property>
-                         </widget>
-                        </item>
-                        <item>
-                         <widget class="QComboBox" name="comboBox_3">
-                          <item>
-                           <property name="text">
-                            <string>sbz</string>
-                           </property>
-                          </item>
-                          <item>
-                           <property name="text">
-                            <string>hz</string>
-                           </property>
-                          </item>
-                          <item>
-                           <property name="text">
-                            <string>vz</string>
-                           </property>
-                          </item>
-                         </widget>
-                        </item>
-                        <item>
-                         <widget class="QLabel" name="label_4">
-                          <property name="text">
-                           <string>to</string>
-                          </property>
-                          <property name="alignment">
-                           <set>Qt::AlignCenter</set>
-                          </property>
-                         </widget>
-                        </item>
-                        <item>
-                         <widget class="QDoubleSpinBox" name="dsb_ZPZ1TargetPos_2">
-                          <property name="suffix">
-                           <string> mm</string>
-                          </property>
-                          <property name="decimals">
-                           <number>4</number>
-                          </property>
-                          <property name="minimum">
-                           <double>-100.000000000000000</double>
-                          </property>
-                          <property name="maximum">
-                           <double>20.000000000000000</double>
-                          </property>
-                          <property name="value">
-                           <double>-15.000000000000000</double>
-                          </property>
-                         </widget>
-                        </item>
-                       </layout>
-                      </item>
                       <item row="0" column="0" colspan="2">
                        <layout class="QGridLayout" name="gridLayout_12">
                         <item row="0" column="0">
@@ -7536,7 +7501,7 @@ Start
                          </widget>
                         </item>
                         <item row="0" column="1">
-                         <widget class="QComboBox" name="comboBox">
+                         <widget class="QComboBox" name="cb_mll_z_motor">
                           <item>
                            <property name="text">
                             <string>sbz</string>
@@ -7556,47 +7521,20 @@ Start
                         </item>
                        </layout>
                       </item>
-                      <item row="1" column="0" colspan="2">
-                       <layout class="QHBoxLayout" name="horizontalLayout_85">
-                        <item>
-                         <widget class="QLabel" name="label_115">
-                          <property name="toolTip">
-                           <string>relative start pos</string>
-                          </property>
-                          <property name="text">
-                           <string>Z Start</string>
-                          </property>
-                          <property name="alignment">
-                           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                          </property>
-                         </widget>
-                        </item>
-                        <item>
-                         <widget class="QSpinBox" name="sb_ZPZ1RelativeStart_2">
-                          <property name="sizePolicy">
-                           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                            <horstretch>0</horstretch>
-                            <verstretch>0</verstretch>
-                           </sizepolicy>
-                          </property>
-                          <property name="suffix">
-                           <string> um</string>
-                          </property>
-                          <property name="minimum">
-                           <number>-1000</number>
-                          </property>
-                          <property name="maximum">
-                           <number>1000</number>
-                          </property>
-                          <property name="singleStep">
-                           <number>10</number>
-                          </property>
-                          <property name="value">
-                           <number>-50</number>
-                          </property>
-                         </widget>
-                        </item>
-                       </layout>
+                      <item row="5" column="0" colspan="3">
+                       <widget class="QPushButton" name="pb_mll_z_focus_start">
+                        <property name="sizePolicy">
+                         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                          <horstretch>0</horstretch>
+                          <verstretch>0</verstretch>
+                         </sizepolicy>
+                        </property>
+                        <property name="text">
+                         <string>
+Start Focus Series
+</string>
+                        </property>
+                       </widget>
                       </item>
                       <item row="2" column="0" colspan="2">
                        <layout class="QHBoxLayout" name="horizontalLayout_86">
@@ -7614,7 +7552,7 @@ Start
                          </widget>
                         </item>
                         <item>
-                         <widget class="QSpinBox" name="sb_ZPZ1RelativeEnd_2">
+                         <widget class="QSpinBox" name="sb_mll_z_end">
                           <property name="sizePolicy">
                            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                             <horstretch>0</horstretch>
@@ -7640,6 +7578,48 @@ Start
                         </item>
                        </layout>
                       </item>
+                      <item row="1" column="0" colspan="2">
+                       <layout class="QHBoxLayout" name="horizontalLayout_85">
+                        <item>
+                         <widget class="QLabel" name="label_115">
+                          <property name="toolTip">
+                           <string>relative start pos</string>
+                          </property>
+                          <property name="text">
+                           <string>Z Start</string>
+                          </property>
+                          <property name="alignment">
+                           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QSpinBox" name="sb_mll_z_start">
+                          <property name="sizePolicy">
+                           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                           </sizepolicy>
+                          </property>
+                          <property name="suffix">
+                           <string> um</string>
+                          </property>
+                          <property name="minimum">
+                           <number>-1000</number>
+                          </property>
+                          <property name="maximum">
+                           <number>1000</number>
+                          </property>
+                          <property name="singleStep">
+                           <number>10</number>
+                          </property>
+                          <property name="value">
+                           <number>-50</number>
+                          </property>
+                         </widget>
+                        </item>
+                       </layout>
+                      </item>
                       <item row="3" column="0" colspan="2">
                        <layout class="QHBoxLayout" name="horizontalLayout_87">
                         <item>
@@ -7653,7 +7633,7 @@ Start
                          </widget>
                         </item>
                         <item>
-                         <widget class="QSpinBox" name="sb_ZPZ1Steps_2">
+                         <widget class="QSpinBox" name="sb_mll_z_steps">
                           <property name="sizePolicy">
                            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                             <horstretch>0</horstretch>
@@ -7679,12 +7659,38 @@ Start
                         </item>
                        </layout>
                       </item>
+                      <item row="6" column="0">
+                       <widget class="QPushButton" name="pb_mll_z_focus_move">
+                        <property name="sizePolicy">
+                         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                          <horstretch>0</horstretch>
+                          <verstretch>0</verstretch>
+                         </sizepolicy>
+                        </property>
+                        <property name="text">
+                         <string>      Move    </string>
+                        </property>
+                       </widget>
+                      </item>
                      </layout>
                     </widget>
                    </item>
                   </layout>
                  </item>
                 </layout>
+               </item>
+               <item row="0" column="0">
+                <widget class="QLabel" name="label_137">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                </widget>
                </item>
               </layout>
              </widget>
@@ -7710,7 +7716,7 @@ Start
                <item row="0" column="0">
                 <widget class="QPushButton" name="pb_mll_osa_out">
                  <property name="enabled">
-                  <bool>false</bool>
+                  <bool>true</bool>
                  </property>
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -9881,21 +9887,19 @@ Move
   <tabstop>doubleSpinBox_7</tabstop>
   <tabstop>pb_mll_rot_align_move_dsz</tabstop>
   <tabstop>doubleSpinBox_8</tabstop>
-  <tabstop>cb_foucsScanMotor_2</tabstop>
-  <tabstop>sb_FocusScanMtrStart_2</tabstop>
-  <tabstop>sb_FocusScanMtrEnd_2</tabstop>
-  <tabstop>sb_FocusScanMtrStep_2</tabstop>
-  <tabstop>dsb_FocusScanDwell_2</tabstop>
+  <tabstop>cb_mll_foucs_mtr</tabstop>
+  <tabstop>dsb_mll_foucs_mtr_start</tabstop>
+  <tabstop>dsb_mll_foucs_mtr_end</tabstop>
+  <tabstop>dsb_mll_foucs_mtr_steps</tabstop>
+  <tabstop>dsb_mll_foucs_mtr_exp_time</tabstop>
   <tabstop>cb_mll_focus_elem</tabstop>
-  <tabstop>cb_linearFlag_zpFocus_2</tabstop>
-  <tabstop>pb_mll_z_focus_start</tabstop>
-  <tabstop>pb_mll_z_focus_move</tabstop>
-  <tabstop>comboBox_3</tabstop>
-  <tabstop>dsb_ZPZ1TargetPos_2</tabstop>
-  <tabstop>comboBox</tabstop>
-  <tabstop>sb_ZPZ1RelativeStart_2</tabstop>
-  <tabstop>sb_ZPZ1RelativeEnd_2</tabstop>
-  <tabstop>sb_ZPZ1Steps_2</tabstop>
+  <tabstop>cb_linearflag_mll_focus</tabstop>
+  <tabstop>cb_mll_z_motor_move</tabstop>
+  <tabstop>dsb_mll_z_target_pos</tabstop>
+  <tabstop>cb_mll_z_motor</tabstop>
+  <tabstop>sb_mll_z_start</tabstop>
+  <tabstop>sb_mll_z_end</tabstop>
+  <tabstop>sb_mll_z_steps</tabstop>
   <tabstop>pb_mll_merlin_view</tabstop>
   <tabstop>pb_mll_lens_in</tabstop>
   <tabstop>pb_mll_osa_out</tabstop>
