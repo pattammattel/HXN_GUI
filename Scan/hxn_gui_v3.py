@@ -755,6 +755,7 @@ class Ui(QtWidgets.QMainWindow):
             move_by = val_box.value()
 
         RE(bps.movr(mot_name, move_by * unit_conv_factor))
+        #mot_name.move(mot_name.position+move_by * unit_conv_factor) #avoids RE errors if user clicks frequently 
         self.statusbar.showMessage(f'{mot_name.name} moved by {move_by} um ')
 
     @show_error_message_box
@@ -1739,7 +1740,7 @@ class Ui(QtWidgets.QMainWindow):
                 list_widget.addItem(item_to_add)
 
         else:
-            return
+            pass
 
 
     def move_stage_to_roi(self,list_widget):
