@@ -314,9 +314,8 @@ def export_diff_data_as_tiff(first_sid,last_sid, det="eiger2_image", mon="sclr1_
             print(f"{saved_as =}")
             
 def export_diff_data_as_h5(sid_list, 
-                           det="eiger2_image", roi=None, 
-                           mask=None, threshold=None,
-                           norm_with = 'sclr1_ch4',
+                           det="eiger2_image", 
+                           norm_channel = 'sclr1_ch4',
                            wd = '.', compression = None):
     # load diffraction data of a list of scans through databroker, with data being stacked at the first axis
     # roi[row_start,col_start,row_size,col_size]
@@ -337,7 +336,8 @@ def export_diff_data_as_h5(sid_list,
         sid = start_doc["scan_id"]
         
         if 'num1' and 'num2' in start_doc:
-            dim1,dim2 = start_doc['num1'],start_doc['num2']
+            dim1, dim2 = (start_doc.get('num1', start_doc['shape'][0]),
+                          start_doc.get('num2', start_doc['shape'][1]))
         elif 'shape' in start_doc:
             dim1,dim2 = start_doc.shape
         try:
@@ -366,69 +366,40 @@ def export_diff_data_as_h5(sid_list,
                     ind = ind + 1
                 #data = list(db[sid].data(det))
                 #data = np.asarray(np.squeeze(data),dtype=data_type)
-            _, roi1,roi2 = np.shape(data)
-
-            if threshold is not None:
-                data[data<threshold[0]] = 0
-                data[data>threshold[1]] = 0
-
-            if norm_with is not None:
-                #mon_array = np.stack(hdr.table(fill=True)[norm_with])
-                mon_array = np.array(list(hdr.data(str(norm_with)))).squeeze()
-                norm_data = data/mon_array[:,np.newaxis,np.newaxis]
-                print(f"data normalized with {norm_with} ")
+            
+            _, roi1, roi2 = data.shape
+            mon_array = np.array(hdr.data(norm_channel)).squeeze()
+            data = np.flip(data, axis=1)  # Consider if this can be done in-place
 
             
-            if mask is not None:     
-                #sz = data.shape
-                data = data*mask
-            if roi is None:
-                data = np.flip(data[:,:,:],axis = 1)
-            else:
-                data = np.flip(data[:,roi[0]:roi[0]+roi[2],roi[1]:roi[1]+roi[3]],axis = 1)
-                
-            print(f"data size = {data.size/1_073_741_824 :.2f} GB")
-
-            #save_folder =  os.path.join(wd,f"{sid}_diff_data")   
-
-            #if not os.path.exists(save_folder):
-                #os.makedirs(save_folder)
-
-            if wd:
-                save_folder = wd
-                
-            saved_as = os.path.join(save_folder,f"scan_{sid}_{det}")
+            save_path = os.path.join(wd, f"scan_{sid}_{det}.h5")
 
             f.close()
-
             
-            with h5py.File(saved_as+'.h5','w') as f:
-
-                #data_group = f.create_group(f'{det}_raw_data')
-                data_group = f.create_group(f'/diff_data/{det}/')
-                data_group.create_dataset('raw_data',
-                                           data=data.reshape(dim1,dim2,roi1,roi2), 
-                                           compression = compression )
-                data_group.create_dataset('norm_data',
-                                           data=norm_data.reshape(dim1,dim2,roi1,roi2), 
-                                           compression = compression )
-                data_group.create_dataset('Io',
-                                           data=mon_array.reshape(dim1,dim2),
-                                           compression = compression )
-
-                data_group = f.create_group(f'/diff_data/scan/')
-                data_group.create_dataset('scan_positions',
-                            data=xy_scan_positions,
-                            compression = 'gzip')
-                scan_table.to_csv(saved_as+'_meta_data.csv')
-
-                # xrf_group = f.create_group('xrf_roi_data')
-                # names, xrf_2d = get_xrf_data(sid)
-                # xrf_group.create_dataset('xrf_roi_array', data = xrf_2d)
-                # xrf_group.create_dataset('xrf_elem_names', data = names)
-
-            f.close()
-            print(f"{saved_as =}")
+            with h5py.File(save_path, 'w') as f:
+                # Create group and datasets efficiently
+                diff_group = f.create_group(f'/diff_data/{det}')
+                diff_group.create_dataset(
+                    'raw_data',
+                    data=data.reshape(dim1, dim2, roi1, roi2),
+                    chunks=(1, 1, roi1, roi2),
+                    compression=compression
+                )
+                diff_group.create_dataset(
+                    'Io',
+                    data=mon_array.reshape(dim1, dim2),
+                    compression=compression
+                )
+                
+                scan_group = f.create_group('/diff_data/scan')
+                scan_group.create_dataset(
+                    'scan_positions',
+                    data=xy_scan_positions,
+                    compression=compression
+                )
+            
+            scan_table.to_csv(f"{save_path[:-3]}_meta_data.csv", index=False)
+            print(f"Saved to: {save_path}")
 
 
 def export_diff_data_logfile(logfile_csv, 
