@@ -1332,7 +1332,7 @@ def xrf_load_and_fit_from_list(sid_list, param_dict):
                             save_txt = False,
                             ignore_datafile_metadata = True,
                             fln_quant_calib_data = param_dict.get("quant_calib_file",''),
-                            quant_ref_eline = param_dict.get("quant_calib_elem",'',)
+                            quant_ref_eline = param_dict.get("quant_calib_elem",'',),
                             interpolate_to_uniform_grid = paramDict.get("interploate_grid",True)
                             )
         except:
@@ -1397,7 +1397,7 @@ class Loadh5AndFit(QThread):
                         save_txt = False,
                         ignore_datafile_metadata = True,
                         fln_quant_calib_data = self.paramDict.get("quant_calib_file",''),
-                        quant_ref_eline = self.paramDict.get("quant_calib_elem",'')
+                        quant_ref_eline = self.paramDict.get("quant_calib_elem",''),
                         interpolate_to_uniform_grid = self.paramDict.get("interploate_grid",True)
                         )
         
