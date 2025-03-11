@@ -8,7 +8,7 @@
     <x>0</x>
     <y>0</y>
     <width>1332</width>
-    <height>933</height>
+    <height>905</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -194,7 +194,20 @@ QGroupBox {
                 <string>Skip 1D</string>
                </property>
                <property name="checked">
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QRadioButton" name="rb_inter_uni_grid">
+               <property name="text">
+                <string>Interpolate to uniform grid</string>
+               </property>
+               <property name="checked">
                 <bool>true</bool>
+               </property>
+               <property name="autoExclusive">
+                <bool>false</bool>
                </property>
               </widget>
              </item>
