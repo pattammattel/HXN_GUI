@@ -312,7 +312,7 @@ class xrf_3ID(QtWidgets.QMainWindow):
                     "XRFfit":self.rb_xrf_fit.isChecked(),
                     "quant_calib_file":self.le_quant_calib_file.text(),
                     "quant_calib_elem":self.le_qunat_ref_elem.text(),
-                    "interploate_grid":self.rb_inter_uni_grid.isChecked()
+                    "interpolate_to_uniform_grid":self.rb_inter_uni_grid.isChecked()
                   }
 
 
@@ -330,7 +330,7 @@ class xrf_3ID(QtWidgets.QMainWindow):
                                      "saveXRFTiff": self.rb_saveXRFTiff.isChecked(),
                                      "quant_calib_file":self.le_quant_calib_file.text(),
                                      "quant_calib_elem":self.le_qunat_ref_elem.text(),
-                                     "interploate_grid":self.rb_inter_uni_grid.isChecked()}
+                                     "interpolate_to_uniform_grid":self.rb_inter_uni_grid.isChecked()}
             
             self.pyxrfBatchThread = xrfBatchThread(xrf_batch_param_dict)
             self.pyxrfBatchThread.start()
@@ -716,7 +716,7 @@ class xrf_3ID(QtWidgets.QMainWindow):
             "norm" :norm,
             "saveXRFTiff": self.rb_saveXRFTiff.isChecked(),
             "XRFfit":self.rb_xrf_fit.isChecked(),
-            "interploate_grid":self.rb_inter_uni_grid.isChecked()
+            "interpolate_to_uniform_grid":self.rb_inter_uni_grid.isChecked()
             }
             
         #self.xrf_batch_thread = Loadh5AndFit(h5Param)
@@ -770,7 +770,7 @@ class xrf_3ID(QtWidgets.QMainWindow):
             "norm" :norm,
             "saveXRFTiff": self.rb_saveXRFTiff.isChecked(),
             "XRFfit":self.rb_xrf_fit.isChecked(),
-            "interploate_grid":self.rb_inter_uni_grid.isChecked()
+            "interpolate_to_uniform_grid":self.rb_inter_uni_grid.isChecked()
             }
             
         #self.xrf_batch_thread = Loadh5AndFit(h5Param)
@@ -836,7 +836,7 @@ class xrf_3ID(QtWidgets.QMainWindow):
             "norm" :norm,
             "saveXRFTiff": self.rb_saveXRFTiff.isChecked(),
             "XRFfit":self.rb_xrf_fit.isChecked(),
-            "interploate_grid":self.rb_inter_uni_grid.isChecked()
+            "interpolate_to_uniform_grid":self.rb_inter_uni_grid.isChecked()
             }
             
         #self.xrf_batch_thread = Loadh5AndFit(h5Param)
@@ -1156,7 +1156,7 @@ class Loadh5AndFitFromList(QThread):
                         ignore_datafile_metadata = True,
                         fln_quant_calib_data = self.paramDict.get("quant_calib_file",''),
                         quant_ref_eline = self.paramDict.get("quant_calib_elem",''),
-                        interpolate_to_uniform_grid = self.paramDict.get("interploate_grid",True)
+                        interpolate_to_uniform_grid = self.paramDict.get("interpolate_to_uniform_grid",True)
                         )
             QtTest.QTest.qWait(5000)
     
@@ -1245,7 +1245,7 @@ class Loadh5AndFitFromListLive(QThread):
                                 ignore_datafile_metadata = True,
                                 fln_quant_calib_data = self.paramDict.get("quant_calib_file",''),
                                 quant_ref_eline = self.paramDict.get("quant_calib_elem",''),
-                                interpolate_to_uniform_grid = self.paramDict.get("interploate_grid",True)
+                                interpolate_to_uniform_grid = self.paramDict.get("interpolate_to_uniform_grid",True)
                                 )
                     print(f"{self.paramDict['wd']}/output_tiff_scan2D_{sid} created")
                 except: pass
@@ -1333,7 +1333,7 @@ def xrf_load_and_fit_from_list(sid_list, param_dict):
                             ignore_datafile_metadata = True,
                             fln_quant_calib_data = param_dict.get("quant_calib_file",''),
                             quant_ref_eline = param_dict.get("quant_calib_elem",'',),
-                            interpolate_to_uniform_grid = paramDict.get("interploate_grid",True)
+                            interpolate_to_uniform_grid = paramDict.get("interpolate_to_uniform_grid",True)
                             )
         except:
                 missed_scans = missed_scans.append(sid)
@@ -1358,7 +1358,7 @@ class Loadh5AndFit(QThread):
         QtTest.QTest.qWait(500)
 
         #print(f"{self.paramDict['file_overwrite_existing'] = }")
-        print(f"Process: make hdf in batch,then,xrf fitting in batch" )
+        print(f"Process: make hdf in batch-->xrf fitting in batch" )
         for sid in self.paramDict["sidList"]: #filter for 1d
 
             hdr = db[int(sid)]
@@ -1388,6 +1388,8 @@ class Loadh5AndFit(QThread):
 
 
         try:
+            print(f"interpolation marker: {self.paramDict.get('interpolate_to_uniform_grid',True)}")
+
             pyxrf_batch(int(self.paramDict["sidList"][0]), 
                         int(self.paramDict["sidList"][-1]), 
                         wd=self.paramDict["wd"], 
@@ -1398,11 +1400,13 @@ class Loadh5AndFit(QThread):
                         ignore_datafile_metadata = True,
                         fln_quant_calib_data = self.paramDict.get("quant_calib_file",''),
                         quant_ref_eline = self.paramDict.get("quant_calib_elem",''),
-                        interpolate_to_uniform_grid = self.paramDict.get("interploate_grid",True)
+                        interpolate_to_uniform_grid = self.paramDict.get("interpolate_to_uniform_grid",True)
                         )
+            
+            print(f"Batch fitting from {self.paramDict['sidList'][0]} to {self.paramDict['sidList'][-1]} is done")
         
 
-        except : pass
+        except Exception as e: print("Error: "+e)
 
         # for sid in self.paramDict["sidList"]:
         #     h5_present = os.path.exists(os.path.join(self.paramDict["wd"],f"scan2D_{sid}.h5"))

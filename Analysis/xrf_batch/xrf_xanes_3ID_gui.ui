@@ -206,6 +206,9 @@ QGroupBox {
                <property name="checked">
                 <bool>true</bool>
                </property>
+               <property name="autoExclusive">
+                <bool>false</bool>
+               </property>
               </widget>
              </item>
             </layout>
@@ -1546,7 +1549,7 @@ border-radius :15px;
      <x>0</x>
      <y>0</y>
      <width>1332</width>
-     <height>37</height>
+     <height>20</height>
     </rect>
    </property>
   </widget>

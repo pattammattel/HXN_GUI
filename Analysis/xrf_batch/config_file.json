@@ -1,7 +1,7 @@
 {
-    "xrf_scan_range": "326677-",
-    "wd": "/data/users/current_user/MG325-55-2_Mn",
-    "param_file": "/data/users/current_user/MM302-105-5/pyxrf_model_parameters_326586_8_45keV.json",
+    "xrf_scan_range": "324556",
+    "wd": "/data/users/2025Q1/Ajith_2025Q1/testing",
+    "param_file": "/data/users/2025Q1/Ajith_2025Q1/NbPt/pyxrf_model_parameters_324395.json",
     "xanes_start_id": "330025",
     "xanes_end_id": "330063",
     "xanes_elem": "Mn_K",
