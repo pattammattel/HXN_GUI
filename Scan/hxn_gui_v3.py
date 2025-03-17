@@ -830,14 +830,16 @@ class Ui(QtWidgets.QMainWindow):
         #self.pb_osa_out.clicked.connect(lambda: self.runTask(lambda:self.ZP_OSA_OUT()))
         self.pb_mll_osa_out.clicked.connect(lambda:self.mll_osa_OUT())
         self.pb_mll_osa_in.clicked.connect(lambda:self.mll_osa_IN())
-        self.pb_mll_bs_out.clicked.connect(lambda: self.runTask(lambda:RE(mll_bs_in())))
-        self.pb_mll_bs_in.clicked.connect(lambda: self.runTask(lambda:RE(mll_bs_in())))
-        self.pb_mll_lens_out.clicked.connect(lambda: self.runTask(lambda:RE(mll_lens_out())))
-        self.pb_mll_lens_in.clicked.connect(lambda: self.runTask(lambda:RE(mll_lens_in())))
+        self.pb_mll_bs_out.clicked.connect(lambda:RE(mll_bs_in()))
+        self.pb_mll_bs_in.clicked.connect(lambda:RE(mll_bs_in()))
+        #self.pb_mll_lens_out.clicked.connect(lambda: self.runTask(lambda:RE(mll_lens_out())))
+        #self.pb_mll_lens_in.clicked.connect(lambda: self.runTask(lambda:RE(mll_lens_in())))
+        self.pb_mll_lens_out.clicked.connect(lambda:RE(mll_lens_out()))
+        self.pb_mll_lens_in.clicked.connect(lambda:RE(mll_lens_in()))
         self.pb_mlls_to_upstream.clicked.connect(lambda: self.runTask(lambda:RE(mll_to_upstream())))
         self.pb_mlls_to_downstream.clicked.connect(lambda: self.runTask(lambda:RE(mll_to_downstream())))
-        self.pb_mll_sample_in.clicked.connect(lambda: self.runTask(lambda:RE(mll_sample_in())))
-        self.pb_mll_sample_out.clicked.connect(lambda: self.runTask(lambda:RE(mll_sample_out())))
+        self.pb_mll_sample_in.clicked.connect(lambda:RE(mll_sample_in()))
+        self.pb_mll_sample_out.clicked.connect(lambda:RE(mll_sample_out()))
 
     def move_dsx(self, neg_=False):
         self.move_motor_with_pv(self.db_move_dsx, dsx, 1, neg=neg_)
@@ -1184,7 +1186,7 @@ class Ui(QtWidgets.QMainWindow):
                                       QMessageBox.No, QMessageBox.No)
 
         if choice == QMessageBox.Yes:
-            RE(go_det("eiger"))
+            RE(go_det("eiger_pos2"))
             QMessageBox.information(self, "info","Eiger motion completed")
         else:
             pass
