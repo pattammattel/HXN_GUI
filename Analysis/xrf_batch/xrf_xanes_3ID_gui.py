@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import time
 import pyqtgraph as pg
-from glob import glob
+import glob
 from functools import wraps
 from collections import deque
 from PyQt5.QtCore import QObject, QTimer, QThread, pyqtSignal, pyqtSlot, QRunnable, QThreadPool
@@ -22,7 +22,7 @@ ui_path = os.path.dirname(os.path.abspath(__file__))
 
 
 def pyxrf_h5_to_scanlist(folder):
-    filelist = glob(os.path.join(folder,"scan2D*.h5"))
+    filelist = glob.glob(os.path.join(folder,"scan2D*.h5"))
     scan_list = []
     for fname in filelist:
         scan_num = os.path.basename(fname).split('_')[1].split('.')[0]
@@ -500,7 +500,7 @@ class xrf_3ID(QtWidgets.QMainWindow):
 
         
         
-    def run_xanes_batch_job_from_logfiles(self, file_filter_key = "nanoXANES",
+    def run_xanes_batch_job_from_logfiles(self, file_filter_key = " ",
                                       file_extention = "csv"):
         
 
@@ -510,8 +510,8 @@ class xrf_3ID(QtWidgets.QMainWindow):
         print(dirname)
 
         if dirname:
-            logfiles = glob(os.path.join(dirname,
-                                         f"*{file_filter_key}*.{file_extention}"))
+            logfiles = glob.glob(os.path.join(dirname,
+                                         f"*.{file_extention}"))
 
         else:
             return 
