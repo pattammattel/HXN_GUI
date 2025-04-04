@@ -27,12 +27,66 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 warnings.simplefilter(action='ignore', category=UserWarning)
 
 import sys
+
 sys.path.insert(0,'/nsls2/data2/hxn/shared/config/bluesky_overlay/2023-1.0-py310-tiled/lib/python3.10/site-packages')
 from hxntools.CompositeBroker import db
 from hxntools.scan_info import get_scan_positions
 
 det_params = {'merlin1':55, "merlin2":55, "eiger2_images":75}
 
+def get_flyscan_dimensions(hdr):
+    
+    if 'dimensions' in hdr.start:
+        return hdr.start['dimensions']
+    else:
+        return hdr.start['shape']
+
+def get_all_scalar_data(hdr):
+
+    keys = list(hdr.table().keys())
+    scalar_keys = [k for k in keys if k.startswith('sclr1') ]
+    print(f"{scalar_keys = }")
+    scan_dim = get_flyscan_dimensions(hdr)
+    scalar_stack_list = []
+
+    for sclr in sorted(scalar_keys):
+        
+        scalar = np.array(list(hdr.data(sclr))).squeeze()
+        sclr_img = scalar.reshape(scan_dim)
+        scalar_stack_list.append(sclr_img)
+
+    # Stack all the 2D images along a new axis (axis=0).
+    scalar_stack = np.stack(scalar_stack_list, axis=0)
+
+    #print("3D Stack shape:", xrf_stack.shape)
+
+    return  scalar_stack, sorted(scalar_keys),
+
+def get_all_xrf_roi_data(hdr):
+
+
+    channels = [1, 2, 3]
+    keys = list(hdr.table().keys())
+    roi_keys = [k for k in keys if k.startswith('Det')]
+    det1_keys = [k for k in keys if k.startswith('Det1')]
+    elem_list = [k.replace("Det1_", "") for k in det1_keys]
+
+    print(f"{elem_list = }")
+
+    scan_dim = get_flyscan_dimensions(hdr)
+    xrf_stack_list = []
+
+    for elem in sorted(elem_list):
+        roi_keys = [f'Det{chan}_{elem}' for chan in channels]
+        spectrum = np.sum([np.array(list(hdr.data(roi)), dtype=np.float32).squeeze() for roi in roi_keys], axis=0)
+        xrf_img = spectrum.reshape(scan_dim)
+        xrf_stack_list.append(xrf_img)
+
+    # Stack all the 2D images along a new axis (axis=0).
+    xrf_stack = np.stack(xrf_stack_list, axis=0)
+
+    #print("3D Stack shape:", xrf_stack.shape)
+    return xrf_stack, sorted(elem_list)
 
 def get_sid_list(str_list, interval):
     num_elem = np.size(str_list)
@@ -240,22 +294,7 @@ def return_diff_array(sid, det="eiger2_image", mon="sclr1_ch4", threshold=None):
 
     hdr = db[int(sid)]
     start_doc = hdr["start"]
-
-    sid = start_doc["scan_id"]
-    
-
-
-
     if not start_doc["plan_type"] in ("FlyPlan1D",):
-
-        if 'num1' and 'num2' in start_doc:
-            dim1,dim2 = start_doc['num1'],start_doc['num2']
-        elif 'shape' in start_doc:
-            dim1,dim2 = start_doc.shape
-        try:
-            xy_scan_positions = list(np.array(df[mots[0]]),np.array(df[mots[1]]))
-        except:
-            xy_scan_positions = list(get_scan_positions(hdr))
 
         file_name = get_path(sid,det)
         print(file_name)
@@ -277,8 +316,6 @@ def return_diff_array(sid, det="eiger2_image", mon="sclr1_ch4", threshold=None):
                     data = np.concatenate([data,np.asarray(f[data_name],dtype=data_type)],0)
                 ind = ind + 1
                 print(data.shape)
-        
-        _, roi1,roi2 = np.shape(data)
 
         raw_size = np.shape(data)
         if threshold is not None:
@@ -306,9 +343,6 @@ def return_diff_array(sid, det="eiger2_image", mon="sclr1_ch4", threshold=None):
                     mon_array = np.concatenate((mon_array, last_mon_array_element), axis=0)            
 
             data = data/mon_array[:,np.newaxis,np.newaxis]
-        
-        data = np.flip(data[:,:,:],axis = 1)
-        data.reshape(dim1,dim2,roi1,roi2)
             
 
     return data
@@ -405,15 +439,18 @@ def export_diff_data_as_tiff(first_sid,last_sid, det="eiger2_image", mon="sclr1_
             print(f"{saved_as =}")
             
 def export_diff_data_as_h5(sid_list, 
-                           det="eiger2_image", roi=None, 
-                           mask=None, threshold=None,
-                           norm_with = 'sclr1_ch4',
-                           wd = '.', compression = None):
+                           det="eiger2_image", 
+                           wd = '.', 
+                           mon = 'sclr1_ch4',
+                           compression = 'gzip'):
     # load diffraction data of a list of scans through databroker, with data being stacked at the first axis
     # roi[row_start,col_start,row_size,col_size]
     # mask has to be the same size of the image data, which corresponds to the last two axes
     
     data_type = 'float32'
+    if isinstance(sid_list, (int, float)):
+        sid_list = [sid_list]
+
   
     num_scans = np.size(sid_list)
     data_name = '/entry/instrument/detector/data'
@@ -458,25 +495,10 @@ def export_diff_data_as_h5(sid_list,
                 #data = list(db[sid].data(det))
                 #data = np.asarray(np.squeeze(data),dtype=data_type)
             _, roi1,roi2 = np.shape(data)
+            if mon != None:
+                mon_array = np.array(list(hdr.data(str(mon)))).squeeze()
+            data = np.flip(data[:,:,:],axis = 1)
 
-            if threshold is not None:
-                data[data<threshold[0]] = 0
-                data[data>threshold[1]] = 0
-
-            if norm_with is not None:
-                #mon_array = np.stack(hdr.table(fill=True)[norm_with])
-                mon_array = np.array(list(hdr.data(str(norm_with)))).squeeze()
-                norm_data = data/mon_array[:,np.newaxis,np.newaxis]
-                print(f"data normalized with {norm_with} ")
-
-            
-            if mask is not None:     
-                #sz = data.shape
-                data = data*mask
-            if roi is None:
-                data = np.flip(data[:,:,:],axis = 1)
-            else:
-                data = np.flip(data[:,roi[0]:roi[0]+roi[2],roi[1]:roi[1]+roi[3]],axis = 1)
                 
             print(f"data size = {data.size/1_073_741_824 :.2f} GB")
 
@@ -495,35 +517,66 @@ def export_diff_data_as_h5(sid_list,
             
             with h5py.File(saved_as+'.h5','w') as f:
 
-                #data_group = f.create_group(f'{det}_raw_data')
-                data_group = f.create_group(f'/diff_data/{det}/')
-                data_group.create_dataset('raw_data',
-                                           data=data.reshape(dim1,dim2,roi1,roi2), 
-                                           compression = compression )
-                data_group.create_dataset('norm_data',
-                                           data=norm_data.reshape(dim1,dim2,roi1,roi2), 
-                                           compression = compression )
-                data_group.create_dataset('Io',
-                                           data=mon_array.reshape(dim1,dim2),
-                                           compression = compression )
+                # Create (or get) the group for the detector raw data
+                det_group = f.require_group(f"/diff_data/{det}/")
+                det_group.create_dataset(
+                    "raw_data",
+                    data=data.reshape(dim1, dim2, roi1, roi2),
+                    compression=compression
+                )
+                if mon != None:
+                    det_group.create_dataset(
+                        "Io",
+                        data=mon_array.reshape(dim1, dim2)
+                    )
+                
+                # Create (or get) the group for scan data
+                scan_group = f.require_group("scan/")
+                scan_group.create_dataset(
+                    "scan_positions",
+                    data=xy_scan_positions
+                )
 
-                data_group = f.create_group(f'/diff_data/scan/')
-                data_group.create_dataset('scan_positions',
-                            data=xy_scan_positions,
-                            compression = 'gzip')
                 scan_table.to_csv(saved_as+'_meta_data.csv')
 
-                # xrf_group = f.create_group('xrf_roi_data')
-                # names, xrf_2d = get_xrf_data(sid)
-                # xrf_group.create_dataset('xrf_roi_array', data = xrf_2d)
-                # xrf_group.create_dataset('xrf_elem_names', data = names)
+                xrf_group = f.require_group('/xrf_roi_data/')
+                xrf_stack, elem_list  = get_all_xrf_roi_data(hdr)
+                scalar_stack, scalar_keys  = get_all_scalar_data(hdr)
+                xrf_group.create_dataset('xrf_roi_array', data = xrf_stack)
+                xrf_group.create_dataset('xrf_elem_names', data = elem_list)
+
+                scalar_group = f.require_group('/scalar_data/')
+                scalar_group.create_dataset('scalar_array', data = scalar_stack)
+                scalar_group.create_dataset('scalar_array_names', data = scalar_keys)
 
             f.close()
             print(f"{saved_as =}")
 
 
 
-def export_diff_h5_log_file(logfile, diff_detector = 'merlin1', norm_with = 'sclr1_ch4',compression = None):
+def unpack_diff_h5(filename, det):
+    """
+    Unpack raw_data, Io, and scan_positions from an HDF5 file.
+
+    Parameters:
+        filename (str): Path to the HDF5 file.
+        det (str): Detector name used in the group path.
+
+    Returns:
+        tuple: (raw_data, Io, scan_positions)
+    """
+    with h5py.File(filename, "r") as f:
+        # Read data from the detector group
+        det_group = f[f"/diff_data/{det}/"]
+        raw_data = det_group["raw_data"][()]
+        Io = det_group["Io"][()]
+        
+        # Read scan positions
+        scan_positions = f["/diff_data/scan/scan_positions"][()]
+    
+    return raw_data, Io, scan_positions
+
+def export_diff_h5_log_file(logfile, diff_detector = 'merlin1',compression = None):
 
     df = pd.read_csv(logfile)
     sid_list = df['scan_id'].to_numpy(dtype = 'int')
@@ -540,7 +593,6 @@ def export_diff_h5_log_file(logfile, diff_detector = 'merlin1', norm_with = 'scl
     
     export_diff_data_as_h5(sid_list, 
                            det=diff_detector,
-                           norm_with = norm_with,
                            wd = save_folder, 
                            compression = compression)
     

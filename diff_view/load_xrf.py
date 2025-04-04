@@ -7,11 +7,15 @@ import datetime
 import warnings
 import pickle
 import os
-from databroker import db
+import sys
 
 warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 from tqdm.auto import tqdm
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+
+sys.path.insert(0,'/nsls2/data2/hxn/shared/config/bluesky_overlay/2023-1.0-py310-tiled/lib/python3.10/site-packages')
+from hxntools.CompositeBroker import db
+from hxntools.scan_info import get_scan_positions
 
 
 def _load_scan(scan_id, fill_events=False):
@@ -31,50 +35,56 @@ def _load_scan(scan_id, fill_events=False):
 
     return scan_id, df
 
-
-def get_xrf_data(scan_id):
-
-    x=None
-    y=None
-
-    h = db[int(scan_id)]
-    start_doc = db[scan_id]['start']
-    mots = h.start['motors']
-    df = h.table()
-
-    if len(mots) == 2:
-        dim1,dim2 = h.start['num1'], h.start['num2']
-
-        if x is None:
-            x = hdr['motor1']
-            #x = hdr['motors'][0]
-        x_data = np.asarray(df[x])
-
-        if y is None:
-            y = hdr['motor2']
-            #y = hdr['motors'][1]
-        y_data = np.asarray(df[y])
-
-        extent = (np.nanmin(x_data), np.nanmax(x_data),
-            np.nanmax(y_data), np.nanmin(y_data))
-
-    elif len(mots) == 1:
-        #dim1 = h.start['num1']
-
-        if x is None:
-            x = hdr['motor']
-            #x = hdr['motors'][0]
-        x_data = np.asarray(df[x])
-        #extent = (np.nanmin(x_data), np.nanmax(x_data))
-
-    xrf_cols_1 = sorted([col for col in df.columns if col.startswith('Det1')])
-    xrf_cols_2 = sorted([col for col in df.columns if col.startswith('Det2')])
-    xrf_cols_3 = sorted([col for col in df.columns if col.startswith('Det3')])
+def get_flyscan_dimensions(hdr):
     
-    xrfs_rois = df[xrf_cols_1].to_numpy()+df[xrf_cols_2].to_numpy()+df[xrf_cols_3].to_numpy()
-    xrfs_rois_2d = xrfs_rois.reshape(dim1,dim2, -1).transpose(2,0,1)
-    xrf_col_elem_names =[col_name[5:] for col_name in xrf_cols_1] 
+    if 'dimensions' in hdr.start:
+        return hdr.start['dimensions']
+    else:
+        return hdr.start['shape']
 
-    
-    return xrf_col_elem_names, xrfs_rois_2d
+def get_all_scalar_data(hdr):
 
+    keys = list(hdr.table().keys())
+    scalar_keys = [k for k in keys if k.startswith('sclr1') ]
+    print(f"{scalar_keys = }")
+    scan_dim = get_flyscan_dimensions(hdr)
+    scalar_stack_list = []
+
+    for sclr in sorted(scalar_keys):
+        
+        scalar = np.array(list(hdr.data(sclr))).squeeze()
+        sclr_img = scalar.reshape(scan_dim)
+        scalar_stack_list.append(sclr_img)
+
+    # Stack all the 2D images along a new axis (axis=0).
+    scalar_stack = np.stack(scalar_stack_list, axis=0)
+
+    #print("3D Stack shape:", xrf_stack.shape)
+
+    return  scalar_stack, sorted(scalar_keys),
+
+def get_all_xrf_roi_data(hdr):
+
+
+    channels = [1, 2, 3]
+    keys = list(hdr.table().keys())
+    roi_keys = [k for k in keys if k.startswith('Det')]
+    det1_keys = [k for k in keys if k.startswith('Det1')]
+    elem_list = [k.replace("Det1_", "") for k in det1_keys]
+
+    print(f"{elem_list = }")
+
+    scan_dim = get_flyscan_dimensions(hdr)
+    xrf_stack_list = []
+
+    for elem in sorted(elem_list):
+        roi_keys = [f'Det{chan}_{elem}' for chan in channels]
+        spectrum = np.sum([np.array(list(h.data(roi)), dtype=np.float32).squeeze() for roi in roi_keys], axis=0)
+        xrf_img = spectrum.reshape(scan_dim)
+        xrf_stack_list.append(xrf_img)
+
+    # Stack all the 2D images along a new axis (axis=0).
+    xrf_stack = np.stack(xrf_stack_list, axis=0)
+
+    #print("3D Stack shape:", xrf_stack.shape)
+    return xrf_stack, sorted(elem_list)
