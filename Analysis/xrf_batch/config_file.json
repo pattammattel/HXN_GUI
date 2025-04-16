@@ -1,9 +1,9 @@
 {
     "xrf_scan_range": "332378-332432, 332435-332770",
-    "wd": "/nsls2/data2/hxn/legacy/users/2025Q1/Liu_2025Q1/WT_NP_d2_b",
-    "param_file": "/nsls2/data2/hxn/legacy/users/2025Q1/Liu_2025Q1/WT_NP_Tris_d2_b/pyxrf_model_parameters_338406.json",
-    "xanes_start_id": "338318",
-    "xanes_end_id": "338404",
-    "xanes_elem": "Hg_L",
-    "alignment_elem": "Hg_M"
+    "wd": "/data/users/2021Q1/Satish_2021Q1",
+    "param_file": "/data/users/2021Q1/Satish_2021Q1/pyxrf_model_parameters_128904.json",
+    "xanes_start_id": "128904",
+    "xanes_end_id": "128962",
+    "xanes_elem": "Zn_K",
+    "alignment_elem": "Fe_K"
 }

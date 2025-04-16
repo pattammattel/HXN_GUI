@@ -754,3 +754,21 @@ def get_file_creation_time(file_path):
 def sort_files_by_creation_time(file_list):
     # Sort the file list based on their creation time
     return sorted(file_list, key=lambda file: get_file_creation_time(file))
+
+
+
+def parse_scan_range(str_scan_range):
+    scanNumbers = []
+    slist = str_scan_range.split(",")
+    #print(slist)
+    for item in slist:
+        if "-" in item:
+            slist_s, slist_e = item.split("-")
+            print(slist_s, slist_e)
+            scanNumbers.extend(list(np.linspace(int(slist_s.strip()), 
+                                            int(slist_e.strip()), 
+                                            int(slist_e.strip())-int(slist_s.strip())+1)))
+        else:
+            scanNumbers.append(int(item.strip()))
+    
+    return np.int_(sorted(scanNumbers))
