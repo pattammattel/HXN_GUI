@@ -1,0 +1,940 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1237</width>
+    <height>781</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <property name="styleSheet">
+    <string notr="true">/* Base styles */
+QWidget {
+    background-color: #F0F0F0;  /* USWDS light gray */
+    color: #1B1B1B;             /* USWDS dark gray text */
+    font-family: &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif;
+    font-size: 14px;
+}
+
+/* Headings and titles via QLabel */
+QLabel[heading=&quot;h1&quot;] {
+    font-size: 24px;
+    font-weight: bold;
+    color: #1B1B1B;
+}
+
+QLabel[heading=&quot;h2&quot;] {
+    font-size: 20px;
+    font-weight: bold;
+    color: #1B1B1B;
+}
+
+QLabel[heading=&quot;h3&quot;] {
+    font-size: 16px;
+    font-weight: bold;
+    color: #1B1B1B;
+}
+
+/* Paragraph text */
+QLabel {
+    font-size: 14px;
+    color: #1B1B1B;
+}
+
+/* Muted / secondary text */
+QLabel[variant=&quot;muted&quot;] {
+    color: #757575;
+}
+
+/* Accent text */
+QLabel[variant=&quot;accent&quot;] {
+    color: #005EA2; /* USWDS primary blue */
+}
+
+/* Text input elements */
+QLineEdit, QTextEdit, QComboBox {
+    background-color: white;
+    color: #1B1B1B;
+    font-size: 14px;
+    border: 1px solid #D6D7D9;
+    padding: 6px;
+    border-radius: 4px;
+}
+
+/* Buttons */
+QPushButton {
+    background-color: #005EA2;
+    color: white;
+    border: 1px solid #005EA2;
+    padding: 6px 14px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+QPushButton:hover {
+    background-color: #1A4480;
+    border: 1px solid #1A4480;
+}
+
+/* GroupBox headers */
+QGroupBox::title {
+    font-weight: bold;
+    color: #1B1B1B;
+}
+
+/* Checkboxes */
+QCheckBox {
+    spacing: 6px;
+    font-size: 14px;
+    color: #1B1B1B;
+}
+
+
+/* Tab Widget Frame */
+QTabWidget::pane {
+    border: 1px solid #D6D7D9;  /* Light gray border */
+    background-color: #FFFFFF;
+    padding: 8px;
+}
+
+/* Tab Bar */
+QTabBar::tab {
+    background: #E1E1E1;       /* USWDS base gray */
+    color: #1B1B1B;            /* Primary text */
+    border: 1px solid #D6D7D9;
+    border-bottom: none;
+    padding: 6px 14px;
+    font-size: 14px;
+    font-weight: 500;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    margin-right: 4px;
+}
+
+/* Hover effect */
+QTabBar::tab:hover {
+    background: #D9E8F6;       /* USWDS light blue hover */
+}
+
+/* Selected tab */
+QTabBar::tab:selected {
+    background: #FFFFFF;
+    border: 1px solid #D6D7D9;
+    border-bottom: 1px solid #FFFFFF;
+    color: #005EA2;           /* USWDS primary blue */
+}
+
+/* Disabled tab */
+QTabBar::tab:!enabled {
+    color: #AFAFAF;
+}
+
+QComboBox {
+    border: 1px solid #D6D7D9;
+    border-radius: 4px;
+    padding: 4px 8px;
+    background-color: #FFFFFF;
+    color: #1B1B1B;
+    font-size: 14px;
+}
+
+QComboBox:hover {
+    border: 1px solid #005EA2;
+}
+
+QComboBox::drop-down {
+    border-left: 1px solid #D6D7D9;
+    background-color: #F1F1F1;
+    width: 24px;
+}
+
+QComboBox::down-arrow {
+    image: url(:/qt-project.org/styles/commonstyle/images/arrowdown.png);
+    width: 10px;
+    height: 10px;
+}
+
+
+QSpinBox, QDoubleSpinBox {
+    border: 1px solid #D6D7D9;
+    border-radius: 4px;
+    padding: 4px 8px;
+    background-color: #FFFFFF;
+    color: #1B1B1B;
+    font-size: 14px;
+}
+
+QSpinBox:hover, QDoubleSpinBox:hover {
+    border: 1px solid #005EA2;
+}
+
+QSpinBox::up-button, QDoubleSpinBox::up-button {
+    subcontrol-origin: border;
+    subcontrol-position: top right;
+    width: 16px;
+    border-left: 1px solid #D6D7D9;
+    background-color: #F1F1F1;
+}
+
+QSpinBox::down-button, QDoubleSpinBox::down-button {
+    subcontrol-origin: border;
+    subcontrol-position: bottom right;
+    width: 16px;
+    border-left: 1px solid #D6D7D9;
+    background-color: #F1F1F1;
+}
+
+QSpinBox::up-arrow, QDoubleSpinBox::up-arrow {
+    image: url(:/qt-project.org/styles/commonstyle/images/up_arrow.png);
+    width: 10px;
+    height: 10px;
+}
+
+QSpinBox::down-arrow, QDoubleSpinBox::down-arrow {
+    image: url(:/qt-project.org/styles/commonstyle/images/down_arrow.png);
+    width: 10px;
+    height: 10px;
+}
+
+QLineEdit {
+    border: 1px solid #D6D7D9;
+    border-radius: 4px;
+    padding: 4px 8px;
+    background-color: #FFFFFF;
+    color: #1B1B1B;
+    font-size: 14px;
+}
+
+QLineEdit:focus {
+    border: 2px solid #005EA2;
+    outline: none;
+}
+
+QCheckBox {
+    spacing: 6px;
+    font-size: 14px;
+    color: #1B1B1B;
+}
+
+QCheckBox::indicator {
+    width: 18px;
+    height: 18px;
+    border: 1px solid #D6D7D9;
+    background-color: #FFFFFF;
+    border-radius: 2px;
+}
+
+QCheckBox::indicator:checked {
+    image: url(:/qt-project.org/styles/commonstyle/images/checkbox_checked.png);
+    background-color: #005EA2;
+    border: 1px solid #005EA2;
+}
+
+QRadioButton {
+    spacing: 6px;
+    font-size: 14px;
+    color: #1B1B1B;
+}
+
+QRadioButton::indicator {
+    width: 18px;
+    height: 18px;
+    border: 1px solid #D6D7D9;
+    border-radius: 9px;
+    background-color: #FFFFFF;
+}
+
+QRadioButton::indicator:checked {
+    border: 6px solid #005EA2;
+    background-color: #FFFFFF;
+}
+
+QLabel {
+    color: #1B1B1B;          /* USWDS base text color */
+    font-size: 14px;
+    font-family: &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif;
+    padding: 2px 4px;
+}
+
+QLabel[heading=&quot;true&quot;] {
+    font-size: 18px;
+    font-weight: bold;
+    color: #1A4480;          /* USWDS primary blue */
+    margin-bottom: 4px;
+}
+
+QLabel[secondary=&quot;true&quot;] {
+    color: #5C5C5C;          /* USWDS secondary text */
+    font-size: 12px;
+}
+
+
+QTextEdit, QPlainTextEdit {
+    background-color: #ffffff;              /* USWDS white */
+    border: 1px solid #dfe1e5;              /* Light gray border */
+    border-radius: 4px;
+    padding: 8px;
+    font-size: 14px;
+    font-family: &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif;
+    color: #1b1b1b;                         /* USWDS base text */
+}
+
+QTextEdit:focus, QPlainTextEdit:focus {
+    border: 2px solid #1a4480;              /* USWDS primary blue focus */
+    outline: none;
+}
+
+QTextEdit[error=&quot;true&quot;], QPlainTextEdit[error=&quot;true&quot;] {
+    border: 2px solid #b50909;              /* USWDS red for error */
+    background-color: #fef0f0;              /* Light red background */
+}
+
+
+QProgressBar {
+    border: 1px solid #dfe1e5;           /* light gray border */
+    border-radius: 4px;
+    background-color: #f0f0f0;           /* light background */
+    text-align: center;
+    height: 16px;
+    font: 13px &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif;
+    color: #1b1b1b;
+}
+
+QProgressBar::chunk {
+    background-color: #1a4480;           /* USWDS primary blue */
+    width: 10px;
+    margin: 0.5px;
+    border-radius: 4px;
+    transition: width 0.3s ease-in-out;
+}
+
+QProgressBar::chunk {
+    background-color: #2e8540;           /* USWDS green */
+}
+QProgressBar::chunk {
+    background-color: #fdb81e;           /* USWDS gold */
+}
+QProgressBar::chunk {
+    background-color: #b50909;           /* USWDS red */
+}
+
+QGroupBox {
+    border: 2px solid #dfe1e5;        /* Light gray border */
+    border-radius: 6px;
+    margin-top: 20px;
+    background-color: #ffffff;        /* White background */
+    padding: 10px;
+    font-family: &quot;Segoe UI&quot;, sans-serif;
+    font-size: 14px;
+    color: #1b1b1b;                   /* Dark text */
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    padding: 0 5px;
+    margin-left: 10px;
+    background-color: #ffffff;
+    color: #005ea2;                   /* USWDS primary blue */
+    font-weight: bold;
+    font-size: 15px;
+}
+
+
+</string>
+   </property>
+   <layout class="QGridLayout" name="gridLayout_2">
+    <item row="1" column="1">
+     <widget class="QGroupBox" name="groupBox">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: rgb(0, 0, 0);</string>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_11">
+       <item row="0" column="0">
+        <layout class="QGridLayout" name="gridLayout_7">
+         <item row="0" column="0">
+          <widget class="ImageView" name="diff_sum_plot_canvas">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <layout class="QGridLayout" name="gridLayout_6">
+           <item row="1" column="0" colspan="2">
+            <widget class="ImageView" name="xrf_plot_canvas">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item row="1" column="0">
+        <layout class="QGridLayout" name="gridLayout_9">
+         <item row="0" column="0">
+          <widget class="ImageView" name="diff_sum_plot_canvas_2">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <layout class="QGridLayout" name="gridLayout_12">
+           <item row="1" column="0" colspan="2">
+            <widget class="ImageView" name="xrf_plot_canvas_2">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item row="0" column="0">
+     <layout class="QGridLayout" name="gridLayout_10">
+      <item row="0" column="0">
+       <layout class="QGridLayout" name="gridLayout_8">
+        <item row="0" column="2">
+         <widget class="QPushButton" name="pb_select_wd">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>...</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLineEdit" name="le_wd">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>/Users/ajithpattammattel/Downloads/testing</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_2">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Working directory:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="1" column="0">
+       <widget class="QTabWidget" name="tabWidget_2">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="tabPosition">
+         <enum>QTabWidget::North</enum>
+        </property>
+        <property name="currentIndex">
+         <number>0</number>
+        </property>
+        <property name="elideMode">
+         <enum>Qt::ElideLeft</enum>
+        </property>
+        <property name="documentMode">
+         <bool>true</bool>
+        </property>
+        <widget class="QWidget" name="tab_2">
+         <attribute name="title">
+          <string>Load from Data Broker</string>
+         </attribute>
+         <layout class="QGridLayout" name="gridLayout_4">
+          <item row="0" column="0" colspan="2">
+           <layout class="QHBoxLayout" name="horizontalLayout_6">
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_5">
+              <item>
+               <widget class="QLabel" name="label">
+                <property name="text">
+                 <string>Scan ID</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="le_sid">
+                <property name="enabled">
+                 <bool>true</bool>
+                </property>
+                <property name="text">
+                 <string>338901</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_4">
+              <item>
+               <widget class="QLabel" name="label_3">
+                <property name="text">
+                 <string>Detector</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QComboBox" name="cb_det_list"/>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_3">
+              <item>
+               <widget class="QLabel" name="label_6">
+                <property name="text">
+                 <string>Normalize with:</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QComboBox" name="cb_norm_scalars"/>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </item>
+          <item row="1" column="0">
+           <layout class="QHBoxLayout" name="horizontalLayout">
+            <item>
+             <widget class="QLabel" name="label_5">
+              <property name="text">
+               <string>Ref image #</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSpinBox" name="spinBox"/>
+            </item>
+           </layout>
+          </item>
+          <item row="1" column="1">
+           <layout class="QGridLayout" name="gridLayout_3">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_4">
+              <property name="text">
+               <string>low/high threshold</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QSpinBox" name="sb_low_threshold">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="maximum">
+               <number>1000000</number>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="QSpinBox" name="sb_high_threshold">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimum">
+               <number>1</number>
+              </property>
+              <property name="maximum">
+               <number>999999999</number>
+              </property>
+              <property name="singleStep">
+               <number>1000</number>
+              </property>
+              <property name="value">
+               <number>1000000</number>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="2" column="0">
+           <widget class="QPushButton" name="pb_load_data_from_db">
+            <property name="styleSheet">
+             <string notr="true"/>
+            </property>
+            <property name="text">
+             <string>Load Data from db</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QPushButton" name="pb_load_data_from_db_2">
+            <property name="styleSheet">
+             <string notr="true"/>
+            </property>
+            <property name="text">
+             <string>Load Data from h5</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="tab">
+         <attribute name="title">
+          <string>Batch Export</string>
+         </attribute>
+         <layout class="QGridLayout" name="gridLayout_16">
+          <item row="0" column="0">
+           <layout class="QGridLayout" name="gridLayout_14">
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_7">
+              <property name="text">
+               <string>Scan_list           </string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QLineEdit" name="le_sid_2">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
+              <property name="toolTip">
+               <string>continuous scans seperated by '_' 
+ comma to sperate different list or singles 
+ examaple:9123-9130,9846,7653-7660</string>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="placeholderText">
+               <string>9123-9130,9846,7653-7660</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="3">
+             <widget class="QComboBox" name="cb_det_list_2"/>
+            </item>
+            <item row="2" column="2">
+             <widget class="QLabel" name="label_8">
+              <property name="text">
+               <string>Detector</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="1" column="0">
+           <layout class="QGridLayout" name="gridLayout_15">
+            <item row="0" column="2">
+             <widget class="QPushButton" name="pb_select_wd_2">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>...</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLineEdit" name="le_wd_2">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_10">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>select Logfile(s)</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="2" column="0">
+           <widget class="QPushButton" name="pushButton">
+            <property name="text">
+             <string>Start Batch Export</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item row="0" column="1">
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="1">
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <item>
+         <widget class="QPushButton" name="pushButton_2">
+          <property name="text">
+           <string>Import  Mask</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButton_4">
+          <property name="text">
+           <string>Export Mask</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButton_3">
+          <property name="text">
+           <string>Apply Mask</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pb_show_mask">
+          <property name="styleSheet">
+           <string notr="true"/>
+          </property>
+          <property name="text">
+           <string>Apply ROI</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="0" column="0">
+       <widget class="ImageView" name="diff_img_view">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QGroupBox" name="groupBox">
+        <property name="title">
+         <string>Display Settings</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <item>
+          <widget class="QPushButton" name="pb_auto_hist_levels_diff">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="styleSheet">
+            <string notr="true"/>
+           </property>
+           <property name="text">
+            <string>Autoscale </string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pb_set_hist_levels_diff">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="styleSheet">
+            <string notr="true"/>
+           </property>
+           <property name="text">
+            <string>Lock Hist. Levels</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="cb_diff_log_scale">
+           <property name="text">
+            <string>Log Scale</string>
+           </property>
+           <property name="checked">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item row="1" column="0">
+     <widget class="QPlainTextEdit" name="pte_status">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="readOnly">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1237</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <widget class="QMenu" name="menuExport_Results_as">
+     <property name="title">
+      <string>Export Results as </string>
+     </property>
+     <addaction name="actiontiff"/>
+     <addaction name="actionpng"/>
+     <addaction name="actionnpy"/>
+    </widget>
+    <addaction name="actionReverse_gx"/>
+    <addaction name="actionReverse_gy"/>
+    <addaction name="actionExport_Mask"/>
+    <addaction name="menuExport_Results_as"/>
+   </widget>
+   <addaction name="menuFile"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionExport_mask_data">
+   <property name="text">
+    <string>Export mask data</string>
+   </property>
+  </action>
+  <action name="actionExport_Mask">
+   <property name="text">
+    <string>Export Mask</string>
+   </property>
+  </action>
+  <action name="actionImport_Mask">
+   <property name="text">
+    <string>Import Mask</string>
+   </property>
+  </action>
+  <action name="actionReverse_gx">
+   <property name="text">
+    <string>Reverse gx</string>
+   </property>
+  </action>
+  <action name="actionReverse_gy">
+   <property name="text">
+    <string>Reverse gy</string>
+   </property>
+  </action>
+  <action name="actiontiff">
+   <property name="text">
+    <string>tiff</string>
+   </property>
+  </action>
+  <action name="actionpng">
+   <property name="text">
+    <string>png</string>
+   </property>
+  </action>
+  <action name="actionnpy">
+   <property name="text">
+    <string>npy</string>
+   </property>
+  </action>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ImageView</class>
+   <extends>QGraphicsView</extends>
+   <header>pyqtgraph</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>
