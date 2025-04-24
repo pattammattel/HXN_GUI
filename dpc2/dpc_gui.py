@@ -122,6 +122,7 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         self.diff_im_view.scene().sigMouseClicked.connect(self.on_mouse_doubleclick)
         self.pb_plot_mask.clicked.connect(self.plot_mask)
         self.pb_apply_mask.clicked.connect(self.apply_mask)
+        self.pb_apply_roi.clicked.connect(self.get_masked_cropped_data)
 
 
         # self.pb_load_xrf.clicked.connect(self.choose_xrf_file)
@@ -313,16 +314,37 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         self.win_mask.setPredefinedGradient("bipolar")
         self.win_mask.show()
 
-
-
     def get_roi_info(self):
         pos = self.roi.pos()
         size = self.roi.size()
         print(f"ROI Position: {pos}, Size: {size}")
         return pos,size
     
-    
-    
+    def get_masked_cropped_data(self):
+        
+        masked = self.diff_stack*self.mask[np.newaxis, :,:]
+        cropped = self.roi.getArrayRegion(
+            masked,
+            self.img_item,
+            axes=(1, 2),
+            returnMappedCoords=False,
+            order=0)
+        # print(cropped.max()), print(cropped.dtype)
+        # print(self.diff_stack.max()), print(self.diff_stack.dtype)
+        self.win_cropped = pg.ImageView()
+        self.win_cropped.setImage(cropped[0:100])
+        self.win_cropped.setWindowTitle("Croppped and masked, first 100")
+        self.win_cropped.setPredefinedGradient("viridis")
+        self.win_cropped.show()
+
+
+        #self.diff_stack_clean = self.diff_stack*self.mask[:, np.newaxis, np.newaxis]
+
+    def clear_all_masked_pixels(self):
+        pass
+
+    def find_and_mask_hot_pixels(self):
+        pass
     
     
     
