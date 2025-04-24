@@ -1,27 +1,20 @@
 
 import sys
 import os
-import json
-import collections
-import h5py
-import runpy
+import warnings
+from scipy.ndimage import center_of_mass
 import numpy as np
 import pyqtgraph as pg
 import tifffile as tf
 from pyqtgraph import functions as fn
-pg.setConfigOption('imageAxisOrder', 'row-major') # best performance
 from functools import wraps
-from PyQt5 import QtWidgets, uic, QtCore, QtGui, QtTest
-from PyQt5.QtWidgets import QMessageBox, QFileDialog,QErrorMessage,QDialog, QLabel, QVBoxLayout, QProgressBar
-from PyQt5.QtCore import Qt,QObject, QTimer, QThread, pyqtSignal
+from PyQt6 import QtWidgets, uic, QtCore, QtGui, QtTest
+from PyQt6.QtWidgets import QMessageBox, QFileDialog,QErrorMessage,QDialog, QLabel, QVBoxLayout, QProgressBar
+from PyQt6.QtCore import Qt,QObject, QTimer, QThread, pyqtSignal
+pg.setConfigOption('imageAxisOrder', 'row-major') # best performance
 ui_path = os.path.dirname(os.path.abspath(__file__))
-import warnings
 warnings.filterwarnings('ignore', category=RuntimeWarning)
 from diff_export import *
-
-sys.path.insert(0,'/nsls2/data2/hxn/shared/config/bluesky_overlay/2023-1.0-py310-tiled/lib/python3.10/site-packages')
-from hxntools.CompositeBroker import db
-from hxntools.scan_info import get_scan_positions
 
 #beamline specific
 detector_list = ["merlin1","merlin2", "eiger1", "eiger2_image"]
@@ -59,78 +52,90 @@ class EmittingStream(QObject):
     def write(self, text):
         self.textWritten.emit(str(text))
 
+
+
+
 class DiffViewWindow(QtWidgets.QMainWindow):
 
     def __init__(self):
         super(DiffViewWindow, self).__init__()
-        uic.loadUi(os.path.join(ui_path,'diff_view.ui'), self)
+        uic.loadUi(os.path.join(ui_path,'dpc_view.ui'), self)
+        print("ui loaded")
         
         sys.stdout = EmittingStream(textWritten=self.normalOutputWritten)
         sys.stderr = EmittingStream(textWritten=self.errorOutputWritten)
 
         self.prev_config = {} # TODO, record the workflow later
         self.wd = None
-        self.xrf_img = None
-        self.diff_sum_img = None
+        self.diff_img = None
         self.single_diff = None
+        self.diff_stack = None
         # self.roi = pg.PolyLineROI( positions=[[-10, -10], [-10, 10], [10, 10], [10, -10]],
         #                         pen="r",
         #                         closed=True,
         #                         removable=True,
         #                         )
         self.roi = None
-        self.create_pointer()
-        self.points = [] # Record Points
-        self.roi_exists = False
-        self.display_param = {
-                              "diff_wd":None,
-                              "xrf_wd":None,
-                              "xrf_img_settings":
-                                    {"lut":"viridis",
-                                     "hist_lim":(None,None),
-                                     "remove_hot_pixels":(True,5),
-                                     "display_log":False,
-                                    },
-                                "diff_sum_img_settings":
-                                    {"lut":"viridis",
-                                     "hist_lim":(None,None),
-                                     "remove_hot_pixels":(True,5),
-                                     "display_log":False,
-                                    },
-                                "diff_img_settings":
-                                    {"lut":'viridis',
-                                     "hist_lim":(None,None),
-                                     "remove_hot_pixels":(True,5),
-                                     "display_log":False,
-                                     }
-                            }
+
+        # self.display_params = {     "diff_img":
+        #                             {"lut":"viridis",
+        #                              "hist_lim":(None,None),
+        #                              "display_log":False,
+        #                             },
+        #                              "amp_img":
+        #                             {"lut":"viridis",
+        #                              "hist_lim":(None,None),
+        #                              "display_log":False,
+        #                             },
+        #                              "gx_img":
+        #                             {"lut":"viridis",
+        #                              "hist_lim":(None,None),
+        #                              "display_log":False,
+        #                             },
+        #                              "gy_img":
+        #                             {"lut":"viridis",
+        #                              "hist_lim":(None,None),
+        #                              "display_log":False,
+        #                             },
+        #                              "phase_img":
+        #                             {"lut":"viridis",
+        #                              "hist_lim":(None,None),
+        #                              "display_log":False,
+        #                             }
+        #                     }
+
         
-        self.diff_img_view.ui.menuBtn.hide()
-        self.diff_img_view.ui.roiBtn.hide()
+        # self.diff_im_view.ui.menuBtn.hide()
+        # self.diff_im_view.ui.roiBtn.hide()
 
         #beamline specific paramaters
         self.cb_norm_scalars.addItems(scalars_list)
         self.cb_det_list.addItems(detector_list)
         self.cb_det_list.setCurrentIndex(0)
         self.cb_norm_scalars.setCurrentIndex(4)
-
+        
+        #self.display_diff_img_from_h5() #testing only
         #connections
         self.pb_select_wd.clicked.connect(self.choose_wd)
-        self.pb_load_xrf.clicked.connect(self.choose_xrf_file)
-        self.pb_load_diff.clicked.connect(self.choose_diff_file)
-        self.pb_set_hist_levels_diff.clicked.connect(lambda:self.toggle_hist_scale_diff(auto = False))
-        self.pb_auto_hist_levels_diff.clicked.connect(lambda:self.toggle_hist_scale_diff(auto = True))
-        self.pb_show_mask.clicked.connect(self.get_mask_from_roi)
-        self.pb_load_data_from_db.clicked.connect(self.load_and_save_from_db)
-        #self.pb_load_data_from_db.clicked.connect(self.load_from_db)
-        self.pb_swap_diff_axes.clicked.connect(lambda:self.diff_stack.transpose(0,1,3,2))
-        self.actionExport_mask_data.triggered.connect(self.save_mask_data)
-        self.cb_xrf_elem_list.currentIndexChanged.connect(self.display_xrf_img)
+        self.pb_load_from_h5.clicked.connect(lambda:self.display_diff_img_from_h5(
+            self.sb_ref_img_num.value()))
+        self.diff_im_view.scene().sigMouseClicked.connect(self.on_mouse_doubleclick)
+        self.pb_plot_mask.clicked.connect(self.plot_mask)
+        self.pb_apply_mask.clicked.connect(self.apply_mask)
+
+
+        # self.pb_load_xrf.clicked.connect(self.choose_xrf_file)
+        # self.pb_load_diff.clicked.connect(self.choose_diff_file)
+        # self.pb_set_hist_levels_diff.clicked.connect(lambda:self.toggle_hist_scale_diff(auto = False))
+        # self.pb_auto_hist_levels_diff.clicked.connect(lambda:self.toggle_hist_scale_diff(auto = True))
+        # self.pb_show_mask.clicked.connect(self.get_mask_from_roi)
+        # self.pb_load_data_from_db.clicked.connect(self.load_and_save_from_db)
+        # #self.pb_load_data_from_db.clicked.connect(self.load_from_db)
+        # self.pb_swap_diff_axes.clicked.connect(lambda:self.diff_stack.transpose(0,1,3,2))
+        # self.actionExport_mask_data.triggered.connect(self.save_mask_data)
+        # self.cb_xrf_elem_list.currentIndexChanged.connect(self.display_xrf_img)
 
     
-
-
-
     def __del__(self):
         import sys
         # Restore sys.stdout
@@ -141,7 +146,7 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         """Append text to the QTextEdit."""
         # Maybe QTextEdit.append() works as well, but this is how I do it:
         cursor = self.pte_status.textCursor()
-        cursor.movePosition(QtGui.QTextCursor.End)
+        cursor.movePosition(QtGui.QTextCursor.MoveOperation.End)
         cursor.insertText(text)
         self.pte_status.setTextCursor(cursor)
         self.pte_status.ensureCursorVisible()
@@ -151,7 +156,7 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         """Append text to the QTextEdit."""
         # Maybe QTextEdit.append() works as well, but this is how I do it:
         cursor = self.pte_status.textCursor()
-        cursor.movePosition(QtGui.QTextCursor.End)
+        cursor.movePosition(QtGui.QTextCursor.MoveOperation.End)
         cursor.insertText(text)
         self.pte_status.setTextCursor(cursor)
         self.pte_status.ensureCursorVisible()
@@ -161,19 +166,7 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         self.wd = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select Folder')
         self.le_wd.setText((str(self.wd)))
 
-
     def create_load_params(self):
-
-        """    
-        param_dict = {wd:'.', 
-                 "sid":-1, 
-                 "det":"merlin1", 
-                 "mon":"sclr1_ch4", 
-                 "roi":None, 
-                 "mask":None, 
-                 "threshold":None}
-                 
-        """
 
         self.load_params = {"wd":self.le_wd.text(),
                             "sid":int(self.le_sid.text()), 
@@ -188,6 +181,153 @@ class DiffViewWindow(QtWidgets.QMainWindow):
             self.load_params['mon'] = None
 
 
+    def display_diff_img_from_h5(self, im_index = 0):
+
+
+        self.create_load_params()
+        sid = self.load_params["sid"]
+        det = self.load_params["det"]
+        filename = glob.glob(os.path.join(self.load_params["wd"],
+                                            f"*{sid}*.h5")
+                                            )[0]
+        
+        h5_name = os.path.basename(filename).split('.')[0]
+        det_name = h5_name.split('_')[2]
+        if det_name in detector_list:
+            det = det_name
+
+        if filename:
+            print(f"loading; scan_{sid}_{det}.h5, please wait")
+            (
+            self.diff_stack,
+            self.Io,
+            self.scan_pos,
+            self.xrf_stack,
+            self.xrf_elem_list
+            ) = unpack_diff_h5(
+            filename,
+            det
+            )
+
+        else:
+            raise FileNotFoundError(f"An h5 file for {sid} not found;" 
+                                    f"typically in scan_{sid}_detname.h5 format")
+        self.im_y,self.im_x,self.roi_y,self.roi_x = self.diff_stack.shape
+        self.diff_stack = self.diff_stack.reshape(-1,self.roi_y,self.roi_x)
+        #GUI widegt limits
+        self.sb_ref_img_num.setMaximum(int(self.diff_stack.shape[0]))
+        
+        # Show axes: these are auto-labeled as pixel numbers
+        self.diff_im_view.invertY(True)
+        self.diff_im_view.setLabel('left', 'Y Pixels')
+        self.diff_im_view.setLabel('bottom', 'X Pixels')
+        
+        self.display_data = self.diff_stack[im_index,:,:]
+        self.img_item = pg.ImageItem()
+        self.img_item.setImage(self.display_data)
+        lut = pg.colormap.get('viridis')  # You can also use: 'inferno', 'plasma', 'cividis', etc.
+        self.img_item.setColorMap(lut)
+        self.diff_im_view.addItem(self.img_item)
+        
+        #Add ROI
+        self.create_roi()
+        if not self.roi in self.diff_im_view.items():
+            self.diff_im_view.addItem(self.roi)
+        # Optional: connect to get ROI updates
+        self.roi.sigRegionChangeFinished.connect(self.get_roi_info)
+
+
+        #masking pixels
+        self.mask = np.ones_like(self.display_data, dtype=bool)
+        # Transparent overlay for mask
+        self.mask_overlay = pg.ImageItem()
+        self.mask_overlay.setZValue(10)
+        self.mask_overlay.setOpts(opacity=0.4, lut=self._make_mask_lut())
+        self.diff_im_view.addItem(self.mask_overlay)
+        self.update_mask_overlay()
+
+    def create_roi(self):
+
+        if self.display_data is None:
+            print("No image loaded.")
+            return
+
+        height, width = self.display_data.shape
+        roi_width = width / 2
+        roi_height = height / 2
+
+        total = np.sum(self.display_data)
+        if total == 0:
+            print("Image is all zeros — defaulting to image center.")
+            cx, cy = width / 2, height / 2
+        else:
+            cy, cx = center_of_mass(self.display_data)
+            if not (0 <= cx < width and 0 <= cy < height):
+                print("Center of mass out of bounds — using image center.")
+                cx, cy = width / 2, height / 2
+
+        self.roi = pg.RectROI([cx - roi_width / 2, cy - roi_height / 2],
+                    [roi_width, roi_height],
+                    pen='r',
+                    maxBounds = QtCore.QRectF(0, 0, width, height))
+        
+        
+    def _make_mask_lut(self):
+        """LUT: 1 → red; 0 → transparent."""
+        lut = np.zeros((2, 4), dtype=np.ubyte)
+        lut[1] = [0, 0, 0, 0]        # Transparent
+        lut[0] = [255, 0, 0, 255]    # Red with alpha
+        return lut
+
+    def update_mask_overlay(self):
+        self.mask_overlay.setImage(self.mask, autoLevels=False)
+
+    def on_mouse_doubleclick(self, event):
+        if  event.double():
+            pos = event.scenePos()
+            mouse_point = self.diff_im_view.plotItem.vb.mapSceneToView(pos)
+            x, y = int(mouse_point.x()), int(mouse_point.y())
+
+            if 0 <= x < self.display_data.shape[1] and 0 <= y < self.display_data.shape[0]:
+                # Toggle pixel: 1 ↔ 0
+                self.mask[y, x] = 1 - self.mask[y, x]
+                print(f"{'Masked' if self.mask[y,x] == 0 else 'Unmasked'} pixel: ({x}, {y})")
+                self.update_mask_overlay()
+
+    def apply_mask(self):
+        print("plotting mask applied img")
+        masked = self.display_data * self.mask
+        # Open a new window to show masked result
+        self.win_masked = pg.ImageView()
+        self.win_masked.setImage(masked)
+        self.win_masked.setWindowTitle("Mask")
+        self.win_masked.setPredefinedGradient("viridis")
+        self.win_masked.show()
+
+    def plot_mask(self):
+        # Open a new window to show masked result
+        print("plotting mask")
+        self.win_mask = pg.ImageView()
+        self.win_mask.setImage(self.mask)
+        self.win_mask.setWindowTitle("Mask")
+        self.win_mask.setPredefinedGradient("bipolar")
+        self.win_mask.show()
+
+
+
+    def get_roi_info(self):
+        pos = self.roi.pos()
+        size = self.roi.size()
+        print(f"ROI Position: {pos}, Size: {size}")
+        return pos,size
+    
+    
+    
+    
+    
+    
+    
+    '''
     def load_and_save_from_db(self):
         
         self.create_load_params()
@@ -360,11 +500,11 @@ class DiffViewWindow(QtWidgets.QMainWindow):
 
             self.diff_sum_img = np.nansum(self.diff_stack, axis = (-2,-1))#memory efficient?
             if not self.roi is None:
-                self.diff_img_view.removeItem(self.roi)
+                self.diff_im_view.removeItem(self.roi)
                 self.roi = None
             try:
                 self.diff_sum_plot_canvas.clear()
-                self.diff_img_view.clear()
+                self.diff_im_view.clear()
                 self.create_pointer()
                 
             except:
@@ -406,7 +546,7 @@ class DiffViewWindow(QtWidgets.QMainWindow):
                 self.hist_diff_sum.setLevels(min=self.display_param["diff_sum_img_settings"]["hist_lim"][0], 
                                     max=self.display_param["diff_sum_img_settings"]["hist_lim"][1])
             self.diff_sum_plot_canvas.addItem(self.hist_diff_sum)
-            self.diff_img_view.hoverEvent = self.imageHoverEvent_diff
+            self.diff_im_view.hoverEvent = self.imageHoverEvent_diff
             self.img_item_diff_sum.mousePressEvent = self.MouseClickEvent_diff_sum
             self.img_item_diff_sum.hoverEvent = self.imageHoverEvent_diff_sum
             self.roi_exists = False
@@ -427,15 +567,15 @@ class DiffViewWindow(QtWidgets.QMainWindow):
                     self.single_diff = np.nan_to_num(np.log10(self.single_diff), nan=np.nan, posinf=np.nan, neginf=np.nan)
                 
                 if self.display_param["diff_img_settings"]["hist_lim"] == (None,None):
-                    self.diff_img_view.setImage(self.single_diff)
+                    self.diff_im_view.setImage(self.single_diff)
                 else:
-                    self.diff_img_view.setImage(self.single_diff,autoLevels = False,autoHistogramRange=True)
+                    self.diff_im_view.setImage(self.single_diff,autoLevels = False,autoHistogramRange=True)
                     levels = self.display_param["diff_img_settings"]["hist_lim"]
-                    self.diff_img_view.setLevels(levels[0], levels[1])
+                    self.diff_im_view.setLevels(levels[0], levels[1])
                 if self.roi == None:
                     self.create_roi(self.single_diff.shape)
-                self.diff_img_view.addItem(self.roi)
-                self.diff_img_view.setPredefinedGradient(self.display_param["diff_img_settings"]["lut"] )
+                self.diff_im_view.addItem(self.roi)
+                self.diff_im_view.setPredefinedGradient(self.display_param["diff_img_settings"]["lut"] )
 
 
             else: event.ignore()
@@ -458,15 +598,15 @@ class DiffViewWindow(QtWidgets.QMainWindow):
 
                 
                 if self.display_param["diff_img_settings"]["hist_lim"] == (None,None):
-                    self.diff_img_view.setImage(self.single_diff)
+                    self.diff_im_view.setImage(self.single_diff)
                 else:
-                    self.diff_img_view.setImage(self.single_diff,autoLevels = False,autoHistogramRange=True)
+                    self.diff_im_view.setImage(self.single_diff,autoLevels = False,autoHistogramRange=True)
                     levels = self.display_param["diff_img_settings"]["hist_lim"]
-                    self.diff_img_view.setLevels(levels[0], levels[1])
+                    self.diff_im_view.setLevels(levels[0], levels[1])
                 if self.roi == None:
                     self.create_roi(self.single_diff.shape)
-                self.diff_img_view.addItem(self.roi)
-                self.diff_img_view.setPredefinedGradient(self.display_param["diff_img_settings"]["lut"] )
+                self.diff_im_view.addItem(self.roi)
+                self.diff_im_view.setPredefinedGradient(self.display_param["diff_img_settings"]["lut"] )
 
             else: event.ignore()
         else: event.ignore()
@@ -512,7 +652,7 @@ class DiffViewWindow(QtWidgets.QMainWindow):
             self.display_param["diff_img_settings"]["hist_lim"] = (None,None)
 
         else:
-            hist_min, hist_max = self.diff_img_view.getLevels()
+            hist_min, hist_max = self.diff_im_view.getLevels()
             self.display_param["diff_img_settings"]["hist_lim"] = (hist_min, hist_max)
             self.statusbar.showMessage(f"Histogram level set to [{hist_min :.4f}, {hist_max :.4f}]")
     
@@ -540,7 +680,7 @@ class DiffViewWindow(QtWidgets.QMainWindow):
     def get_mask_from_roi(self):
 
         # get the roi region:QPaintPathObject
-        roiShape = self.roi.mapToItem(self.diff_img_view.getImageItem(), self.roi.shape())
+        roiShape = self.roi.mapToItem(self.diff_im_view.getImageItem(), self.roi.shape())
         
         grid_shape = np.shape(self.single_diff)
 
@@ -588,8 +728,10 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         tf.imwrite(os.path.join(self.save_folder,"_masked_diff_sum.tiff"),  self.masked_diff_img)
         tf.imwrite(os.path.join(self.save_folder,"_mask.tiff"),  self.mask2D)
 
+    '''
+
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     w = DiffViewWindow()
     w.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())

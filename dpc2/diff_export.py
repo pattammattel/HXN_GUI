@@ -1,8 +1,9 @@
 ############ Created by Hanfei Yan for nanodiffraction analysis at HXN ############
 ############ Edited by Hanfei Yan on July 06, 2023 #################################
-
+import socket
+machine_name = socket.gethostname()
+print("Machine Name:", machine_name)
 import numpy as np
-from pystackreg import StackReg
 import matplotlib.pyplot as plt
 import matplotlib.animation as manimation
 import tifffile as tf
@@ -15,22 +16,22 @@ warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 #from ipywidgets import interact, interactive, fixed, interact_manual
 #import ipywidgets as widgets
 #from scipy.interpolate import interpn
-import csv
-from tqdm.auto import tqdm
+
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-import pickle
 import os
-import pandas as pd
 import warnings
 import glob
 warnings.simplefilter(action='ignore', category=FutureWarning)
 warnings.simplefilter(action='ignore', category=UserWarning)
 
 import sys
+db = None
+if not machine_name.startswith("LPS"):
 
-sys.path.insert(0,'/nsls2/data2/hxn/shared/config/bluesky_overlay/2023-1.0-py310-tiled/lib/python3.10/site-packages')
-from hxntools.CompositeBroker import db
-from hxntools.scan_info import get_scan_positions
+    sys.path.insert(0,'/nsls2/data2/hxn/shared/config/bluesky_overlay/2023-1.0-py310-tiled/lib/python3.10/site-packages')
+    from hxntools.CompositeBroker import db
+    from hxntools.scan_info import get_scan_positions
+
 
 det_params = {'merlin1':55, "merlin2":55, "eiger2_images":75}
 
