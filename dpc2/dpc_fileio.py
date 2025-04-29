@@ -1,32 +1,25 @@
-############ Created by Hanfei Yan for nanodiffraction analysis at HXN ############
-############ Edited by Hanfei Yan on July 06, 2023 #################################
-import socket
-machine_name = socket.gethostname()
-print("Machine Name:", machine_name)
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.animation as manimation
-import tifffile as tf
+
+import os
+import warnings
+import glob
 import h5py
 import pandas as pd
 import datetime
 import warnings
-warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
-#from matplotlib.widgets import Slider, Button
-#from ipywidgets import interact, interactive, fixed, interact_manual
-#import ipywidgets as widgets
-#from scipy.interpolate import interpn
-
+import sys
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.animation as manimation
+import tifffile as tf
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-import os
-import warnings
-import glob
+
+warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 warnings.simplefilter(action='ignore', category=FutureWarning)
 warnings.simplefilter(action='ignore', category=UserWarning)
 
-import sys
+
 db = None
-if not machine_name.startswith("LPS"):
+if  os.getlogin().startswith("xf03"):
 
     sys.path.insert(0,'/nsls2/data2/hxn/shared/config/bluesky_overlay/2023-1.0-py310-tiled/lib/python3.10/site-packages')
     from hxntools.CompositeBroker import db
@@ -171,7 +164,6 @@ def get_scan_metadata(sid):
     return output
 
 
-
 def export_scan_metadata(sid, wd):
     output = db.get_table(db[int(sid)],stream_name = "baseline")
     df_dictionary = pd.DataFrame([get_scan_details(sid = int(sid))])
@@ -248,22 +240,7 @@ def create_file_list(data_path, prefix, postfix, sid_list):
         file_list.append(tmp)
     return file_list
 
-def align_im_stack(im_stack, norm_intensity = False,reference = "previous"):
-    # default stacking axis is zero
-    #im_stack = np.moveaxis(im_stack,2,0)
-    if norm_intensity:
-        mean = np.mean(im_stack)
-        std = np.std(im_stack)
-        im_stack = (im_stack - mean) / std
-    sr = StackReg(StackReg.TRANSLATION)
-    #sr = StackReg(StackReg.SCALED_ROTATION)
-    #sr = StackReg(StackReg.RIGID_BODY)
-    tmats = sr.register_stack(im_stack, reference=reference)
-    out = sr.transform_stack(im_stack)
-    a = tmats[:,0,2]
-    b = tmats[:,1,2]
-    trans_matrix = np.column_stack([-b,-a])
-    return out, trans_matrix
+
 
 def load_h5_data(file_list, roi, mask):
     # load a list of scans, with data being stacked at the first axis
@@ -755,8 +732,6 @@ def get_file_creation_time(file_path):
 def sort_files_by_creation_time(file_list):
     # Sort the file list based on their creation time
     return sorted(file_list, key=lambda file: get_file_creation_time(file))
-
-
 
 def parse_scan_range(str_scan_range):
     scanNumbers = []

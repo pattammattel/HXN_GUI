@@ -20,28 +20,19 @@ from __future__ import print_function, division
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-
 import pandas as pd
-
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.optimize import minimize
 import time
 import h5py
 import tqdm
 import tifffile as tf
-from dpcmaps.db_config.db_config import db
-from hxntools.scan_info import get_scan_positions
+# from dpcmaps.db_config.db_config import db
+# from hxntools.scan_info import get_scan_positions
 import warnings
 warnings.simplefilter(action='ignore', category=UserWarning)
 warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
-#close any open h5s 
-import gc
-# for obj in gc.get_objects():   # Browse through ALL objects
-#     if isinstance(obj, h5py.File):   # Just HDF5 files
-#         try:
-#             obj.close()
-#         except:
-#             pass # Was already closed
+from dpc_calc2 import *
 
 hxn_detector_config = {'merlin1':{'pixel_size_um':55,
                                   'distance_m':0.500},
@@ -253,24 +244,6 @@ def load_metadata(scan_num:int, det_name:str):
 
     return metadata
 
-
-def get_beta(xdata):
-    length = len(xdata)
-    try:
-        beta = rss_cache[length]
-    except Exception:
-        # beta = 1j * (np.arange(length) + 1 - (np.floor(length / 2.0) + 1))
-        beta = 1j * (np.arange(length) - np.floor(length / 2.0))
-        rss_cache[length] = beta
-
-    return beta
-
-
-def rss(v, xdata, ydata, beta):
-    """Function to be minimized in the Nelder Mead algorithm"""
-    fitted_curve = xdata * v[0] * np.exp(v[1] * beta)
-    return np.sum(np.abs(ydata - fitted_curve) ** 2)
-
 def make_hdf_dpc(start_scan_id = -1, end_scan_id = -1, det_name = 'eiger1',
                  crop_params = {'x_pos':0,'y_pos':0, 'x_len':100, 'y_len':100},
                  hot_pixels_list = [], wd = '.', plot_roi_img = False):
@@ -351,22 +324,6 @@ def get_im_data_from_h5(h5_name):
     with h5py.File(h5_name, 'r') as hf:
         im_data = hf['data']
         return np.array(im_data)
-
-def calc_img_shift(img_array_2d):
-    """
-    
-    """
-    xline = np.sum(img_array_2d, axis=0)
-    yline = np.sum(img_array_2d, axis=1)
-
-    #print(f"{xline.shape}, {yline.shape}")
-
-    fx = np.fft.fftshift(np.fft.ifft(xline))
-    fy = np.fft.fftshift(np.fft.ifft(yline))
-
-    return fx, fy
-
-
 
 def recon(gx, gy, dx=0.1, dy=0.1, pad=1, w=1.0, filter = True):
     """
@@ -584,7 +541,6 @@ def main_from_h5(
     tf.imwrite(os.path.join(save_dir,'phi.tiff'), phi)
 
     return a_, gx_, gy_, phi
-
 
 def recon_dpc(
     sid,

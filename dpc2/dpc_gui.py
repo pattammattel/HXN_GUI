@@ -2,23 +2,32 @@
 import sys
 import os
 import warnings
-from scipy.ndimage import center_of_mass
+import re
+from difflib import get_close_matches
 import numpy as np
 import pyqtgraph as pg
 import tifffile as tf
+from scipy.ndimage import center_of_mass
 from pyqtgraph import functions as fn
 from functools import wraps
 from PyQt6 import QtWidgets, uic, QtCore, QtGui, QtTest
-from PyQt6.QtWidgets import QMessageBox, QFileDialog,QErrorMessage,QDialog, QLabel, QVBoxLayout, QProgressBar
-from PyQt6.QtCore import Qt,QObject, QTimer, QThread, pyqtSignal
+from PyQt6.QtWidgets import QMessageBox
+from PyQt6.QtCore import QObject, pyqtSignal
 pg.setConfigOption('imageAxisOrder', 'row-major') # best performance
 ui_path = os.path.dirname(os.path.abspath(__file__))
 warnings.filterwarnings('ignore', category=RuntimeWarning)
-from diff_export import *
+from dpc_fileio import *
+from dpc_kernel2 import *
+from image_utils import *
 
 #beamline specific
 detector_list = ["merlin1","merlin2", "eiger1", "eiger2_image"]
 scalars_list = ["None", "sclr1_ch1","sclr1_ch2","sclr1_ch3","sclr1_ch4","sclr1_ch5"]
+
+def load_stylesheet(path):
+    with open(path, "r") as file:
+        stylesheet = file.read()
+    return stylesheet
 
 
 def remove_nan_inf(im):
@@ -45,6 +54,46 @@ def show_error_message_box(func):
             pass
     return wrapper
 
+def extract_detector_name(filename, detector_list, fuzzy_cutoff=0.6):
+    """
+    Robustly extract a detector name from a filename by:
+    1) Checking for exact matches
+    2) Using fuzzy matching for any tokens (and position) in the filename
+    
+    Returns the exact detector name (correct case) or None.
+    """
+    # 1) Get the base name (no dirs, no extension)
+    base = os.path.splitext(os.path.basename(filename))[0]
+    
+    # 2) Tokenize the base name on non-alphanumeric characters
+    tokens = re.findall(r"[A-Za-z0-9]+", base)
+    if not tokens:
+        return None
+    
+    # Precompute lowercase mapping for exact matching
+    det_lower_map = {d.lower(): d for d in detector_list}
+    det_lowers = list(det_lower_map.keys())
+    
+    # 3) Exact match for the detector names anywhere in the filename
+    for tok in tokens:
+        tok_l = tok.lower()
+        if tok_l in det_lower_map:
+            return det_lower_map[tok_l]
+    
+    # 4) Fuzzy match any token in the filename against the known detector names
+    for tok in tokens:
+        m = get_close_matches(tok.lower(), det_lowers, n=1, cutoff=fuzzy_cutoff)
+        if m:
+            return det_lower_map[m[0]]
+    
+    # 5) Check if any detector name is a substring of the base (in any order)
+    base_l = base.lower()
+    for det in detector_list:
+        if det.lower() in base_l:
+            return det
+    
+    return None
+    
 class EmittingStream(QObject):
 
     textWritten = pyqtSignal(str)
@@ -62,51 +111,15 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         uic.loadUi(os.path.join(ui_path,'dpc_view.ui'), self)
         print("ui loaded")
         
-        sys.stdout = EmittingStream(textWritten=self.normalOutputWritten)
-        sys.stderr = EmittingStream(textWritten=self.errorOutputWritten)
+        #sys.stdout = EmittingStream(textWritten=self.normalOutputWritten)
+        #sys.stderr = EmittingStream(textWritten=self.errorOutputWritten)
 
         self.prev_config = {} # TODO, record the workflow later
         self.wd = None
         self.diff_img = None
         self.single_diff = None
         self.diff_stack = None
-        # self.roi = pg.PolyLineROI( positions=[[-10, -10], [-10, 10], [10, 10], [10, -10]],
-        #                         pen="r",
-        #                         closed=True,
-        #                         removable=True,
-        #                         )
         self.roi = None
-
-        # self.display_params = {     "diff_img":
-        #                             {"lut":"viridis",
-        #                              "hist_lim":(None,None),
-        #                              "display_log":False,
-        #                             },
-        #                              "amp_img":
-        #                             {"lut":"viridis",
-        #                              "hist_lim":(None,None),
-        #                              "display_log":False,
-        #                             },
-        #                              "gx_img":
-        #                             {"lut":"viridis",
-        #                              "hist_lim":(None,None),
-        #                              "display_log":False,
-        #                             },
-        #                              "gy_img":
-        #                             {"lut":"viridis",
-        #                              "hist_lim":(None,None),
-        #                              "display_log":False,
-        #                             },
-        #                              "phase_img":
-        #                             {"lut":"viridis",
-        #                              "hist_lim":(None,None),
-        #                              "display_log":False,
-        #                             }
-        #                     }
-
-        
-        # self.diff_im_view.ui.menuBtn.hide()
-        # self.diff_im_view.ui.roiBtn.hide()
 
         #beamline specific paramaters
         self.cb_norm_scalars.addItems(scalars_list)
@@ -123,19 +136,7 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         self.pb_plot_mask.clicked.connect(self.plot_mask)
         self.pb_apply_mask.clicked.connect(self.apply_mask)
         self.pb_apply_roi.clicked.connect(self.get_masked_cropped_data)
-
-
-        # self.pb_load_xrf.clicked.connect(self.choose_xrf_file)
-        # self.pb_load_diff.clicked.connect(self.choose_diff_file)
-        # self.pb_set_hist_levels_diff.clicked.connect(lambda:self.toggle_hist_scale_diff(auto = False))
-        # self.pb_auto_hist_levels_diff.clicked.connect(lambda:self.toggle_hist_scale_diff(auto = True))
-        # self.pb_show_mask.clicked.connect(self.get_mask_from_roi)
-        # self.pb_load_data_from_db.clicked.connect(self.load_and_save_from_db)
-        # #self.pb_load_data_from_db.clicked.connect(self.load_from_db)
-        # self.pb_swap_diff_axes.clicked.connect(lambda:self.diff_stack.transpose(0,1,3,2))
-        # self.actionExport_mask_data.triggered.connect(self.save_mask_data)
-        # self.cb_xrf_elem_list.currentIndexChanged.connect(self.display_xrf_img)
-
+        self.pb_recon_dpc.clicked.connect(self._recon_dpc)
     
     def __del__(self):
         import sys
@@ -181,24 +182,40 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         if self.load_params['mon'] == 'None':
             self.load_params['mon'] = None
 
-
-    def display_diff_img_from_h5(self, im_index = 0):
-
+    def load_im_stack_from_h5(self):
 
         self.create_load_params()
         sid = self.load_params["sid"]
-        det = self.load_params["det"]
-        filename = glob.glob(os.path.join(self.load_params["wd"],
-                                            f"*{sid}*.h5")
-                                            )[0]
         
-        h5_name = os.path.basename(filename).split('.')[0]
-        det_name = h5_name.split('_')[2]
-        if det_name in detector_list:
-            det = det_name
+
+        filename, _ = QtWidgets.QFileDialog.getOpenFileName(
+        self,
+        "Select HDF5 File",
+        self.load_params["wd"],  # default directory
+        "HDF5 Files (*.h5 *.hdf5);;All Files (*)")
+        
+
+        # filename = glob.glob(os.path.join(self.load_params["wd"],
+        #                                     f"*{sid}*.h5")
+        #                                     )[0]
+        
+        #h5_name = os.path.basename(filename).split('.')[0]
+        # det_name = h5_name.split('_')[2]
+        # if det_name in detector_list:
+        #     det = det_name
+
+        det = extract_detector_name(filename, detector_list)
+        
+        if det is None:
+            det = self.load_params["det"]
+        else:
+            self.load_params["det"] = det
+            self.cb_det_list.setCurrentText(det)
+
+        print(f"{det = }")
 
         if filename:
-            print(f"loading; scan_{sid}_{det}.h5, please wait")
+            print(f"loading; {os.path.basename(filename)}.h5, please wait")
             (
             self.diff_stack,
             self.Io,
@@ -215,6 +232,11 @@ class DiffViewWindow(QtWidgets.QMainWindow):
                                     f"typically in scan_{sid}_detname.h5 format")
         self.im_y,self.im_x,self.roi_y,self.roi_x = self.diff_stack.shape
         self.diff_stack = self.diff_stack.reshape(-1,self.roi_y,self.roi_x)
+
+
+    def display_diff_img_from_h5(self, im_index = 0):
+        
+        self.load_im_stack_from_h5()
         #GUI widegt limits
         self.sb_ref_img_num.setMaximum(int(self.diff_stack.shape[0]))
         
@@ -345,6 +367,32 @@ class DiffViewWindow(QtWidgets.QMainWindow):
 
     def find_and_mask_hot_pixels(self):
         pass
+
+    def _recon_dpc(self):
+        
+        a_, gx_, gy_, phi = recon_dpc_from_im_stack(self.diff_stack, 
+                                                    ref_image_num=1, 
+                                                    start_point=[1, 0], 
+                                                    max_iter=1000, 
+                                                    solver="Nelder-Mead", 
+                                                    reverse_x=1, 
+                                                    reverse_y=1,
+                                                    energy = 12, 
+                                                    det_pixel = 55, 
+                                                    det_dist = 2.05,
+                                                    dxy = [0.020,0.020])
+        
+        self.gx_im_view.setImage(gx_)
+        self.gx_im_view.view.register("Gradient_x")
+        self.gy_im_view.setImage(gy_)
+        self.gy_im_view.setWindowTitle("Gradient_y")
+        self.amp_im_view.setImage(a_)
+        self.amp_im_view.setWindowTitle("Gradient_Amplitude")
+        self.phase_im_view.setImage(phi)
+        self.phase_im_view.setWindowTitle("Phase")
+
+        
+
     
     
     
@@ -754,6 +802,9 @@ class DiffViewWindow(QtWidgets.QMainWindow):
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
+    app.setStyleSheet(load_stylesheet(os.path.join(ui_path,"style_sheet.css")))
+    font = QtGui.QFont("Arial", 10)
+    app.setFont(font)   
     w = DiffViewWindow()
     w.show()
     sys.exit(app.exec())
