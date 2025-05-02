@@ -102,8 +102,6 @@ class EmittingStream(QObject):
         self.textWritten.emit(str(text))
 
 
-
-
 class DiffViewWindow(QtWidgets.QMainWindow):
 
     def __init__(self):
@@ -120,12 +118,17 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         self.single_diff = None
         self.diff_stack = None
         self.roi = None
+        self.cropped_stack = None
 
         #beamline specific paramaters
         self.cb_norm_scalars.addItems(scalars_list)
         self.cb_det_list.addItems(detector_list)
         self.cb_det_list.setCurrentIndex(0)
         self.cb_norm_scalars.setCurrentIndex(4)
+
+        num_comma_validator = QtGui.QRegExpValidator(QtCore.QRegExp("[0-9,]*"))
+        self.le_xy_num.setValidator(num_comma_validator)
+        self.le_step_size.setValidator(num_comma_validator)
         
         #self.display_diff_img_from_h5() #testing only
         #connections
@@ -345,7 +348,7 @@ class DiffViewWindow(QtWidgets.QMainWindow):
     def get_masked_cropped_data(self):
         
         masked = self.diff_stack*self.mask[np.newaxis, :,:]
-        cropped = self.roi.getArrayRegion(
+        self.cropped_stack = self.roi.getArrayRegion(
             masked,
             self.img_item,
             axes=(1, 2),
@@ -354,7 +357,7 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         # print(cropped.max()), print(cropped.dtype)
         # print(self.diff_stack.max()), print(self.diff_stack.dtype)
         self.win_cropped = pg.ImageView()
-        self.win_cropped.setImage(cropped[0:100])
+        self.win_cropped.setImage(self.cropped_stack[0:100])
         self.win_cropped.setWindowTitle("Croppped and masked, first 100")
         self.win_cropped.setPredefinedGradient("viridis")
         self.win_cropped.show()
@@ -369,18 +372,36 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         pass
 
     def _recon_dpc(self):
+
+        ref_img = self.sb_ref_img_num.value()
+        max_iter = self.cb_max_iter.value()
+        solver = self.cb_solver.currentText()
+        reverse_gy = 1
+        if self.cb_reverse_gy.isChecked():
+            reverse_gy = -1
+
+        reverse_gx = 1
+        if self.cb_reverse_gx.isChecked():
+            reverse_gx = -1
+
+        energy = self.cb_energy.value()
+        det_pixel = self.cb_det_pixel_size.value()
+        det_dist = self.cb_det_dist.value()
+        dxy = list(self.le_step_size.text().split('_'))
+        num_xy = list(self.le_xy_num.text().split('_'))
         
-        a_, gx_, gy_, phi = recon_dpc_from_im_stack(self.diff_stack, 
-                                                    ref_image_num=1, 
+        a_, gx_, gy_, phi = recon_dpc_from_im_stack(self.cropped_stack, 
+                                                    ref_image_num=ref_img, 
                                                     start_point=[1, 0], 
-                                                    max_iter=1000, 
-                                                    solver="Nelder-Mead", 
-                                                    reverse_x=1, 
-                                                    reverse_y=1,
-                                                    energy = 12, 
-                                                    det_pixel = 55, 
-                                                    det_dist = 2.05,
-                                                    dxy = [0.020,0.020])
+                                                    max_iter=max_iter, 
+                                                    solver=solver, 
+                                                    reverse_x=reverse_gx, 
+                                                    reverse_y=reverse_gy,
+                                                    energy = energy, 
+                                                    det_pixel = det_pixel, 
+                                                    det_dist = det_dist,
+                                                    dxy = dxy,
+                                                    num_xy =num_xy)
         
         self.gx_im_view.setImage(gx_)
         self.gx_im_view.view.register("Gradient_x")

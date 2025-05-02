@@ -143,8 +143,6 @@ def get_scan_details(sid = -1):
 
     elif "scan" in start_doc.keys():
         param_dict["scan"] = start_doc["scan"]
-
-
     
     param_dict["zp_theta"] = np.round(df.zpsth.iloc[0],3)
     param_dict["mll_theta"] = np.round(df.dsth.iloc[0],3)
@@ -529,6 +527,17 @@ def export_diff_data_as_h5(sid_list,
                     "scan_positions",
                     data=xy_scan_positions
                 )
+                # Store scan_parameters dictionary
+                scan_params = get_scan_details
+                for key, value in scan_params.items():
+                    if isinstance(value, dict):  # Handle nested dictionaries
+                        # Create a subgroup for the nested dictionary
+                        param_group = scan_group.create_group(key)
+                        for nested_key, nested_value in value.items():
+                            param_group.create_dataset(nested_key, data=nested_value)
+                    else:
+                        # Store each parameter as a dataset
+                        scan_group.create_dataset(key, data=value)
 
                 scan_table.to_csv(saved_as+'_meta_data.csv')
 
