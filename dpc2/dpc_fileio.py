@@ -428,7 +428,27 @@ def export_diff_data_as_tiff(first_sid,last_sid, det="eiger2_image", mon="sclr1_
             export_scan_metadata(sid,save_folder)
             scan_table.to_csv(os.path.join(save_folder,f"{sid}_scan_table.csv"))
             print(f"{saved_as =}")
+
+# Recursive function to store dictionaries in HDF5
+def save_dict_to_h5(group, dictionary):
+    """Recursively store a dictionary into HDF5 format"""
+    for key, value in dictionary.items():
+        if isinstance(value, dict):  # If it's a nested dictionary, create a subgroup
+            subgroup = group.create_group(key)
+            save_dict_to_h5(subgroup, value)
+        else:  # If it's a simple type, create a dataset
+            group.create_dataset(key, data=value)
             
+def read_dict_from_h5(group):
+    """Recursively read a dictionary from HDF5 format"""
+    result = {}
+    for key, item in group.items():
+        if isinstance(item, h5py.Group):  # If it's a subgroup (nested dictionary)
+            result[key] = read_dict_from_h5(item)
+        else:  # If it's a dataset, convert it to numpy array
+            result[key] = item[()]
+    return result
+           
 def export_diff_data_as_h5(sid_list, 
                            det="eiger2_image", 
                            wd = '.', 
@@ -528,16 +548,8 @@ def export_diff_data_as_h5(sid_list,
                     data=xy_scan_positions
                 )
                 # Store scan_parameters dictionary
-                scan_params = get_scan_details
-                for key, value in scan_params.items():
-                    if isinstance(value, dict):  # Handle nested dictionaries
-                        # Create a subgroup for the nested dictionary
-                        param_group = scan_group.create_group(key)
-                        for nested_key, nested_value in value.items():
-                            param_group.create_dataset(nested_key, data=nested_value)
-                    else:
-                        # Store each parameter as a dataset
-                        scan_group.create_dataset(key, data=value)
+                scan_params = get_scan_details(sid)
+                save_dict_to_h5(scan_group, scan_params)
 
                 scan_table.to_csv(saved_as+'_meta_data.csv')
 
