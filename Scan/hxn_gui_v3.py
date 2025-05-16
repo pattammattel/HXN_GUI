@@ -1692,7 +1692,7 @@ class Ui(QtWidgets.QMainWindow):
             self.sample_pos_roi_dict[item_text] = item_data
 
         if auto:
-            save_file_path = os.path.join(ui_path,"temp_files/gui_roi_positions.json")
+            save_file_path = os.path.join(ui_path,"temp/gui_roi_positions.json")
             # write the data to the temp location as JSON
 
         else:
@@ -1717,7 +1717,7 @@ class Ui(QtWidgets.QMainWindow):
         list_widget.clear()
 
         if auto:
-            file_path = os.path.join(ui_path,"temp_files/gui_roi_positions.json")
+            file_path = os.path.join(ui_path,"temp/gui_roi_positions.json")
         else:
             file_path = QFileDialog().getOpenFileName(self,"Open JSON file", self.active_folder, "JSON Files (*.json)")[0]
             self.active_folder = file_path
