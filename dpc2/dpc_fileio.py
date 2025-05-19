@@ -17,19 +17,22 @@ warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 warnings.simplefilter(action='ignore', category=FutureWarning)
 warnings.simplefilter(action='ignore', category=UserWarning)
 
-
-db = None
-if  os.getlogin().startswith("xf03"):
+if  os.getlogin().startswith("xf03") or os.getlogin().startswith("pattam"):
 
     sys.path.insert(0,'/nsls2/data2/hxn/shared/config/bluesky_overlay/2023-1.0-py310-tiled/lib/python3.10/site-packages')
     from hxntools.CompositeBroker import db
     from hxntools.scan_info import get_scan_positions
 
+else: 
+    db = None
+    print("Offline analysis; No BL data available") 
+
+
 
 det_params = {'merlin1':55, "merlin2":55, "eiger2_images":75}
 
 
-def get_path(scan_id, key_name='merlin1', db=db):
+def get_path(scan_id, key_name='merlin1'):
     """Return file path with given scan id and keyname.
     """
     
