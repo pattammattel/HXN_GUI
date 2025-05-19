@@ -1,36 +1,30 @@
-############ Created by Hanfei Yan for nanodiffraction analysis at HXN ############
-############ Edited by Hanfei Yan on July 06, 2023 #################################
 
-import numpy as np
-from pystackreg import StackReg
-import matplotlib.pyplot as plt
-import matplotlib.animation as manimation
-import tifffile as tf
+import os
+import warnings
+import glob
 import h5py
 import pandas as pd
 import datetime
 import warnings
-warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
-#from matplotlib.widgets import Slider, Button
-#from ipywidgets import interact, interactive, fixed, interact_manual
-#import ipywidgets as widgets
-#from scipy.interpolate import interpn
-import csv
-from tqdm.auto import tqdm
+import sys
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.animation as manimation
+import tifffile as tf
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-import pickle
-import os
-import pandas as pd
-import warnings
-import glob
+
+warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 warnings.simplefilter(action='ignore', category=FutureWarning)
 warnings.simplefilter(action='ignore', category=UserWarning)
 
-import sys
 
-sys.path.insert(0,'/nsls2/data2/hxn/shared/config/bluesky_overlay/2023-1.0-py310-tiled/lib/python3.10/site-packages')
-from hxntools.CompositeBroker import db
-from hxntools.scan_info import get_scan_positions
+db = None
+if  os.getlogin().startswith("xf03"):
+
+    sys.path.insert(0,'/nsls2/data2/hxn/shared/config/bluesky_overlay/2023-1.0-py310-tiled/lib/python3.10/site-packages')
+    from hxntools.CompositeBroker import db
+    from hxntools.scan_info import get_scan_positions
+
 
 det_params = {'merlin1':55, "merlin2":55, "eiger2_images":75}
 
@@ -149,8 +143,6 @@ def get_scan_details(sid = -1):
 
     elif "scan" in start_doc.keys():
         param_dict["scan"] = start_doc["scan"]
-
-
     
     param_dict["zp_theta"] = np.round(df.zpsth.iloc[0],3)
     param_dict["mll_theta"] = np.round(df.dsth.iloc[0],3)
@@ -168,7 +160,6 @@ def get_scan_metadata(sid):
     df_dictionary = pd.DataFrame([get_scan_details(sid = int(sid))])
     output = pd.concat([output, df_dictionary], ignore_index=True)
     return output
-
 
 
 def export_scan_metadata(sid, wd):
@@ -247,22 +238,7 @@ def create_file_list(data_path, prefix, postfix, sid_list):
         file_list.append(tmp)
     return file_list
 
-def align_im_stack(im_stack, norm_intensity = False,reference = "previous"):
-    # default stacking axis is zero
-    #im_stack = np.moveaxis(im_stack,2,0)
-    if norm_intensity:
-        mean = np.mean(im_stack)
-        std = np.std(im_stack)
-        im_stack = (im_stack - mean) / std
-    sr = StackReg(StackReg.TRANSLATION)
-    #sr = StackReg(StackReg.SCALED_ROTATION)
-    #sr = StackReg(StackReg.RIGID_BODY)
-    tmats = sr.register_stack(im_stack, reference=reference)
-    out = sr.transform_stack(im_stack)
-    a = tmats[:,0,2]
-    b = tmats[:,1,2]
-    trans_matrix = np.column_stack([-b,-a])
-    return out, trans_matrix
+
 
 def load_h5_data(file_list, roi, mask):
     # load a list of scans, with data being stacked at the first axis
@@ -452,7 +428,27 @@ def export_diff_data_as_tiff(first_sid,last_sid, det="eiger2_image", mon="sclr1_
             export_scan_metadata(sid,save_folder)
             scan_table.to_csv(os.path.join(save_folder,f"{sid}_scan_table.csv"))
             print(f"{saved_as =}")
+
+# Recursive function to store dictionaries in HDF5
+def save_dict_to_h5(group, dictionary):
+    """Recursively store a dictionary into HDF5 format"""
+    for key, value in dictionary.items():
+        if isinstance(value, dict):  # If it's a nested dictionary, create a subgroup
+            subgroup = group.create_group(key)
+            save_dict_to_h5(subgroup, value)
+        else:  # If it's a simple type, create a dataset
+            group.create_dataset(key, data=value)
             
+def read_dict_from_h5(group):
+    """Recursively read a dictionary from HDF5 format"""
+    result = {}
+    for key, item in group.items():
+        if isinstance(item, h5py.Group):  # If it's a subgroup (nested dictionary)
+            result[key] = read_dict_from_h5(item)
+        else:  # If it's a dataset, convert it to numpy array
+            result[key] = item[()]
+    return result
+           
 def export_diff_data_as_h5(sid_list, 
                            det="eiger2_image", 
                            wd = '.', 
@@ -551,6 +547,9 @@ def export_diff_data_as_h5(sid_list,
                     "scan_positions",
                     data=xy_scan_positions
                 )
+                # Store scan_parameters dictionary
+                scan_params = get_scan_details(sid)
+                save_dict_to_h5(scan_group, scan_params)
 
                 scan_table.to_csv(saved_as+'_meta_data.csv')
 
@@ -754,8 +753,6 @@ def get_file_creation_time(file_path):
 def sort_files_by_creation_time(file_list):
     # Sort the file list based on their creation time
     return sorted(file_list, key=lambda file: get_file_creation_time(file))
-
-
 
 def parse_scan_range(str_scan_range):
     scanNumbers = []

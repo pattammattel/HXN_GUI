@@ -6,3 +6,9 @@
 *.pdf
 *.obj
 *.h5
+*.pyc
+*.swp
+autonomous/
+temp/
+Scan/temp/
+.DS_Store
