@@ -1358,32 +1358,30 @@ class Loadh5AndFit(QThread):
         QtTest.QTest.qWait(500)
 
         #print(f"{self.paramDict['file_overwrite_existing'] = }")
-        print(f"Process: make hdf in batch-->xrf fitting in batch" )
+        print(f"\n Process: make hdf in batch-->xrf fitting in batch" )
         for sid in self.paramDict["sidList"]: #filter for 1d
 
-            hdr = db[int(sid)]
-            start_doc = hdr["start"]
-            if not start_doc["plan_type"] in ("FlyPlan1D",):
+            try:
+                hdr = db[int(sid)]
+                start_doc = hdr["start"]
+                if not start_doc["plan_type"] in ("FlyPlan1D",):
+                    print(f"Loading h5 data of {sid = }")
 
-                print(f"Loading h5 data of {sid = }")
-
-                try:
-
-                    make_hdf(
-                        int(sid), 
-                        wd = self.paramDict["wd"],
-                        file_overwrite_existing = self.paramDict['file_overwrite_existing'],
-                        create_each_det = True,
-                        skip_scan_types = ['FlyPlan1D','1D_FLY_PANDA']
-                        )
-                    
-                    print(f"Pyxrf h5 for {sid = } is created ")
-                    
-                except:
-                    if sid not in self.failed_scans: 
-                        self.failed_scans.append(sid)
-                        #self.le_failed_scans.setText(self.failed_scans)
-                    pass
+                make_hdf(
+                    int(sid), 
+                    wd = self.paramDict["wd"],
+                    file_overwrite_existing = self.paramDict['file_overwrite_existing'],
+                    create_each_det = True,
+                    skip_scan_types = ['FlyPlan1D','1D_FLY_PANDA']
+                    )
+                
+                print(f"Pyxrf h5 for {sid = } is created ")
+                
+            except:
+                if sid not in self.failed_scans: 
+                    self.failed_scans.append(sid)
+                    #self.le_failed_scans.setText(self.failed_scans)
+                pass
             QtTest.QTest.qWait(1000)
 
 
