@@ -412,12 +412,6 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         self.phase_im_view.setImage(phi)
         self.phase_im_view.setWindowTitle("Phase")
 
-        
-
-    
-    
-    
-    
     '''
     def load_and_save_from_db(self):
         
