@@ -576,7 +576,7 @@ def export_diff_data_as_h5(
                     _, roi_y, roi_x = raw.shape
                 grp = f.require_group(f"/diff_data/{det}")
                 grp.create_dataset(
-                    "raw_data",
+                    "det_images",
                     data=raw.reshape(dim1, dim2, roi_y, roi_x),
                     compression=compression
                 )
@@ -603,7 +603,7 @@ def export_diff_data_as_h5(
         if save_and_return:
             # Build a return dict, drop pandas table if too big
             ret = {k: common[k] for k in ("Io", "scan_positions", "xrf_stack", "xrf_names", "scalar_stack", "scalar_names")}
-            ret["raw_data"] = {det: _load_detector_stack(hdr, det) for det in dets}
+            ret["det_images"] = {det: _load_detector_stack(hdr, det) for det in dets}
             ret["filename"] = out_fn
             results.append(ret)
 
@@ -649,7 +649,7 @@ def unpack_diff_h5(filename, dets=None):
     result : dict
         {
           "diff_data": {
-             "<det1>": {"raw_data": np.ndarray, "Io": np.ndarray or None},
+             "<det1>": {"det_images": np.ndarray, "Io": np.ndarray or None},
              "<det2>": {...}, ...
           },
           "scan": { … nested dict of all /scan contents … },
@@ -669,7 +669,7 @@ def unpack_diff_h5(filename, dets=None):
 
     # Access:
     diffs = data["diff_data"]
-    raw1 = diffs["eiger2_image"]["raw_data"]
+    raw1 = diffs["eiger2_image"]["det_images"]
     io1  = diffs["eiger2_image"]["Io"]
 
     scan_info = data["scan"]              # nested dict of everything under /scan
@@ -687,10 +687,10 @@ def unpack_diff_h5(filename, dets=None):
         diff_data = {}
         for det in det_list:
             grp = diff_root[det]
-            raw = grp["raw_data"][()]
+            raw = grp["det_images"][()]
             io_ds = grp.get("Io", None)
             io = io_ds[()] if io_ds is not None else None
-            diff_data[det] = {"raw_data": raw, "Io": io}
+            diff_data[det] = {"det_images": raw, "Io": io}
         result["diff_data"] = diff_data
 
         # 2) scan → nested dict
