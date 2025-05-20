@@ -16,7 +16,7 @@ from PyQt6.QtCore import QObject, pyqtSignal
 pg.setConfigOption('imageAxisOrder', 'row-major') # best performance
 ui_path = os.path.dirname(os.path.abspath(__file__))
 warnings.filterwarnings('ignore', category=RuntimeWarning)
-from dpc_fileio import *
+from hxn_data_loader.h5_data_io import *
 from dpc_kernel2 import *
 from image_utils import *
 
