@@ -3,6 +3,22 @@ from scipy.optimize import minimize
 from joblib import Parallel, delayed # type: ignore
 
 
+SOLVERS = [
+    "Nelder-Mead",
+    "Powell",
+    "CG",
+    "BFGS",
+    "Newton-CG",
+    "Anneal",
+    "L-BFGS-B",
+    "TNC",
+    "COBYLA",
+    "SLS-QP",
+    "dogleg",
+    "trust-ncg",
+]
+
+
 # Placeholder for the RSS function (to be minimized)
 def rss(v, xdata, ydata, beta):
     """Function to be minimized in the Nelder Mead algorithm"""
