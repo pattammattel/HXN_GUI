@@ -477,11 +477,6 @@ def read_dict_from_h5(group):
             result[key] = _decode_bytes(raw)
     return result
 
-           
-import os
-import numpy as np
-import h5py
-from tqdm import tqdm
 
 def _load_scan_common(hdr, mon, data_type='float32'):
     """
@@ -609,9 +604,6 @@ def export_diff_data_as_h5(
 
     return results if save_and_return else None
 
-
-import h5py
-import numpy as np
 
 def _read_group_as_dict(group):
     """Recursively read an HDF5 group into a nested dict, decoding bytes→str."""

@@ -16,12 +16,12 @@ from PyQt6.QtCore import QObject, pyqtSignal
 pg.setConfigOption('imageAxisOrder', 'row-major') # best performance
 ui_path = os.path.dirname(os.path.abspath(__file__))
 warnings.filterwarnings('ignore', category=RuntimeWarning)
-from hxn_data_loader.h5_data_io import *
+from h5_data_io import *
 from dpc_kernel2 import *
 from image_utils import *
 
 #beamline specific
-detector_list = ["merlin1","merlin2", "eiger1", "eiger2_image"]
+detector_list = ["eiger2_image","merlin1","merlin2", "eiger1"]
 scalars_list = ["None", "sclr1_ch1","sclr1_ch2","sclr1_ch3","sclr1_ch4","sclr1_ch5"]
 
 def load_stylesheet(path):
@@ -126,15 +126,17 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         self.cb_det_list.setCurrentIndex(0)
         self.cb_norm_scalars.setCurrentIndex(4)
 
-        num_comma_validator = QtGui.QRegExpValidator(QtCore.QRegExp("[0-9,]*"))
-        self.le_xy_num.setValidator(num_comma_validator)
-        self.le_step_size.setValidator(num_comma_validator)
+        num_comma_validator = QtGui.QRegularExpressionValidator(QtCore.QRegularExpression("[0-9,]*"))
+        self.cb_solvers.addItems(SOLVERS)
+
         
         #self.display_diff_img_from_h5() #testing only
         #connections
         self.pb_select_wd.clicked.connect(self.choose_wd)
-        self.pb_load_from_h5.clicked.connect(lambda:self.display_diff_img_from_h5(
+        self.pb_load_from_h5.clicked.connect(lambda:self.display_diff_data(
             self.sb_ref_img_num.value()))
+        self.pb_load_data_from_db.clicked.connect(lambda:self.display_diff_data(
+            self.sb_ref_img_num.value(), from_h5=False))
         self.diff_im_view.scene().sigMouseClicked.connect(self.on_mouse_doubleclick)
         self.pb_plot_mask.clicked.connect(self.plot_mask)
         self.pb_apply_mask.clicked.connect(self.apply_mask)
@@ -185,12 +187,21 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         if self.load_params['mon'] == 'None':
             self.load_params['mon'] = None
 
+    def load_im_stack_from_db(self):
+        self.create_load_params()
+        self.all_data_dict = export_diff_data_as_h5(self.load_params["sid"],
+                               dets = [self.load_params["det"]],
+                               wd = self.load_params["wd"],
+                               mon = self.load_params["mon"],
+                               compression= None,
+                               save_and_return=True
+)
+
     def load_im_stack_from_h5(self):
 
         self.create_load_params()
         sid = self.load_params["sid"]
         
-
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(
         self,
         "Select HDF5 File",
@@ -207,39 +218,86 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         # if det_name in detector_list:
         #     det = det_name
 
-        det = extract_detector_name(filename, detector_list)
+        #det = extract_detector_name(filename, detector_list)
+        #TODO smart selection of the detector
+        self.det = None
         
-        if det is None:
-            det = self.load_params["det"]
+        if self.det is None:
+            self.det = self.load_params["det"]
         else:
-            self.load_params["det"] = det
-            self.cb_det_list.setCurrentText(det)
+            self.load_params["det"] = self.det
+            self.cb_det_list.setCurrentText(self.det)
 
-        print(f"{det = }")
+        print(f"{self.det = }")
 
         if filename:
-            print(f"loading; {os.path.basename(filename)}.h5, please wait")
-            (
-            self.diff_stack,
-            self.Io,
-            self.scan_pos,
-            self.xrf_stack,
-            self.xrf_elem_list
-            ) = unpack_diff_h5(
-            filename,
-            det
-            )
-
+            print(f"loading; {os.path.basename(filename)}, please wait")
+            self.all_data_dict = unpack_diff_h5(filename,dets = [self.det])
         else:
             raise FileNotFoundError(f"An h5 file for {sid} not found;" 
                                     f"typically in scan_{sid}_detname.h5 format")
+    
+    def get_diff_data(self):
+        diffs = self.all_data_dict["diff_data"]
+        self.diff_stack = diffs[self.det]["det_images"]
+        Io  = diffs[self.det]["Io"]
         self.im_y,self.im_x,self.roi_y,self.roi_x = self.diff_stack.shape
         self.diff_stack = self.diff_stack.reshape(-1,self.roi_y,self.roi_x)
 
+    def _inject_dict(self, d: dict, prefix: str = ""):
+        """
+        Recursively walk dict `d`.  For each (key, val):
+          - if val is a dict, recurse with prefix "prefix_key"
+          - else setattr(self, "prefix_key" or "key", val)
+        """
+        for key, val in d.items():
+            # build attribute name
+            attr = f"{prefix}_{key}" if prefix else key
 
-    def display_diff_img_from_h5(self, im_index = 0):
-        
-        self.load_im_stack_from_h5()
+            if isinstance(val, dict):
+                # Recurse into the sub-dict
+                self._inject_dict(val, prefix=attr)
+            else:
+                # Leaf: assign as attribute
+                setattr(self, attr, val)
+
+    def get_and_fill_scan_params(self):
+        """
+        {'energy': np.float64(7.175),
+        'mll_theta': np.float64(-5.231),
+        'motors': array(['zpssx', 'zpssy'], dtype=object),
+        'scan': {'detector_distance': np.float64(2.05),
+        'detectors': array(['fs', 'eiger2', 'xspress3', 'panda1', 'sclr1'], dtype=object),
+        'dwell': np.float64(0.005),
+        'fast_axis': {'motor_name': 'zpssx', 'units': 'um'},
+        'sample_name': '',
+        'scan_input': array([ -1.1764,   0.8236, 100.    ,  -2.4892,   1.0108, 175.    ]),
+        'shape': array([100, 175]),
+        'slow_axis': {'motor_name': 'zpssy', 'units': 'um'},
+        'type': '2D_FLY_PANDA'},
+        'scan_id': np.int64(324725),
+        'scan_positions': array([[-1.12373271, -1.10256856, -1.07363721, ...,  0.72006795,
+                0.73767294,  0.75481991],
+                [-2.40281   , -2.40124   , -2.403     , ...,  0.96374   ,
+                0.9665    ,  0.96548   ]], shape=(2, 17500)),
+        'time': '2025-02-11 16:05:32',
+        'zp_theta': np.float64(0.0)}
+        """
+
+        scan_params = self.all_data_dict["scan"]
+        self._inject_dict(scan_params)   
+        self.dsb_energy.setValue(self.energy)
+        self.dsb_det_dist.setValue(self.scan_detector_distance)
+        x_num, y_num = self.scan_scan_input[2],self.scan_scan_input[5]
+        x_step = np.around((self.scan_scan_input[1]-self.scan_scan_input[0])/x_num, 2)
+        y_step = np.around((self.scan_scan_input[4]-self.scan_scan_input[3])/y_num, 2)
+        self.dsb_x_step.setValue(float(x_step))
+        self.dsb_y_step.setValue(float(y_step))
+        self.sb_x_num.setValue(int(x_num))
+        self.sb_y_num.setValue(int(y_num))
+
+    def display_diff_data(self, im_index = 0):
+        #self.load_im_stack_from_h5()
         #GUI widegt limits
         self.sb_ref_img_num.setMaximum(int(self.diff_stack.shape[0]))
         
@@ -271,6 +329,16 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         self.mask_overlay.setOpts(opacity=0.4, lut=self._make_mask_lut())
         self.diff_im_view.addItem(self.mask_overlay)
         self.update_mask_overlay()
+
+    def display_diff_data(self, im_index = 0, from_h5 = True):
+        if from_h5:
+            self.load_im_stack_from_h5()
+        else:
+            self.load_im_stack_from_db()
+        self.get_diff_data()
+        self.display_diff_data(im_index)
+        self.get_and_fill_scan_params()
+
 
     def create_roi(self):
 
@@ -374,8 +442,8 @@ class DiffViewWindow(QtWidgets.QMainWindow):
     def _recon_dpc(self):
 
         ref_img = self.sb_ref_img_num.value()
-        max_iter = self.cb_max_iter.value()
-        solver = self.cb_solver.currentText()
+        max_iter = self.sb_max_iter.value()
+        solver = self.cb_solvers.currentText()
         reverse_gy = 1
         if self.cb_reverse_gy.isChecked():
             reverse_gy = -1
@@ -384,11 +452,11 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         if self.cb_reverse_gx.isChecked():
             reverse_gx = -1
 
-        energy = self.cb_energy.value()
-        det_pixel = self.cb_det_pixel_size.value()
-        det_dist = self.cb_det_dist.value()
-        dxy = list(self.le_step_size.text().split('_'))
-        num_xy = list(self.le_xy_num.text().split('_'))
+        energy = self.dsb_energy.value()
+        det_pixel = self.dsb_det_pixel_size.value()
+        det_dist = self.dsb_det_dist.value()
+        dxy = [self.dsb_x_step.value(),self.dsb_y_step.value()]
+        num_xy = [self.sb_y_num.value(),self.sb_x_num.value()]
         
         a_, gx_, gy_, phi = recon_dpc_from_im_stack(self.cropped_stack, 
                                                     ref_image_num=ref_img, 
