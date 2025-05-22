@@ -192,8 +192,9 @@ class DiffViewWindow(QtWidgets.QMainWindow):
 
     def load_im_stack_from_db(self):
         self.create_load_params()
+        self.det = self.load_params["det"]
         self.all_data_dict = export_diff_data_as_h5(self.load_params["sid"],
-                               dets = [self.load_params["det"]],
+                               dets = [self.det],
                                wd = self.load_params["wd"],
                                mon = self.load_params["mon"],
                                compression= None,
