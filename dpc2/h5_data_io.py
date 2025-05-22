@@ -629,97 +629,76 @@ def _read_group_as_dict(group):
 
 def unpack_diff_h5(filename, dets=None):
     """
-    Unpack an HDF5 scan file supporting multiple detectors.
-
-    Parameters
-    ----------
-    filename : str
-        Path to the .h5 file.
-    dets : list of str or None
-        List of detector names under /diff_data. If None, auto-detects all subgroups.
-
-    Returns
-    -------
-    result : dict
-        {
-          "diff_data": {
-             "<det1>": {"det_images": np.ndarray, "Io": np.ndarray or None},
-             "<det2>": {...}, ...
-          },
-          "scan": { … nested dict of all /scan contents … },
-          "xrf_array": np.ndarray,
-          "xrf_names": list[str],
-          "scalar_array": np.ndarray,
-          "scalar_names": list[str],
-        }
-
-
-    Usage:
-    # Auto-detect all detectors under /diff_data
-    data = unpack_diff_h5("scan_1234_eiger2_image_otherdet.h5")
-
-    # Or specify detectors explicitly:
-    data = unpack_diff_h5("scan_1234_combined.h5", dets=["eiger2_image","otherdet"])
-
-    # Access:
-    diffs = data["diff_data"]
-    raw1 = diffs["eiger2_image"]["det_images"]
-    io1  = diffs["eiger2_image"]["Io"]
-
-    scan_info = data["scan"]              # nested dict of everything under /scan
-    xrf_stack = data["xrf_array"]
-    xrf_labels = data["xrf_names"]
-
+    Unpack an HDF5 scan file *written* by export_diff_data_as_h5(save_and_return=True)
+    and return a dict with the same keys and nesting.
     """
+    import h5py
+    import numpy as np
+
     result = {}
     with h5py.File(filename, "r") as f:
-        # 1) Diffraction data for one or many detectors
-        diff_root = f.get("/diff_data", None)
-        if diff_root is None:
-            raise KeyError("Missing '/diff_data' group")
-        det_list = dets or list(diff_root.keys())
-        diff_data = {}
+        # ——— 1) diff_data + Io ——————————————
+        det_grp = f["/detector_data"]
+        # top‐level Io
+        result["Io"] = det_grp.get("Io", None)[()] if "Io" in det_grp else None
+
+        # build list of detectors (everything except the Io dataset)
+        det_list = dets or [k for k in det_grp.keys() if k != "Io"]
+        diff = {}
         for det in det_list:
-            grp = diff_root[det]
-            raw = grp["det_images"][()]
-            io_ds = grp.get("Io", None)
-            io = io_ds[()] if io_ds is not None else None
-            diff_data[det] = {"det_images": raw, "Io": io}
-        result["diff_data"] = diff_data
+            diff[det] = det_grp[det][()]
+        result["diff_data"] = diff
 
-        # 2) scan → nested dict
-        scan_grp = f.get("/scan", None)
-        if scan_grp is None:
-            raise KeyError("Missing '/scan' group")
-        result["scan"] = _read_group_as_dict(scan_grp)
+        # ——— 2) scan_positions + scan_params —————
+        scan_grp = f["/scan"]
+        # positions
+        result["scan_positions"] = scan_grp["scan_positions"][()]
 
-        # 3) xrf_roi_data
-        xrf = f.get("/xrf_roi_data", None)
-        if xrf is not None:
-            result["xrf_array"] = xrf["xrf_roi_array"][()]
-            names = xrf["xrf_elem_names"][()]
-            # decode names
-            result["xrf_names"] = [n.decode("utf-8") if isinstance(n,(bytes,bytearray)) else n
-                                   for n in names]
+        # the rest of scan_*/ datasets → flat keys
+        for name, ds in scan_grp.items():
+            if name == "scan_positions":
+                continue
+            val = ds[()]
+            # decode bytes→str if needed
+            if isinstance(val, (bytes, bytearray)):
+                val = val.decode("utf-8")
+            elif isinstance(val, np.ndarray) and ds.dtype.kind in ("S","O","a"):
+                arr = val.tolist()
+                val = np.array(
+                    [e.decode("utf-8") if isinstance(e, (bytes, bytearray)) else e
+                     for e in arr],
+                    dtype=object
+                )
+            result[name] = val
+
+        # ——— 3) xrf —————————————
+        if "xrf_roi_data" in f:
+            xg = f["xrf_roi_data"]
+            result["xrf_stack"] = xg["xrf_roi_array"][()]
+            names = xg["xrf_elem_names"][()]
+            result["xrf_names"] = [
+                n.decode("utf-8") if isinstance(n, (bytes, bytearray)) else n
+                for n in names
+            ]
         else:
-            result["xrf_array"] = None
+            result["xrf_stack"] = None
             result["xrf_names"] = []
 
-        # 4) scalar_data
-        scalar = f.get("/scalar_data", None)
-        if scalar is not None:
-            result["scalar_array"] = scalar["scalar_array"][()]
-            sn = scalar["scalar_array_names"][()]
-            result["scalar_names"] = [s.decode("utf-8") if isinstance(s,(bytes,bytearray)) else s
-                                      for s in sn]
+        # ——— 4) scalar —————————————
+        if "scalar_data" in f:
+            sg2 = f["scalar_data"]
+            result["scalar_stack"] = sg2["scalar_array"][()]
+            sn = sg2["scalar_array_names"][()]
+            result["scalar_names"] = [
+                s.decode("utf-8") if isinstance(s, (bytes, bytearray)) else s
+                for s in sn
+            ]
         else:
-            result["scalar_array"] = None
+            result["scalar_stack"] = None
             result["scalar_names"] = []
-    
-    #this can be a list if multiple detectors saved
-    #data = unpack_diff_h5("file.h5", dets=["eiger2_image"])
-    # data is STILL a dict—but the inner “diff_data” key will have only one entry.
-    #data = unpack_diff_h5("file.h5", dets="eiger2_image") --> single dict
+
+        # ——— 5) filename (optional) ————————
+        result["filename"] = filename
 
     return result
 
