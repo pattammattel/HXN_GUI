@@ -443,85 +443,61 @@ def save_dict_to_h5(group, dictionary):
         else:  # If it's a simple type, create a dataset
             group.create_dataset(key, data=value)
             
-
+# ————————————————————————————————————————————————————————————
+# Helpers for decoding byte‐strings in HDF5
+# ————————————————————————————————————————————————————————————
 def _decode_bytes(obj):
-    """
-    Recursively decode byte-strings in Python scalars, lists, tuples or numpy arrays.
-    """
-    # Single bytes => decode
     if isinstance(obj, (bytes, bytearray)):
         return obj.decode('utf-8')
-    # Numpy array of bytes => convert to list of decoded strings
-    if isinstance(obj, np.ndarray) and obj.dtype.kind in ('S', 'a', 'O'):
-        # obj.tolist() turns it into nested lists/tuples of bytes
-        decoded = _decode_bytes(obj.tolist())
-        return np.array(decoded, dtype=object)  # or dtype=str if you prefer
-    # Python list/tuple => recurse
+    if isinstance(obj, np.ndarray) and obj.dtype.kind in ('S','O','a'):
+        return np.array([_decode_bytes(x) for x in obj.tolist()], dtype=object)
     if isinstance(obj, list):
         return [_decode_bytes(x) for x in obj]
     if isinstance(obj, tuple):
         return tuple(_decode_bytes(x) for x in obj)
-    # Everything else => return as is
     return obj
 
 def read_dict_from_h5(group):
-    """
-    Recursively read a dictionary from HDF5 format, decoding any byte-strings
-    into Python str.
-    """
-    result = {}
+    out = {}
     for key, item in group.items():
         if isinstance(item, h5py.Group):
-            result[key] = read_dict_from_h5(item)
+            out[key] = read_dict_from_h5(item)
         else:
             raw = item[()]
-            result[key] = _decode_bytes(raw)
-    return result
+            out[key] = _decode_bytes(raw)
+    return out
 
-
+# ————————————————————————————————————————————————————————————
+# Your existing loaders
+# ————————————————————————————————————————————————————————————
 def _load_scan_common(hdr, mon, data_type='float32'):
-    """
-    Load everything *except* detector stacks (i.e. scan positions, xrf, scalar, scan params).
-    """
-    # 1) Monitor (Io) if requested
     sd = hdr.start
     dim1, dim2 = (sd['num1'], sd['num2']) if 'num1' in sd and 'num2' in sd else sd.shape
     Io = None
     if mon:
         Io = np.array(list(hdr.data(str(mon))), dtype=data_type).squeeze().reshape(dim1, dim2)
 
-    # 2) Scan positions
     try:
         xy = list(get_scan_positions(hdr))
     except:
-        xy = [np.array(v) for v in df[mots]]  # fallback
+        xy = [np.array(v) for v in df[mots]]
 
-    # 3) XRF & scalar
-    xrf_stack, xrf_names = get_all_xrf_roi_data(hdr)
+    xrf_stack, xrf_names       = get_all_xrf_roi_data(hdr)
     scalar_stack, scalar_names = get_all_scalar_data(hdr)
-
-    # 4) Scan parameters & metadata table
-    scan_params = get_scan_details(hdr.start["scan_id"])
-    scan_table  = get_scan_metadata(hdr.start["scan_id"])
+    scan_params                = get_scan_details(hdr.start["scan_id"])
+    scan_table                 = get_scan_metadata(hdr.start["scan_id"])
 
     return {
         "Io": Io,
-        "dim1": dim1,
-        "dim2": dim2,
+        "dim1": dim1, "dim2": dim2,
         "scan_positions": np.array(xy),
-        "xrf_stack": xrf_stack,
-        "xrf_names": xrf_names,
-        "scalar_stack": scalar_stack,
-        "scalar_names": scalar_names,
         "scan_params": scan_params,
-        "scan_table": scan_table,
+        "scan_table":  scan_table,
+        "xrf_stack": xrf_stack, "xrf_names": xrf_names,
+        "scalar_stack": scalar_stack, "scalar_names": scalar_names,
     }
 
-
 def _load_detector_stack(hdr, det, data_type='float32'):
-    """
-    Load & reshape just one detector's raw_data array.
-    """
     data_name = '/entry/instrument/detector/data'
     files = get_path(hdr.start["scan_id"], det)
     arrays = []
@@ -529,178 +505,133 @@ def _load_detector_stack(hdr, det, data_type='float32'):
         with h5py.File(fn, 'r') as f_in:
             arrays.append(np.asarray(f_in[data_name], dtype=data_type))
     data = np.concatenate(arrays, axis=0) if len(arrays) > 1 else arrays[0]
-    data = np.flip(data, axis=1)
-    return data  # shape: (n_steps, roi_y, roi_x)
+    return np.flip(data, axis=1)  # (n_steps, roi_y, roi_x)
 
-
-def export_diff_data_as_h5(
+# ————————————————————————————————————————————————————————————
+# 1) Export single detector
+# ————————————————————————————————————————————————————————————
+def export_single_detector_h5(
     sid_list,
-    dets       = ["eiger2_image"],
-    wd         = '.',
-    mon        = 'sclr1_ch4',
-    compression= 'gzip',
+    det,
+    wd='.',
+    mon='sclr1_ch4',
+    compression=None,
     save_and_return=False
 ):
     """
-    Export scan(s) to HDF5, writing *all* detectors in `dets` into one file per scan.
-    If save_and_return=True, returns a list of dicts with loaded numpy data.
+    Export scan(s) to HDF5, writing only one detector per file, with separate
+    groups for scan_positions and scan_params.
     """
     if isinstance(sid_list, (int, float)):
         sid_list = [int(sid_list)]
-
     results = []
 
     for sid in tqdm(sid_list, desc="Exporting scans"):
-        hdr = db[int(sid)]
+        hdr    = db[int(sid)]
         common = _load_scan_common(hdr, mon)
 
-        # reshape dims from common
+        # reshape detector stack
+        raw = _load_detector_stack(hdr, det)
         dim1, dim2 = common["dim1"], common["dim2"]
-        roi_sample, roi_y, roi_x = None, None, None
+        nsteps, ry, rx = raw.shape
+        raw = raw.reshape(dim1, dim2, ry, rx)
 
-        # Prepare output filename
-        out_fn = os.path.join(wd, f"scan_{sid}_{'_'.join(dets)}.h5")
-
-        # Write everything
+        out_fn = os.path.join(wd, f"scan_{sid}_{det}.h5")
         with h5py.File(out_fn, 'w') as f:
+            # detector_data
+            dg = f.require_group("detector_data")
+            dg.create_dataset(det,    data=raw,          compression=compression)
+            if common["Io"] is not None:
+                dg.create_dataset("Io", data=common["Io"])
 
-            # 1) diff_data for each det
-            for det in dets:
-                raw = _load_detector_stack(hdr, det)
-                # determine roi dims on first det
-                if roi_y is None:
-                    _, roi_y, roi_x = raw.shape
-                grp = f.require_group(f"/detector_data")
-                grp.create_dataset(
-                    f"{det}",
-                    data=raw.reshape(dim1, dim2, roi_y, roi_x),
-                    compression=compression
-                )
-                if common["Io"] is not None:
-                    grp.create_dataset("Io", data=common["Io"])
+            # scan_positions group
+            sp = f.require_group("scan_positions")
+            sp.create_dataset("positions", data=common["scan_positions"])
 
-            # 2) scan/
-            sg = f.require_group("scan")
-            sg.create_dataset("scan_positions", data=common["scan_positions"])
-            save_dict_to_h5(sg, common["scan_params"])
-            common["scan_table"].to_csv(out_fn.replace(".h5", "_meta_data.csv"))
+            # scan_params group
+            param_grp = f.require_group("scan_params")
+            save_dict_to_h5(param_grp, common["scan_params"])
 
-            # 3) xrf_roi_data
+            # optionally save the table as CSV alongside
+            common["scan_table"].to_csv(out_fn.replace(".h5", "_meta.csv"))
+
+            # xrf_roi_data
             xg = f.require_group("xrf_roi_data")
-            xg.create_dataset("xrf_roi_array", data=common["xrf_stack"])
+            xg.create_dataset("xrf_roi_array",  data=common["xrf_stack"])
             xg.create_dataset("xrf_elem_names", data=common["xrf_names"])
 
-            # 4) scalar_data
+            # scalar_data
             sg2 = f.require_group("scalar_data")
-            sg2.create_dataset("Io", data=common["Io"])
-            sg2.create_dataset("scalar_array", data=common["scalar_stack"])
+            sg2.create_dataset("scalar_array",       data=common["scalar_stack"])
             sg2.create_dataset("scalar_array_names", data=common["scalar_names"])
 
-        # Optionally return data
         if save_and_return:
-            # Build a return dict, drop pandas table if too big
-            ret = {k: common[k] for k in ("Io", "scan_positions", "xrf_stack", "xrf_names", "scalar_stack", "scalar_names")}
-            ret["diff_data"] = {det: _load_detector_stack(hdr, det) for det in dets}
-            ret["filename"] = out_fn
-            results.append(ret)
+            results.append({
+                "det":             raw,
+                "Io":              common["Io"],
+                "scan_positions":  common["scan_positions"],
+                "scan_params":     common["scan_params"],
+                "xrf_stack":       common["xrf_stack"],
+                "xrf_names":       common["xrf_names"],
+                "scalar_stack":    common["scalar_stack"],
+                "scalar_names":    common["scalar_names"],
+                "filename":        out_fn,
+            })
 
     return results if save_and_return else None
 
-
-def _read_group_as_dict(group):
-    """Recursively read an HDF5 group into a nested dict, decoding bytes→str."""
-    out = {}
-    for key, item in group.items():
-        if isinstance(item, h5py.Group):
-            out[key] = _read_group_as_dict(item)
-        else:
-            val = item[()]
-            # Decode single byte strings
-            if isinstance(val, (bytes, bytearray)):
-                val = val.decode('utf-8')
-            # Decode numpy arrays of bytes/objects
-            elif isinstance(val, np.ndarray) and val.dtype.kind in ('S','O','a'):
-                arr = val.tolist()
-                def decode_elem(e):
-                    return e.decode('utf-8') if isinstance(e,(bytes,bytearray)) else e
-                val = np.array([decode_elem(e) for e in arr], dtype=object)
-            out[key] = val
-    return out
-
-def unpack_diff_h5(filename, dets=None):
+# ————————————————————————————————————————————————————————————
+# 2) Unpack single detector
+# ————————————————————————————————————————————————————————————
+def unpack_single_detector_h5(filename, det_name=None):
     """
-    Unpack an HDF5 scan file *written* by export_diff_data_as_h5(save_and_return=True)
-    and return a dict with the same keys and nesting.
+    Read back a file written by export_single_detector_h5, retrieving one detector.
     """
-    import h5py
-    import numpy as np
+    with h5py.File(filename, 'r') as f:
+        # detector_data
+        dg = f["detector_data"]
+        dets = [k for k in dg.keys() if k != "Io"]
+        det = det_name or dets[0]
+        det_images = dg[det][()]
+        Io = dg["Io"][()] if "Io" in dg else None
 
-    result = {}
-    with h5py.File(filename, "r") as f:
-        # ——— 1) diff_data + Io ——————————————
-        det_grp = f["/detector_data"]
-        # top‐level Io
-        result["Io"] = det_grp.get("Io", None)[()] if "Io" in det_grp else None
+        # scan_positions
+        sp = f["scan_positions"]
+        scan_positions = sp["positions"][()]
 
-        # build list of detectors (everything except the Io dataset)
-        det_list = dets or [k for k in det_grp.keys() if k != "Io"]
-        diff = {}
-        for det in det_list:
-            diff[det] = det_grp[det][()]
-        result["diff_data"] = diff
+        # scan_params
+        param_grp = f["scan_params"]
+        scan_params = read_dict_from_h5(param_grp)
 
-        # ——— 2) scan_positions + scan_params —————
-        scan_grp = f["/scan"]
-        # positions
-        result["scan_positions"] = scan_grp["scan_positions"][()]
-
-        # the rest of scan_*/ datasets → flat keys
-        for name, ds in scan_grp.items():
-            if name == "scan_positions":
-                continue
-            val = ds[()]
-            # decode bytes→str if needed
-            if isinstance(val, (bytes, bytearray)):
-                val = val.decode("utf-8")
-            elif isinstance(val, np.ndarray) and ds.dtype.kind in ("S","O","a"):
-                arr = val.tolist()
-                val = np.array(
-                    [e.decode("utf-8") if isinstance(e, (bytes, bytearray)) else e
-                     for e in arr],
-                    dtype=object
-                )
-            result[name] = val
-
-        # ——— 3) xrf —————————————
+        # xrf
         if "xrf_roi_data" in f:
             xg = f["xrf_roi_data"]
-            result["xrf_stack"] = xg["xrf_roi_array"][()]
-            names = xg["xrf_elem_names"][()]
-            result["xrf_names"] = [
-                n.decode("utf-8") if isinstance(n, (bytes, bytearray)) else n
-                for n in names
-            ]
+            xrf_stack = xg["xrf_roi_array"][()]
+            raw = xg["xrf_elem_names"][()]
+            xrf_names = [_decode_bytes(n) for n in raw.tolist()]
         else:
-            result["xrf_stack"] = None
-            result["xrf_names"] = []
+            xrf_stack, xrf_names = None, []
 
-        # ——— 4) scalar —————————————
+        # scalar
         if "scalar_data" in f:
             sg2 = f["scalar_data"]
-            result["scalar_stack"] = sg2["scalar_array"][()]
-            sn = sg2["scalar_array_names"][()]
-            result["scalar_names"] = [
-                s.decode("utf-8") if isinstance(s, (bytes, bytearray)) else s
-                for s in sn
-            ]
+            scalar_stack = sg2["scalar_array"][()]
+            raw = sg2["scalar_array_names"][()]
+            scalar_names = [_decode_bytes(s) for s in raw.tolist()]
         else:
-            result["scalar_stack"] = None
-            result["scalar_names"] = []
+            scalar_stack, scalar_names = None, []
 
-        # ——— 5) filename (optional) ————————
-        result["filename"] = filename
-
-    return result
+    return {
+        "det":             det_images,
+        "Io":              Io,
+        "scan_positions":  scan_positions,
+        "scan_params":     scan_params,
+        "xrf_stack":       xrf_stack,
+        "xrf_names":       xrf_names,
+        "scalar_stack":    scalar_stack,
+        "scalar_names":    scalar_names,
+        "filename":        filename,
+    }
 
 def export_diff_h5_log_file(logfile, diff_detector = 'merlin1',compression = None):
 

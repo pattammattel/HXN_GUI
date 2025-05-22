@@ -193,110 +193,83 @@ class DiffViewWindow(QtWidgets.QMainWindow):
     def load_im_stack_from_db(self):
         self.create_load_params()
         self.det = self.load_params["det"]
-        self.all_data_dict = export_diff_data_as_h5(self.load_params["sid"],
-                               dets = [self.det],
-                               wd = self.load_params["wd"],
-                               mon = self.load_params["mon"],
-                               compression= None,
-                               save_and_return=True
-                                )[0]
+        # export_single_detector_h5 now takes `det=` (not `dets=`) and returns a flat dict
+        self.all_data_dict = export_single_detector_h5(
+            self.load_params["sid"],
+            det=self.det,
+            wd=self.load_params["wd"],
+            mon=self.load_params["mon"],
+            compression=None,
+            save_and_return=True
+        )[0]
+
 
     def load_im_stack_from_h5(self):
-
         self.create_load_params()
         sid = self.load_params["sid"]
-        
+
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(
-        self,
-        "Select HDF5 File",
-        self.load_params["wd"],  # default directory
-        "HDF5 Files (*.h5 *.hdf5);;All Files (*)")
-        
+            self,
+            "Select HDF5 File",
+            self.load_params["wd"],
+            "HDF5 Files (*.h5 *.hdf5);;All Files (*)"
+        )
 
-        # filename = glob.glob(os.path.join(self.load_params["wd"],
-        #                                     f"*{sid}*.h5")
-        #                                     )[0]
-        
-        #h5_name = os.path.basename(filename).split('.')[0]
-        # det_name = h5_name.split('_')[2]
-        # if det_name in detector_list:
-        #     det = det_name
-
-        #det = extract_detector_name(filename, detector_list)
-        #TODO smart selection of the detector
-        self.det = None
-        
-        if self.det is None:
+        # decide which detector to use
+        if getattr(self, "det", None) is None:
             self.det = self.load_params["det"]
         else:
             self.load_params["det"] = self.det
             self.cb_det_list.setCurrentText(self.det)
-
-        print(f"{self.det = }")
+        print(f"{self.det=}")
 
         if filename:
-            print(f"loading; {os.path.basename(filename)}, please wait")
-            self.all_data_dict = unpack_diff_h5(filename,dets = [self.det])
+            print(f"Loading {os.path.basename(filename)}, please wait…")
+            # unpack_single_detector_h5 uses `det_name=` now
+            self.all_data_dict = unpack_single_detector_h5(
+                filename,
+                det_name=self.det
+            )
         else:
-            raise FileNotFoundError(f"An h5 file for {sid} not found;" 
-                                    f"typically in scan_{sid}_detname.h5 format")
-    
+            raise FileNotFoundError(
+                f"An HDF5 for scan {sid} not found; "
+                f"expected scan_{sid}_{self.load_params['det']}.h5"
+            )
+
+
     def get_diff_data(self):
-        diffs = self.all_data_dict["diff_data"]
-        self.diff_stack = diffs[self.det]["det_images"]
-        Io  = diffs[self.det]["Io"]
-        self.im_y,self.im_x,self.roi_y,self.roi_x = self.diff_stack.shape
-        self.diff_stack = self.diff_stack.reshape(-1,self.roi_y,self.roi_x)
+        # flat keys now: "det" and "Io", no nested diff_data dict
+        self.diff_stack = self.all_data_dict["det"]
+        self.Io = self.all_data_dict["Io"]
 
-    def _inject_dict(self, d: dict, prefix: str = ""):
-        """
-        Recursively walk dict `d`.  For each (key, val):
-          - if val is a dict, recurse with prefix "prefix_key"
-          - else setattr(self, "prefix_key" or "key", val)
-        """
-        for key, val in d.items():
-            # build attribute name
-            attr = f"{prefix}_{key}" if prefix else key
+        # shape is (dim1, dim2, roi_y, roi_x)
+        self.im_y, self.im_x, self.roi_y, self.roi_x = self.diff_stack.shape
 
-            # if isinstance(val, dict):
-            #     # Recurse into the sub-dict
-            #     self._inject_dict(val, prefix=attr)
-            # else:
-                # Leaf: assign as attribute
-            setattr(self, attr, val)
+        # flatten back into (n_steps, roi_y, roi_x)
+        self.diff_stack = self.diff_stack.reshape(-1, self.roi_y, self.roi_x)
+
 
     def get_and_fill_scan_params(self):
-        """
-        {'energy': np.float64(7.175),
-        'mll_theta': np.float64(-5.231),
-        'motors': array(['zpssx', 'zpssy'], dtype=object),
-        'scan': {'detector_distance': np.float64(2.05),
-        'detectors': array(['fs', 'eiger2', 'xspress3', 'panda1', 'sclr1'], dtype=object),
-        'dwell': np.float64(0.005),
-        'fast_axis': {'motor_name': 'zpssx', 'units': 'um'},
-        'sample_name': '',
-        'scan_input': array([ -1.1764,   0.8236, 100.    ,  -2.4892,   1.0108, 175.    ]),
-        'shape': array([100, 175]),
-        'slow_axis': {'motor_name': 'zpssy', 'units': 'um'},
-        'type': '2D_FLY_PANDA'},
-        'scan_id': np.int64(324725),
-        'scan_positions': array([[-1.12373271, -1.10256856, -1.07363721, ...,  0.72006795,
-                0.73767294,  0.75481991],
-                [-2.40281   , -2.40124   , -2.403     , ...,  0.96374   ,
-                0.9665    ,  0.96548   ]], shape=(2, 17500)),
-        'time': '2025-02-11 16:05:32',
-        'zp_theta': np.float64(0.0)}
-        """
+        # pull from the new top‐level "scan_params" key
+        scan_params = self.all_data_dict["scan_params"]
+        # inject only the flat keys—nested dicts (like 'scan') stay as dicts
+        self._inject_dict(scan_params)
 
-        scan_params = self.all_data_dict["scan"]
-        self._inject_dict(scan_params)   
+        # energy is now self.energy
         self.dsb_energy.setValue(self.energy)
-        self.dsb_det_dist.setValue(self.scan_detector_distance)
-        x_num, y_num = self.scan_scan_input[2],self.scan_scan_input[5]
-        x_step = np.around((self.scan_scan_input[1]-self.scan_scan_input[0])/x_num, 2)
-        y_step = np.around((self.scan_scan_input[4]-self.scan_scan_input[3])/y_num, 2)
-        self.dsb_x_step.setValue(float(x_step))
-        self.dsb_y_step.setValue(float(y_step))
+        # detector distance lives under the nested scan dict
+        self.dsb_det_dist.setValue(self.scan["detector_distance"])
+
+        # scan_input also lives under self.scan
+        x_num, y_num = self.scan["scan_input"][2], self.scan["scan_input"][5]
+        x0, x1 = self.scan["scan_input"][0], self.scan["scan_input"][1]
+        y0, y1 = self.scan["scan_input"][3], self.scan["scan_input"][4]
+
+        x_step = round((x1 - x0) / x_num, 2)
+        y_step = round((y1 - y0) / y_num, 2)
+
+        self.dsb_x_step.setValue(x_step)
+        self.dsb_y_step.setValue(y_step)
         self.sb_x_num.setValue(int(x_num))
         self.sb_y_num.setValue(int(y_num))
 
@@ -496,7 +469,7 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         
         QtTest.QTest.qWait(1000)
         #saves data to a default folder with sid name      
-        export_diff_data_as_h5(int(self.load_params['sid']),
+        export_single_detector_h5(int(self.load_params['sid']),
                         det=self.load_params['det'],
                         wd= self.load_params['wd'],
                         mon = self.load_params['mon']
@@ -512,7 +485,7 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         self.load_params['sid'] = real_sid
         print(self.load_params)
         print(f"Loading {self.load_params['sid']} please wait...this may take a while...")
-        export_diff_data_as_h5(int(self.load_params['sid']),
+        export_single_detector_h5(int(self.load_params['sid']),
                                self.load_params['det'],
                                )
         # diff_array = return_diff_array(int(self.load_params['sid']), 
@@ -641,7 +614,7 @@ class DiffViewWindow(QtWidgets.QMainWindow):
                 self.scan_pos,
                 self.xrf_stack,
                 self.xrf_elem_list
-                ) = unpack_diff_h5(
+                ) = unpack_single_detector_h5(
                 self.display_param["diff_wd"],
                 self.load_params["det"]
                 )
