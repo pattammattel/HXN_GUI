@@ -10,9 +10,12 @@ import tifffile as tf
 from scipy.ndimage import center_of_mass
 from pyqtgraph import functions as fn
 from functools import wraps
-from PyQt6 import QtWidgets, uic, QtCore, QtGui, QtTest
-from PyQt6.QtWidgets import QMessageBox
-from PyQt6.QtCore import QObject, pyqtSignal
+# from PyQt6 import QtWidgets, uic, QtCore, QtGui, QtTest
+# from PyQt6.QtWidgets import QMessageBox
+# from PyQt6.QtCore import QObject, pyqtSignal
+from PyQt5 import QtWidgets, uic, QtCore, QtGui, QtTest
+from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtCore import QObject, pyqtSignal
 pg.setConfigOption('imageAxisOrder', 'row-major') # best performance
 ui_path = os.path.dirname(os.path.abspath(__file__))
 warnings.filterwarnings('ignore', category=RuntimeWarning)
@@ -195,7 +198,7 @@ class DiffViewWindow(QtWidgets.QMainWindow):
                                mon = self.load_params["mon"],
                                compression= None,
                                save_and_return=True
-)
+                                )[0]
 
     def load_im_stack_from_h5(self):
 
