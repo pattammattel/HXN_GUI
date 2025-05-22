@@ -257,12 +257,12 @@ class DiffViewWindow(QtWidgets.QMainWindow):
             # build attribute name
             attr = f"{prefix}_{key}" if prefix else key
 
-            if isinstance(val, dict):
-                # Recurse into the sub-dict
-                self._inject_dict(val, prefix=attr)
-            else:
+            # if isinstance(val, dict):
+            #     # Recurse into the sub-dict
+            #     self._inject_dict(val, prefix=attr)
+            # else:
                 # Leaf: assign as attribute
-                setattr(self, attr, val)
+            setattr(self, attr, val)
 
     def get_and_fill_scan_params(self):
         """
