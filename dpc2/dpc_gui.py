@@ -133,8 +133,14 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         #self.display_diff_img_from_h5() #testing only
         #connections
         self.pb_select_wd.clicked.connect(self.choose_wd)
+<<<<<<< HEAD
+        self.pb_load_from_h5.clicked.connect(lambda:self.display_diff_data(
+=======
         self.pb_load_from_h5.clicked.connect(lambda:self.display_diff_data_from_h5(
+>>>>>>> 646f912331219bba3c82ee167c281add36040a13
             self.sb_ref_img_num.value()))
+        self.pb_load_data_from_db.clicked.connect(lambda:self.display_diff_data(
+            self.sb_ref_img_num.value(), from_h5=False))
         self.diff_im_view.scene().sigMouseClicked.connect(self.on_mouse_doubleclick)
         self.pb_plot_mask.clicked.connect(self.plot_mask)
         self.pb_apply_mask.clicked.connect(self.apply_mask)
@@ -185,12 +191,21 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         if self.load_params['mon'] == 'None':
             self.load_params['mon'] = None
 
+    def load_im_stack_from_db(self):
+        self.create_load_params()
+        self.all_data_dict = export_diff_data_as_h5(self.load_params["sid"],
+                               dets = [self.load_params["det"]],
+                               wd = self.load_params["wd"],
+                               mon = self.load_params["mon"],
+                               compression= None,
+                               save_and_return=True
+)
+
     def load_im_stack_from_h5(self):
 
         self.create_load_params()
         sid = self.load_params["sid"]
         
-
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(
         self,
         "Select HDF5 File",
@@ -319,8 +334,16 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         self.diff_im_view.addItem(self.mask_overlay)
         self.update_mask_overlay()
 
+<<<<<<< HEAD
+    def display_diff_data(self, im_index = 0, from_h5 = True):
+        if from_h5:
+            self.load_im_stack_from_h5()
+        else:
+            self.load_im_stack_from_db()
+=======
     def display_diff_data_from_h5(self,im_index = 0):
         self.load_im_stack_from_h5()
+>>>>>>> 646f912331219bba3c82ee167c281add36040a13
         self.get_diff_data()
         self.display_diff_data(im_index)
         self.get_and_fill_scan_params()
