@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as manimation
 import tifffile as tf
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from tqdm import tqdm
 
 warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -569,9 +570,9 @@ def export_diff_data_as_h5(
                 # determine roi dims on first det
                 if roi_y is None:
                     _, roi_y, roi_x = raw.shape
-                grp = f.require_group(f"/diff_data/{det}")
+                grp = f.require_group(f"/diff_data")
                 grp.create_dataset(
-                    "det_images",
+                    f"{det}",
                     data=raw.reshape(dim1, dim2, roi_y, roi_x),
                     compression=compression
                 )
@@ -598,7 +599,7 @@ def export_diff_data_as_h5(
         if save_and_return:
             # Build a return dict, drop pandas table if too big
             ret = {k: common[k] for k in ("Io", "scan_positions", "xrf_stack", "xrf_names", "scalar_stack", "scalar_names")}
-            ret["det_images"] = {det: _load_detector_stack(hdr, det) for det in dets}
+            ret["diff_data"] = {det: _load_detector_stack(hdr, det) for det in dets}
             ret["filename"] = out_fn
             results.append(ret)
 
