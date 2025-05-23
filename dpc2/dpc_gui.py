@@ -136,9 +136,9 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         #self.display_diff_img_from_h5() #testing only
         #connections
         self.pb_select_wd.clicked.connect(self.choose_wd)
-        self.pb_load_from_h5.clicked.connect(lambda:self.display_diff_data_from_h5(
+        self.pb_load_from_h5.clicked.connect(lambda:self.load_and_display_diff_data(
             self.sb_ref_img_num.value()))
-        self.pb_load_data_from_db.clicked.connect(lambda:self.display_diff_data(
+        self.pb_load_data_from_db.clicked.connect(lambda:self.load_and_display_diff_data(
             self.sb_ref_img_num.value(), from_h5=False))
         self.diff_im_view.scene().sigMouseClicked.connect(self.on_mouse_doubleclick)
         self.pb_plot_mask.clicked.connect(self.plot_mask)
@@ -307,7 +307,7 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         self.diff_im_view.addItem(self.mask_overlay)
         self.update_mask_overlay()
 
-    def display_diff_data(self, im_index = 0, from_h5 = True):
+    def load_and_display_diff_data(self, im_index = 0, from_h5 = True):
         if from_h5:
             self.load_im_stack_from_h5()
         else:
