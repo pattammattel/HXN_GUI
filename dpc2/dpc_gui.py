@@ -293,7 +293,7 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         self.sb_ref_img_num.setMaximum(int(self.diff_stack.shape[0]))
         
         # Show axes: these are auto-labeled as pixel numbers
-        self.diff_im_view.invertY(True)
+        # self.diff_im_view.invertY(True)
         self.diff_im_view.setLabel('left', 'Y Pixels')
         self.diff_im_view.setLabel('bottom', 'X Pixels')
         
