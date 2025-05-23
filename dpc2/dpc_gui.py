@@ -248,6 +248,20 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         # flatten back into (n_steps, roi_y, roi_x)
         self.diff_stack = self.diff_stack.reshape(-1, self.roi_y, self.roi_x)
 
+    
+    def _inject_dict(self, d: dict, prefix: str = ""):
+        """
+        Recursively turn nested dict into flat attributes:
+          {'scan':{'detector_distance':2.0}, 'energy':7.1}
+        → self.scan_detector_distance, self.energy
+        """
+        for key, val in d.items():
+            attr = f"{prefix}_{key}" if prefix else key
+            if isinstance(val, dict):
+                self._inject_dict(val, prefix=attr)
+            else:
+                setattr(self, attr, val)
+
 
     def get_and_fill_scan_params(self):
         # pull from the new top‐level "scan_params" key
