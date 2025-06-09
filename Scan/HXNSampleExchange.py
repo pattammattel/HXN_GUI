@@ -167,7 +167,7 @@ class SampleExchangeProtocol():
 
             
 
-    def start_pumps(self, fast_pump_start_pressure = 400, target_pressure = 1.2):
+    def start_pumps(self, fast_pump_start_pressure = 400, target_pressure = 1.3):
         
         #while lopp end after 1 hour
 
