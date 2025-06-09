@@ -385,6 +385,7 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         # Open a new window to show masked result
         self.win_masked = pg.ImageView()
         self.win_masked.setImage(masked)
+        self.win_masked.getView().invertY(False)
         self.win_masked.setWindowTitle("Mask")
         self.win_masked.setPredefinedGradient("viridis")
         self.win_masked.show()
@@ -394,6 +395,7 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         print("plotting mask")
         self.win_mask = pg.ImageView()
         self.win_mask.setImage(self.mask)
+        self.win_mask.getView().invertY(False)
         self.win_mask.setWindowTitle("Mask")
         self.win_mask.setPredefinedGradient("bipolar")
         self.win_mask.show()
@@ -418,6 +420,7 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         self.win_cropped = pg.ImageView()
         self.win_cropped.setImage(self.cropped_stack[0:100])
         self.win_cropped.setWindowTitle("Croppped and masked, first 100")
+        self.win_cropped.getView().invertY(False)
         self.win_cropped.setPredefinedGradient("viridis")
         self.win_cropped.show()
 
