@@ -331,6 +331,8 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         # self.roi_state = None
 
     def display_diff_sum_img(self):
+        
+        self.cb_xrf_elem_list.addItems([])
         if not self.display_param["diff_wd"] == None:
             #TODO, may have memory issues
             tiffs = (".tiff", ".tif")
