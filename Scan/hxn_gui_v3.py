@@ -1017,10 +1017,18 @@ class Ui(QtWidgets.QMainWindow):
     def zp_to_nanobeam_(self):
         RE(zp_to_nanobeam())
 
+    @show_error_message_box
+    def mll_to_cam11_view_(self):
+        RE(mll_to_cam11_view())
+
+    @show_error_message_box
+    def mll_to_nanobeam_(self):
+        RE(mll_to_nanobeam())
+
 
     @show_error_message_box
     def ZP_OSA_OUT(self):
-
+        
         curr_pos = caget("XF:03IDC-ES{ANC350:5-Ax:1}Mtr.RBV")
         if curr_pos >2000:
             raise ValueError('OSAY is out of IN range')
@@ -1058,7 +1066,8 @@ class Ui(QtWidgets.QMainWindow):
     
     @show_error_message_box
     def mll_osa_OUT(self):
-
+        #closing c shutter for safety
+        caput("XF:03IDC-ES{Zeb:2}:SOFT_IN:B0", 1)
         if abs(mllosa.osax.position)<50:
             caput(mllosa.osax.prefix,caget(mllosa.osax.prefix)+2600)
             QtTest.QTest.qWait(5000)
@@ -1431,6 +1440,9 @@ class Ui(QtWidgets.QMainWindow):
 
         self.pb_zp_cam11_view.clicked.connect(lambda:self.zp_to_cam11_view_())
         self.pb_zp_nanobeam.clicked.connect(lambda:self.zp_to_nanobeam_())
+        self.pb_mll_cam11_view.clicked.connect(lambda:self.mll_to_cam11_view_())
+        self.pb_mll_nanobeam.clicked.connect(lambda:self.mll_to_nanobeam_())
+
 
 
         # self.pb_zp_cam11_view.clicked.connect(lambda: self.runTask(lambda:self.zp_to_cam11_view_()))
@@ -1442,8 +1454,9 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_MoveZPZ1AbsPos.clicked.connect(lambda:self.zpMoveAbs())
 
         self.pb_mll_z_focus_start.clicked.connect(lambda:self.mll_focus_scan())
-
         self.pb_mll_z_focus_move.clicked.connect(lambda:RE(bps.mov(sbz, self.dsb_mll_z_target_pos.value())))
+        
+        self.pb_mll_rot_align_start.clicked.connect(lambda:RE(self.mll_rot_alignment_))
         #self.pb_mll_z_focus_move.clicked.connect(lambda:RE(self.move_with_confirmation(sbz, self.dsb_mll_z_target_pos.value()))) #not tested
 
         #recover from beamdump
@@ -1499,6 +1512,61 @@ class Ui(QtWidgets.QMainWindow):
                            scanDwell,
                            elem= fitElem, 
                            lin_flag = linFlag))
+    
+    @show_error_message_box
+    def mll_rot_alignment_(self):
+        
+        # a_start = self.sb_mll_rot_angle_start.value()
+        # a_end = self.sb_mll_rot_angle_end.value()
+        # a_num = self.sb_mll_rot_angle_num.value()
+        # start = self.sb_mll_rot_scan_start.value()
+        # end = self.sb_mll_rot_scan_end.value()
+        # num = self.sb_mll_rot_scan_num.value()
+        # acq_time = self.sb_mll_rot_scan_exp_time.value()
+        # elem = self.cb_mll_rot_elem.currentItem()
+        # move_flag=0, 
+        # threshold = 
+
+
+        # dx, dz = RE(mll_rot_alignment(   a_start, 
+        #                         a_end, 
+        #                         a_num, 
+        #                         start, 
+        #                         end, 
+        #                         num, 
+        #                         acq_time, 
+        #                         elem='Pt_L', 
+        #                         move_flag=0, 
+        #                         threshold = 0.5))
+
+        # self.dsb_rot_align_dsx.setValue(dx)
+        # self.dsb_rot_align_dsz.setValue(dz)
+        # self.dsb_rot_align_sbx.setValue(-1*dx)
+
+        # choice = QMessageBox.question(self, "MLL Rot Align",
+        #                               f"The recommended correction is {dx = :.2f}, {dz = :.2f} and sbx = {-1*dx :.2f}"
+        #                               "\n Proceed?",
+        #                               QMessageBox.Yes |
+        #                               QMessageBox.No, QMessageBox.No)
+        # QtTest.QTest.qWait(500)
+        # if choice == QMessageBox.Yes:
+        #     RE(self.apply_mll_rot_algn_corr())
+
+        # else:
+        #     pass
+
+        pass
+
+    def apply_mll_rot_algn_corr(self):
+
+        dx = self.dsb_rot_align_dsx.value(dx)
+        dz = self.dsb_rot_align_dsz.value(dz)
+
+        RE(bps.movr(dsx, dx, dsz, dz, sbx -1*dx))
+
+        
+
+
 
 
     def zpMoveAbs(self):
