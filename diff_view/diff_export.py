@@ -52,9 +52,9 @@ def get_path(scan_id, key_name='merlin1', db=db):
 def get_flyscan_dimensions(hdr):
     
     if 'dimensions' in hdr.start:
-        return hdr.start['dimensions']
+        return hdr.start['dimensions'][::-1]
     else:
-        return hdr.start['shape']
+        return hdr.start['shape'][::-1]
 
 def get_all_scalar_data(hdr):
 

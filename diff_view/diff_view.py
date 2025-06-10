@@ -289,7 +289,7 @@ class DiffViewWindow(QtWidgets.QMainWindow):
 
         im_array = self.xrf_img
         z, ysize,xsize = np.shape(self.xrf_stack)
-        self.statusbar.showMessage(f"Image Shape = {np.shape(self.xrf_stack)}")
+        print(f" XRF Image Shape = {np.shape(self.xrf_stack)}")
         # A plot area (ViewBox + axes) for displaying the image
 
             
@@ -332,7 +332,7 @@ class DiffViewWindow(QtWidgets.QMainWindow):
 
     def display_diff_sum_img(self):
         
-        self.cb_xrf_elem_list.addItems([])
+        self.cb_xrf_elem_list.clear()
         if not self.display_param["diff_wd"] == None:
             #TODO, may have memory issues
             tiffs = (".tiff", ".tif")
@@ -375,7 +375,7 @@ class DiffViewWindow(QtWidgets.QMainWindow):
             
             im_array = self.diff_sum_img 
             ysize,xsize = np.shape(im_array)
-            self.statusbar.showMessage(f"Image Shape = {np.shape(im_array)}")
+            #self.statusbar.showMessage(f"Image Shape = {np.shape(im_array)}")
             # A plot area (ViewBox + axes) for displaying the image
 
             self.p1_diff_sum = self.diff_sum_plot_canvas.addPlot(title= "Diff_Sum_Image")
