@@ -15,4 +15,5 @@ Scan/temp/
 /Analysis/xrf_batch/config_file.json
 ptychoSave/
 __pycache__/
-*.idea/
+.idea/
+Archived/elog/__pycache__/
