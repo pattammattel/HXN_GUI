@@ -14,3 +14,4 @@ Scan/temp/
 .DS_Store
 /Analysis/xrf_batch/config_file.json
 ptychoSave/
+__pycache__/
