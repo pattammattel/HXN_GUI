@@ -48,19 +48,19 @@ class Ui(QtWidgets.QMainWindow):
         uic.loadUi(os.path.join(ui_path,'ui_files/hxn_gui_v3.ui'), self)
         print("UI File loaded")
 
-        # self.fly_motor_dict = {'zpssx': zpssx,
-        #                        'zpssy': zpssy,
-        #                        'zpssz': zpssz,
-        #                        'dssx': dssx,
-        #                        'dssy': dssy,
-        #                        'dssz': dssz}
-
-        self.fly_motor_dict = {'dssx': dssx,
-                               'dssy': dssy,
-                               'dssz': dssz,
-                               'zpssx': zpssx,
+        self.fly_motor_dict = {'zpssx': zpssx,
                                'zpssy': zpssy,
-                               'zpssz': zpssz,}
+                               'zpssz': zpssz,
+                               'dssx': dssx,
+                               'dssy': dssy,
+                               'dssz': dssz}
+
+        # self.fly_motor_dict = {'dssx': dssx,
+        #                        'dssy': dssy,
+        #                        'dssz': dssz,
+        #                        'zpssx': zpssx,
+        #                        'zpssy': zpssy,
+        #                        'zpssz': zpssz,}
 
         # self.fly_det_dict = {'dets1': dets1,
         #                      'dets2': dets2,
@@ -716,7 +716,11 @@ class Ui(QtWidgets.QMainWindow):
             self.y_end.setValue(valsToFill[1] / 2)
             self.x_step.setValue(valsToFill[2])
             self.y_step.setValue(valsToFill[3])
-            self.dwell.setValue(valsToFill[4])
+            
+            if self.rb_1d.isChecked():
+                self.dwell.setValue(valsToFill[4]*10)
+            else:
+                self.dwell.setValue(valsToFill[4])
 
     def quit_scan(self):
         
@@ -1067,7 +1071,7 @@ class Ui(QtWidgets.QMainWindow):
     @show_error_message_box
     def mll_osa_OUT(self):
         #closing c shutter for safety
-        caput("XF:03IDC-ES{Zeb:2}:SOFT_IN:B0", 1)
+        caput("XF:03IDC-ES{Zeb:2}:SOFT_IN:B0", 0)
         if abs(mllosa.osax.position)<50:
             caput(mllosa.osax.prefix,caget(mllosa.osax.prefix)+2600)
             QtTest.QTest.qWait(5000)
@@ -1456,7 +1460,8 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_mll_z_focus_start.clicked.connect(lambda:self.mll_focus_scan())
         self.pb_mll_z_focus_move.clicked.connect(lambda:RE(bps.mov(sbz, self.dsb_mll_z_target_pos.value())))
         
-        self.pb_mll_rot_align_start.clicked.connect(lambda:RE(self.mll_rot_alignment_))
+        self.pb_mll_rot_align_start.clicked.connect(lambda:self.mll_rot_alignment_())
+        self.pb_zp_rot_align_start.clicked.connect(lambda:self.zp_rot_alignment_())
         #self.pb_mll_z_focus_move.clicked.connect(lambda:RE(self.move_with_confirmation(sbz, self.dsb_mll_z_target_pos.value()))) #not tested
 
         #recover from beamdump
@@ -1490,7 +1495,7 @@ class Ui(QtWidgets.QMainWindow):
         z_motor = eval(self.cb_mll_z_motor.currentText())
         z_start = self.sb_mll_z_start.value()
         z_end = self.sb_mll_z_end.value()
-        z_end = self.sb_mll_z_steps.value()
+        z_steps = self.sb_mll_z_steps.value()
 
         scanMotor = eval(self.cb_mll_foucs_mtr.currentText())
         scanStart = self.dsb_mll_foucs_mtr_start.value()
@@ -1504,7 +1509,7 @@ class Ui(QtWidgets.QMainWindow):
         RE(mll_z_alignment(z_motor,
                            z_start,
                            z_end,
-                           z_end,
+                           z_steps,
                            scanMotor,
                            scanStart,
                            scanEnd,
@@ -1523,7 +1528,7 @@ class Ui(QtWidgets.QMainWindow):
         # end = self.sb_mll_rot_scan_end.value()
         # num = self.sb_mll_rot_scan_num.value()
         # acq_time = self.sb_mll_rot_scan_exp_time.value()
-        # elem = self.cb_mll_rot_elem.currentItem()
+        # elem = self.cb_mll_rot_elem.currentText().split(':')[0]
         # move_flag=0, 
         # threshold = 
 
@@ -1535,7 +1540,7 @@ class Ui(QtWidgets.QMainWindow):
         #                         end, 
         #                         num, 
         #                         acq_time, 
-        #                         elem='Pt_L', 
+        #                         elem=elem, 
         #                         move_flag=0, 
         #                         threshold = 0.5))
 
@@ -1557,12 +1562,65 @@ class Ui(QtWidgets.QMainWindow):
 
         pass
 
+
+    @show_error_message_box
+    def zp_rot_alignment_(self):
+        print("zp rot_alignment started")
+        a_start = self.sb_zp_rot_angle_start.value()
+        a_end = self.sb_zp_rot_angle_end.value()
+        a_num = self.sb_zp_rot_angle_num.value()
+        start = self.sb_zp_rot_scan_start.value()
+        end = self.sb_zp_rot_scan_end.value()
+        num = self.sb_zp_rot_scan_num.value()
+        acq_time = self.sb_zp_rot_scan_exp_time.value()
+        elem = self.cb_zp_rot_elem.currentText().split(':')[0]
+        move_flag=0, 
+        threshold = 0.5
+
+
+        dx, dz = RE(zp_rot_alignment(a_start, 
+                                a_end, 
+                                a_num, 
+                                start, 
+                                end, 
+                                num, 
+                                acq_time, 
+                                elem=elem, 
+                                move_flag=0, 
+                                threshold = 0.5))
+
+        self.dsb_rot_align_smarx.setValue(dx)
+        self.dsb_rot_align_smarz.setValue(dz)
+        #self.dsb_rot_align_sbx.setValue(-1*dx)
+
+        choice = QMessageBox.question(self, "zp Rot Align",
+                                      f"The recommended correction is {dx = :.2f}, {dz = :.2f} and zpsx = {-1*dx :.2f}"
+                                      "\n Proceed?",
+                                      QMessageBox.Yes |
+                                      QMessageBox.No, QMessageBox.No)
+        QtTest.QTest.qWait(500)
+        if choice == QMessageBox.Yes:
+            RE(self.apply_zp_rot_algn_corr())
+
+        else:
+            pass
+
+        
+
     def apply_mll_rot_algn_corr(self):
 
         dx = self.dsb_rot_align_dsx.value(dx)
         dz = self.dsb_rot_align_dsz.value(dz)
 
-        RE(bps.movr(dsx, dx, dsz, dz, sbx -1*dx))
+        RE(bps.movr(dsx, dx, dsz, dz, sbx, -1*dx))
+
+    def apply_zp_rot_algn_corr(self):
+
+        dx = self.dsb_rot_align_smarx.value(dx)
+        dz = self.dsb_rot_align_smarz.value(dz)
+
+        RE(bps.movr(smarx, dx, smarz, dz, zpsx, -1*dx))
+
 
         
 

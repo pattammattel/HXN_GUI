@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1452</width>
-    <height>1436</height>
+    <height>1486</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -2058,7 +2058,7 @@ font: 15pt &quot;Modern No. 20&quot;;
               <enum>QTabWidget::North</enum>
              </property>
              <property name="currentIndex">
-              <number>1</number>
+              <number>0</number>
              </property>
              <property name="documentMode">
               <bool>true</bool>
@@ -5862,7 +5862,7 @@ color:rgb(51, 184, 141)</string>
            <bool>true</bool>
           </property>
           <property name="currentIndex">
-           <number>1</number>
+           <number>0</number>
           </property>
           <widget class="QWidget" name="tab_5">
            <attribute name="title">
@@ -6407,397 +6407,6 @@ Start Focus Series
                <string>ZP_Rot.Center</string>
               </property>
               <layout class="QGridLayout" name="gridLayout_66">
-               <item row="1" column="0">
-                <layout class="QGridLayout" name="gridLayout_65">
-                 <item row="0" column="0">
-                  <widget class="QWidget" name="widget_7" native="true">
-                   <layout class="QGridLayout" name="gridLayout_63">
-                    <item row="0" column="0">
-                     <layout class="QGridLayout" name="gridLayout_64">
-                      <item row="0" column="0">
-                       <layout class="QVBoxLayout" name="verticalLayout_41">
-                        <item>
-                         <layout class="QVBoxLayout" name="verticalLayout_42">
-                          <item>
-                           <layout class="QHBoxLayout" name="horizontalLayout_66">
-                            <item>
-                             <widget class="QLabel" name="label_103">
-                              <property name="text">
-                               <string>Theta Start</string>
-                              </property>
-                              <property name="alignment">
-                               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                              </property>
-                             </widget>
-                            </item>
-                            <item>
-                             <widget class="QSpinBox" name="spinBox_13">
-                              <property name="sizePolicy">
-                               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                                <horstretch>0</horstretch>
-                                <verstretch>0</verstretch>
-                               </sizepolicy>
-                              </property>
-                              <property name="suffix">
-                               <string/>
-                              </property>
-                              <property name="minimum">
-                               <number>-120</number>
-                              </property>
-                              <property name="maximum">
-                               <number>120</number>
-                              </property>
-                              <property name="singleStep">
-                               <number>10</number>
-                              </property>
-                              <property name="value">
-                               <number>-60</number>
-                              </property>
-                              <property name="displayIntegerBase">
-                               <number>10</number>
-                              </property>
-                             </widget>
-                            </item>
-                           </layout>
-                          </item>
-                          <item>
-                           <layout class="QHBoxLayout" name="horizontalLayout_67">
-                            <item>
-                             <widget class="QLabel" name="label_104">
-                              <property name="text">
-                               <string>Theta End</string>
-                              </property>
-                              <property name="alignment">
-                               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                              </property>
-                             </widget>
-                            </item>
-                            <item>
-                             <widget class="QSpinBox" name="spinBox_16">
-                              <property name="sizePolicy">
-                               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                                <horstretch>0</horstretch>
-                                <verstretch>0</verstretch>
-                               </sizepolicy>
-                              </property>
-                              <property name="suffix">
-                               <string/>
-                              </property>
-                              <property name="minimum">
-                               <number>-120</number>
-                              </property>
-                              <property name="maximum">
-                               <number>120</number>
-                              </property>
-                              <property name="singleStep">
-                               <number>10</number>
-                              </property>
-                              <property name="value">
-                               <number>60</number>
-                              </property>
-                             </widget>
-                            </item>
-                           </layout>
-                          </item>
-                          <item>
-                           <layout class="QHBoxLayout" name="horizontalLayout_70">
-                            <item>
-                             <widget class="QLabel" name="label_107">
-                              <property name="text">
-                               <string>No. of Steps</string>
-                              </property>
-                              <property name="alignment">
-                               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                              </property>
-                             </widget>
-                            </item>
-                            <item>
-                             <widget class="QSpinBox" name="spinBox_17">
-                              <property name="sizePolicy">
-                               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                                <horstretch>0</horstretch>
-                                <verstretch>0</verstretch>
-                               </sizepolicy>
-                              </property>
-                              <property name="suffix">
-                               <string/>
-                              </property>
-                              <property name="minimum">
-                               <number>1</number>
-                              </property>
-                              <property name="maximum">
-                               <number>100</number>
-                              </property>
-                              <property name="value">
-                               <number>12</number>
-                              </property>
-                             </widget>
-                            </item>
-                           </layout>
-                          </item>
-                         </layout>
-                        </item>
-                        <item>
-                         <layout class="QHBoxLayout" name="horizontalLayout_71">
-                          <item>
-                           <widget class="QLabel" name="label_98">
-                            <property name="text">
-                             <string>Elem:</string>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QComboBox" name="cb_zp_rot_elem"/>
-                          </item>
-                         </layout>
-                        </item>
-                       </layout>
-                      </item>
-                      <item row="0" column="1">
-                       <layout class="QVBoxLayout" name="verticalLayout_43">
-                        <item>
-                         <layout class="QHBoxLayout" name="horizontalLayout_72">
-                          <item>
-                           <widget class="QLabel" name="label_108">
-                            <property name="text">
-                             <string>Start</string>
-                            </property>
-                            <property name="alignment">
-                             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QSpinBox" name="spinBox_18">
-                            <property name="sizePolicy">
-                             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                             </sizepolicy>
-                            </property>
-                            <property name="suffix">
-                             <string> um</string>
-                            </property>
-                            <property name="minimum">
-                             <number>-15</number>
-                            </property>
-                            <property name="maximum">
-                             <number>15</number>
-                            </property>
-                            <property name="singleStep">
-                             <number>2</number>
-                            </property>
-                            <property name="value">
-                             <number>-2</number>
-                            </property>
-                           </widget>
-                          </item>
-                         </layout>
-                        </item>
-                        <item>
-                         <layout class="QHBoxLayout" name="horizontalLayout_73">
-                          <item>
-                           <widget class="QLabel" name="label_109">
-                            <property name="text">
-                             <string>End</string>
-                            </property>
-                            <property name="alignment">
-                             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QSpinBox" name="spinBox_19">
-                            <property name="sizePolicy">
-                             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                             </sizepolicy>
-                            </property>
-                            <property name="suffix">
-                             <string> um</string>
-                            </property>
-                            <property name="minimum">
-                             <number>-15</number>
-                            </property>
-                            <property name="maximum">
-                             <number>15</number>
-                            </property>
-                            <property name="singleStep">
-                             <number>2</number>
-                            </property>
-                            <property name="value">
-                             <number>2</number>
-                            </property>
-                           </widget>
-                          </item>
-                         </layout>
-                        </item>
-                        <item>
-                         <layout class="QHBoxLayout" name="horizontalLayout_74">
-                          <item>
-                           <widget class="QLabel" name="label_110">
-                            <property name="text">
-                             <string>No. of Steps</string>
-                            </property>
-                            <property name="alignment">
-                             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QSpinBox" name="spinBox_20">
-                            <property name="sizePolicy">
-                             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                             </sizepolicy>
-                            </property>
-                            <property name="suffix">
-                             <string/>
-                            </property>
-                            <property name="minimum">
-                             <number>1</number>
-                            </property>
-                            <property name="maximum">
-                             <number>1000</number>
-                            </property>
-                            <property name="value">
-                             <number>100</number>
-                            </property>
-                           </widget>
-                          </item>
-                         </layout>
-                        </item>
-                       </layout>
-                      </item>
-                      <item row="1" column="0" colspan="2">
-                       <widget class="QPushButton" name="pushButton_8">
-                        <property name="sizePolicy">
-                         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                          <horstretch>0</horstretch>
-                          <verstretch>0</verstretch>
-                         </sizepolicy>
-                        </property>
-                        <property name="text">
-                         <string>
-Start
-</string>
-                        </property>
-                       </widget>
-                      </item>
-                     </layout>
-                    </item>
-                   </layout>
-                  </widget>
-                 </item>
-                 <item row="0" column="1">
-                  <widget class="QWidget" name="widget_8" native="true">
-                   <layout class="QGridLayout" name="gridLayout_62">
-                    <item row="0" column="0">
-                     <layout class="QHBoxLayout" name="horizontalLayout_79">
-                      <item>
-                       <widget class="QPushButton" name="pushButton_11">
-                        <property name="text">
-                         <string>
-Rotate to
-</string>
-                        </property>
-                       </widget>
-                      </item>
-                      <item>
-                       <widget class="QDoubleSpinBox" name="doubleSpinBox_5">
-                        <property name="suffix">
-                         <string/>
-                        </property>
-                        <property name="decimals">
-                         <number>1</number>
-                        </property>
-                        <property name="minimum">
-                         <double>-120.000000000000000</double>
-                        </property>
-                        <property name="maximum">
-                         <double>120.000000000000000</double>
-                        </property>
-                        <property name="singleStep">
-                         <double>5.000000000000000</double>
-                        </property>
-                        <property name="value">
-                         <double>15.000000000000000</double>
-                        </property>
-                       </widget>
-                      </item>
-                     </layout>
-                    </item>
-                    <item row="1" column="0">
-                     <layout class="QHBoxLayout" name="horizontalLayout_77">
-                      <item>
-                       <widget class="QPushButton" name="pushButton_9">
-                        <property name="text">
-                         <string>  
-Move smarX by  
-  </string>
-                        </property>
-                       </widget>
-                      </item>
-                      <item>
-                       <widget class="QDoubleSpinBox" name="doubleSpinBox_3">
-                        <property name="suffix">
-                         <string> um</string>
-                        </property>
-                        <property name="decimals">
-                         <number>1</number>
-                        </property>
-                        <property name="minimum">
-                         <double>-1000.000000000000000</double>
-                        </property>
-                        <property name="maximum">
-                         <double>1000.000000000000000</double>
-                        </property>
-                        <property name="value">
-                         <double>100.000000000000000</double>
-                        </property>
-                       </widget>
-                      </item>
-                     </layout>
-                    </item>
-                    <item row="2" column="0">
-                     <layout class="QHBoxLayout" name="horizontalLayout_78">
-                      <item>
-                       <widget class="QPushButton" name="pushButton_10">
-                        <property name="text">
-                         <string>
-Move smarZ by
-</string>
-                        </property>
-                       </widget>
-                      </item>
-                      <item>
-                       <widget class="QDoubleSpinBox" name="doubleSpinBox_4">
-                        <property name="suffix">
-                         <string> um</string>
-                        </property>
-                        <property name="decimals">
-                         <number>1</number>
-                        </property>
-                        <property name="minimum">
-                         <double>-1000.000000000000000</double>
-                        </property>
-                        <property name="maximum">
-                         <double>1000.000000000000000</double>
-                        </property>
-                        <property name="value">
-                         <double>100.000000000000000</double>
-                        </property>
-                       </widget>
-                      </item>
-                     </layout>
-                    </item>
-                   </layout>
-                  </widget>
-                 </item>
-                </layout>
-               </item>
                <item row="0" column="0">
                 <widget class="QLabel" name="label_156">
                  <property name="sizePolicy">
@@ -6809,6 +6418,432 @@ Move smarZ by
                  <property name="text">
                   <string/>
                  </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QWidget" name="widget_7" native="true">
+                 <layout class="QGridLayout" name="gridLayout_63">
+                  <item row="0" column="0">
+                   <layout class="QGridLayout" name="gridLayout_64">
+                    <item row="0" column="1">
+                     <layout class="QVBoxLayout" name="verticalLayout_43">
+                      <item>
+                       <layout class="QHBoxLayout" name="horizontalLayout_72">
+                        <item>
+                         <widget class="QLabel" name="label_108">
+                          <property name="text">
+                           <string>Start</string>
+                          </property>
+                          <property name="alignment">
+                           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QSpinBox" name="sb_zp_rot_scan_start">
+                          <property name="sizePolicy">
+                           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                           </sizepolicy>
+                          </property>
+                          <property name="suffix">
+                           <string> um</string>
+                          </property>
+                          <property name="minimum">
+                           <number>-15</number>
+                          </property>
+                          <property name="maximum">
+                           <number>15</number>
+                          </property>
+                          <property name="singleStep">
+                           <number>2</number>
+                          </property>
+                          <property name="value">
+                           <number>-12</number>
+                          </property>
+                         </widget>
+                        </item>
+                       </layout>
+                      </item>
+                      <item>
+                       <layout class="QHBoxLayout" name="horizontalLayout_73">
+                        <item>
+                         <widget class="QLabel" name="label_109">
+                          <property name="text">
+                           <string>End</string>
+                          </property>
+                          <property name="alignment">
+                           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QSpinBox" name="sb_zp_rot_scan_end">
+                          <property name="sizePolicy">
+                           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                           </sizepolicy>
+                          </property>
+                          <property name="suffix">
+                           <string> um</string>
+                          </property>
+                          <property name="minimum">
+                           <number>-15</number>
+                          </property>
+                          <property name="maximum">
+                           <number>15</number>
+                          </property>
+                          <property name="singleStep">
+                           <number>2</number>
+                          </property>
+                          <property name="value">
+                           <number>12</number>
+                          </property>
+                         </widget>
+                        </item>
+                       </layout>
+                      </item>
+                      <item>
+                       <layout class="QHBoxLayout" name="horizontalLayout_74">
+                        <item>
+                         <widget class="QLabel" name="label_110">
+                          <property name="text">
+                           <string>No. of Steps</string>
+                          </property>
+                          <property name="alignment">
+                           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QSpinBox" name="sb_zp_rot_scan_num">
+                          <property name="sizePolicy">
+                           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                           </sizepolicy>
+                          </property>
+                          <property name="suffix">
+                           <string/>
+                          </property>
+                          <property name="minimum">
+                           <number>1</number>
+                          </property>
+                          <property name="maximum">
+                           <number>1000</number>
+                          </property>
+                          <property name="value">
+                           <number>100</number>
+                          </property>
+                         </widget>
+                        </item>
+                       </layout>
+                      </item>
+                      <item>
+                       <layout class="QGridLayout" name="gridLayout_65">
+                        <item row="0" column="0">
+                         <widget class="QLabel" name="label_157">
+                          <property name="text">
+                           <string>Dwell Time</string>
+                          </property>
+                          <property name="alignment">
+                           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="0" column="1">
+                         <widget class="QDoubleSpinBox" name="sb_zp_rot_scan_exp_time">
+                          <property name="sizePolicy">
+                           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                           </sizepolicy>
+                          </property>
+                          <property name="decimals">
+                           <number>3</number>
+                          </property>
+                          <property name="minimum">
+                           <double>0.005000000000000</double>
+                          </property>
+                          <property name="maximum">
+                           <double>0.500000000000000</double>
+                          </property>
+                          <property name="singleStep">
+                           <double>0.010000000000000</double>
+                          </property>
+                          <property name="value">
+                           <double>0.050000000000000</double>
+                          </property>
+                         </widget>
+                        </item>
+                       </layout>
+                      </item>
+                     </layout>
+                    </item>
+                    <item row="2" column="0" colspan="2">
+                     <widget class="QPushButton" name="pb_zp_rot_align_start">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="text">
+                       <string>
+Start
+</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="0" column="0">
+                     <layout class="QVBoxLayout" name="verticalLayout_41">
+                      <item>
+                       <layout class="QVBoxLayout" name="verticalLayout_42">
+                        <item>
+                         <layout class="QHBoxLayout" name="horizontalLayout_66">
+                          <item>
+                           <widget class="QLabel" name="label_103">
+                            <property name="text">
+                             <string>Theta Start</string>
+                            </property>
+                            <property name="alignment">
+                             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                            </property>
+                           </widget>
+                          </item>
+                          <item>
+                           <widget class="QSpinBox" name="sb_zp_rot_angle_start">
+                            <property name="sizePolicy">
+                             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                              <horstretch>0</horstretch>
+                              <verstretch>0</verstretch>
+                             </sizepolicy>
+                            </property>
+                            <property name="suffix">
+                             <string/>
+                            </property>
+                            <property name="minimum">
+                             <number>-120</number>
+                            </property>
+                            <property name="maximum">
+                             <number>120</number>
+                            </property>
+                            <property name="singleStep">
+                             <number>10</number>
+                            </property>
+                            <property name="value">
+                             <number>-30</number>
+                            </property>
+                            <property name="displayIntegerBase">
+                             <number>10</number>
+                            </property>
+                           </widget>
+                          </item>
+                         </layout>
+                        </item>
+                        <item>
+                         <layout class="QHBoxLayout" name="horizontalLayout_67">
+                          <item>
+                           <widget class="QLabel" name="label_104">
+                            <property name="text">
+                             <string>Theta End</string>
+                            </property>
+                            <property name="alignment">
+                             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                            </property>
+                           </widget>
+                          </item>
+                          <item>
+                           <widget class="QSpinBox" name="sb_zp_rot_angle_end">
+                            <property name="sizePolicy">
+                             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                              <horstretch>0</horstretch>
+                              <verstretch>0</verstretch>
+                             </sizepolicy>
+                            </property>
+                            <property name="suffix">
+                             <string/>
+                            </property>
+                            <property name="minimum">
+                             <number>-120</number>
+                            </property>
+                            <property name="maximum">
+                             <number>120</number>
+                            </property>
+                            <property name="singleStep">
+                             <number>10</number>
+                            </property>
+                            <property name="value">
+                             <number>30</number>
+                            </property>
+                           </widget>
+                          </item>
+                         </layout>
+                        </item>
+                        <item>
+                         <layout class="QHBoxLayout" name="horizontalLayout_70">
+                          <item>
+                           <widget class="QLabel" name="label_107">
+                            <property name="text">
+                             <string>No. of Steps</string>
+                            </property>
+                            <property name="alignment">
+                             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                            </property>
+                           </widget>
+                          </item>
+                          <item>
+                           <widget class="QSpinBox" name="sb_zp_rot_angle_num">
+                            <property name="sizePolicy">
+                             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                              <horstretch>0</horstretch>
+                              <verstretch>0</verstretch>
+                             </sizepolicy>
+                            </property>
+                            <property name="suffix">
+                             <string/>
+                            </property>
+                            <property name="minimum">
+                             <number>1</number>
+                            </property>
+                            <property name="maximum">
+                             <number>100</number>
+                            </property>
+                            <property name="value">
+                             <number>10</number>
+                            </property>
+                           </widget>
+                          </item>
+                         </layout>
+                        </item>
+                       </layout>
+                      </item>
+                      <item>
+                       <layout class="QHBoxLayout" name="horizontalLayout_71">
+                        <item>
+                         <widget class="QLabel" name="label_98">
+                          <property name="text">
+                           <string>Elem:</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QComboBox" name="cb_zp_rot_elem"/>
+                        </item>
+                       </layout>
+                      </item>
+                     </layout>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QWidget" name="widget_8" native="true">
+                 <layout class="QGridLayout" name="gridLayout_62">
+                  <item row="0" column="0">
+                   <layout class="QHBoxLayout" name="horizontalLayout_79">
+                    <item>
+                     <widget class="QPushButton" name="pushButton_11">
+                      <property name="text">
+                       <string>
+Rotate to
+</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QDoubleSpinBox" name="dsb_rot_align_zpsth">
+                      <property name="suffix">
+                       <string/>
+                      </property>
+                      <property name="decimals">
+                       <number>1</number>
+                      </property>
+                      <property name="minimum">
+                       <double>-120.000000000000000</double>
+                      </property>
+                      <property name="maximum">
+                       <double>120.000000000000000</double>
+                      </property>
+                      <property name="singleStep">
+                       <double>5.000000000000000</double>
+                      </property>
+                      <property name="value">
+                       <double>15.000000000000000</double>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item row="1" column="0">
+                   <layout class="QHBoxLayout" name="horizontalLayout_77">
+                    <item>
+                     <widget class="QPushButton" name="pushButton_9">
+                      <property name="text">
+                       <string>  
+Move smarX by  
+  </string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QDoubleSpinBox" name="dsb_rot_align_smarx">
+                      <property name="suffix">
+                       <string> um</string>
+                      </property>
+                      <property name="decimals">
+                       <number>1</number>
+                      </property>
+                      <property name="minimum">
+                       <double>-1000.000000000000000</double>
+                      </property>
+                      <property name="maximum">
+                       <double>1000.000000000000000</double>
+                      </property>
+                      <property name="value">
+                       <double>100.000000000000000</double>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item row="2" column="0">
+                   <layout class="QHBoxLayout" name="horizontalLayout_78">
+                    <item>
+                     <widget class="QPushButton" name="pushButton_10">
+                      <property name="text">
+                       <string>
+Move smarZ by
+</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QDoubleSpinBox" name="dsb_rot_align_smarz">
+                      <property name="suffix">
+                       <string> um</string>
+                      </property>
+                      <property name="decimals">
+                       <number>1</number>
+                      </property>
+                      <property name="minimum">
+                       <double>-1000.000000000000000</double>
+                      </property>
+                      <property name="maximum">
+                       <double>1000.000000000000000</double>
+                      </property>
+                      <property name="value">
+                       <double>100.000000000000000</double>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
                 </widget>
                </item>
               </layout>
@@ -6922,7 +6957,7 @@ MLL to CAM 11 View
                 </widget>
                </item>
                <item row="5" column="1">
-                <widget class="QPushButton" name="pb_mll_merlin_view">
+                <widget class="QPushButton" name="pb_mll_nanobeam">
                  <property name="text">
                   <string>
 MLL to Nanobeam
@@ -10093,20 +10128,19 @@ Move
   <tabstop>dsb_ZPZ1TargetPos</tabstop>
   <tabstop>cb_linearFlag_zpFocus</tabstop>
   <tabstop>cb_zp_focus_elem</tabstop>
-  <tabstop>spinBox_13</tabstop>
-  <tabstop>spinBox_16</tabstop>
-  <tabstop>spinBox_17</tabstop>
+  <tabstop>sb_zp_rot_angle_end</tabstop>
+  <tabstop>sb_zp_rot_angle_num</tabstop>
   <tabstop>cb_zp_rot_elem</tabstop>
-  <tabstop>spinBox_18</tabstop>
-  <tabstop>spinBox_19</tabstop>
-  <tabstop>spinBox_20</tabstop>
-  <tabstop>pushButton_8</tabstop>
+  <tabstop>sb_zp_rot_scan_start</tabstop>
+  <tabstop>sb_zp_rot_scan_end</tabstop>
+  <tabstop>sb_zp_rot_scan_num</tabstop>
+  <tabstop>pb_zp_rot_align_start</tabstop>
   <tabstop>pushButton_11</tabstop>
-  <tabstop>doubleSpinBox_5</tabstop>
+  <tabstop>dsb_rot_align_zpsth</tabstop>
   <tabstop>pushButton_9</tabstop>
-  <tabstop>doubleSpinBox_3</tabstop>
+  <tabstop>dsb_rot_align_smarx</tabstop>
   <tabstop>pushButton_10</tabstop>
-  <tabstop>doubleSpinBox_4</tabstop>
+  <tabstop>dsb_rot_align_smarz</tabstop>
   <tabstop>sb_mll_rot_angle_start</tabstop>
   <tabstop>sb_mll_rot_angle_end</tabstop>
   <tabstop>sb_mll_rot_angle_num</tabstop>
@@ -10127,7 +10161,7 @@ Move
   <tabstop>sb_mll_z_start</tabstop>
   <tabstop>sb_mll_z_end</tabstop>
   <tabstop>sb_mll_z_steps</tabstop>
-  <tabstop>pb_mll_merlin_view</tabstop>
+  <tabstop>pb_mll_nanobeam</tabstop>
   <tabstop>pb_mll_lens_in</tabstop>
   <tabstop>pb_mll_osa_out</tabstop>
   <tabstop>pb_mll_lens_out</tabstop>
