@@ -12,5 +12,11 @@ autonomous/
 temp/
 Scan/temp/
 .DS_Store
-Analysis/xrf_batch/config_file.json
+/Analysis/xrf_batch/config_file.json
 ptychoSave/
+__pycache__/
+**.idea/
+Archived/elog/__pycache__/
+**/__pycache__/
+/Analysis/__pycache__/
+/Analysis/.DS_Store

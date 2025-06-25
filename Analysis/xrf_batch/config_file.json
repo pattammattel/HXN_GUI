@@ -1,9 +1,0 @@
-{
-    "xrf_scan_range": "349663-349751",
-    "wd": "/nsls2/data/hxn/legacy/users/current_user/WSe2/xrf",
-    "param_file": "/nsls2/data/hxn/legacy/users/current_user/WSe2/xrf/pyxrf_model_parameters_349663.json",
-    "xanes_start_id": "348317",
-    "xanes_end_id": "348447",
-    "xanes_elem": "Au_L",
-    "alignment_elem": "Au_M"
-}
