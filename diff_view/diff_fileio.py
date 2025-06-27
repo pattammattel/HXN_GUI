@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as manimation
 import tifffile as tf
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from tqdm import tqdm
 
 warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -477,12 +478,6 @@ def read_dict_from_h5(group):
             result[key] = _decode_bytes(raw)
     return result
 
-           
-import os
-import numpy as np
-import h5py
-from tqdm import tqdm
-
 def _load_scan_common(hdr, mon, data_type='float32'):
     """
     Load everything *except* detector stacks (i.e. scan positions, xrf, scalar, scan params).
@@ -543,11 +538,11 @@ def export_diff_data_as_h5(
     wd         = '.',
     mon        = 'sclr1_ch4',
     compression= 'gzip',
-    save_and_return=False
+    save_to_disk=True
 ):
     """
-    Export scan(s) to HDF5, writing *all* detectors in `dets` into one file per scan.
-    If save_and_return=True, returns a list of dicts with loaded numpy data.
+    Export scan(s) to HDF5, writing *all* detectors in `dets` into one file per scan if `save_to_disk=True`.
+    Always returns a list of dicts with loaded numpy data.
     """
     if isinstance(sid_list, (int, float)):
         sid_list = [int(sid_list)]
@@ -565,53 +560,45 @@ def export_diff_data_as_h5(
         # Prepare output filename
         out_fn = os.path.join(wd, f"scan_{sid}_{'_'.join(dets)}.h5")
 
-        # Write everything
-        with h5py.File(out_fn, 'w') as f:
+        if save_to_disk:
+            with h5py.File(out_fn, 'w') as f:
+                # 1) diff_data for each det
+                for det in dets:
+                    raw = _load_detector_stack(hdr, det)
+                    if roi_y is None:
+                        _, roi_y, roi_x = raw.shape
+                    grp = f.require_group(f"/diff_data/{det}")
+                    grp.create_dataset(
+                        "det_images",
+                        data=raw.reshape(dim1, dim2, roi_y, roi_x),
+                        compression=compression
+                    )
+                    if common["Io"] is not None:
+                        grp.create_dataset("Io", data=common["Io"])
 
-            # 1) diff_data for each det
-            for det in dets:
-                raw = _load_detector_stack(hdr, det)
-                # determine roi dims on first det
-                if roi_y is None:
-                    _, roi_y, roi_x = raw.shape
-                grp = f.require_group(f"/diff_data/{det}")
-                grp.create_dataset(
-                    "det_images",
-                    data=raw.reshape(dim1, dim2, roi_y, roi_x),
-                    compression=compression
-                )
-                if common["Io"] is not None:
-                    grp.create_dataset("Io", data=common["Io"])
+                # 2) scan/
+                sg = f.require_group("scan")
+                sg.create_dataset("scan_positions", data=common["scan_positions"])
+                save_dict_to_h5(sg, common["scan_params"])
+                common["scan_table"].to_csv(out_fn.replace(".h5", "_meta_data.csv"))
 
-            # 2) scan/
-            sg = f.require_group("scan")
-            sg.create_dataset("scan_positions", data=common["scan_positions"])
-            save_dict_to_h5(sg, common["scan_params"])
-            common["scan_table"].to_csv(out_fn.replace(".h5", "_meta_data.csv"))
+                # 3) xrf_roi_data
+                xg = f.require_group("xrf_roi_data")
+                xg.create_dataset("xrf_roi_array", data=common["xrf_stack"])
+                xg.create_dataset("xrf_elem_names", data=common["xrf_names"])
 
-            # 3) xrf_roi_data
-            xg = f.require_group("xrf_roi_data")
-            xg.create_dataset("xrf_roi_array", data=common["xrf_stack"])
-            xg.create_dataset("xrf_elem_names", data=common["xrf_names"])
+                # 4) scalar_data
+                sg2 = f.require_group("scalar_data")
+                sg2.create_dataset("scalar_array", data=common["scalar_stack"])
+                sg2.create_dataset("scalar_array_names", data=common["scalar_names"])
 
-            # 4) scalar_data
-            sg2 = f.require_group("scalar_data")
-            sg2.create_dataset("scalar_array", data=common["scalar_stack"])
-            sg2.create_dataset("scalar_array_names", data=common["scalar_names"])
+        # Always build return dict
+        ret = {k: common[k] for k in ("Io", "scan_positions", "xrf_stack", "xrf_names", "scalar_stack", "scalar_names")}
+        ret["det_images"] = {det: _load_detector_stack(hdr, det) for det in dets}
+        ret["filename"] = out_fn if save_to_disk else None
+        results.append(ret)
 
-        # Optionally return data
-        if save_and_return:
-            # Build a return dict, drop pandas table if too big
-            ret = {k: common[k] for k in ("Io", "scan_positions", "xrf_stack", "xrf_names", "scalar_stack", "scalar_names")}
-            ret["det_images"] = {det: _load_detector_stack(hdr, det) for det in dets}
-            ret["filename"] = out_fn
-            results.append(ret)
-
-    return results if save_and_return else None
-
-
-import h5py
-import numpy as np
+    return results
 
 def _read_group_as_dict(group):
     """Recursively read an HDF5 group into a nested dict, decoding bytes→str."""
