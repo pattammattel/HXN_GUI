@@ -510,6 +510,9 @@ class Ui(QtWidgets.QMainWindow):
 
         if self.mot1_steps * self.mot2_steps >64000:
                 raise ValueError ("scan points cannot exceed 64k")
+        
+        if self.det.endswith('merlin') and self.dwell_t<0.02:
+            raise ValueError("Merlin detector cannot scan with dwell time below 20 ms.")
 
     def copyForBatch(self):
         self.text_scan_plan.setText('yield from '+self.scan_plan)
@@ -571,6 +574,8 @@ class Ui(QtWidgets.QMainWindow):
 
 #@show_error_message_box
     def run_fly_scan(self):
+        #if self.initParams() is None:
+            #return  # Stop scan due to earlier error
         self.getScanValues()
 
         if caget("XF:03IDB-PPS{PSh}Sts:Cls-Sts") == 1:
@@ -807,7 +812,7 @@ class Ui(QtWidgets.QMainWindow):
          self.moveAMotor(self.db_move_smarz, smarz, 0.001, neg=neg_)
 
     def move_zpth(self, neg_=False):
-        self.moveAMotor(db_move_zpsth, zpsth, neg=neg_)
+        self.moveAMotor(self.db_move_zpsth, zpsth, neg=neg_)
 
     def move_zpz1(self, neg_=False):
         if neg_:
@@ -1578,7 +1583,7 @@ class Ui(QtWidgets.QMainWindow):
         threshold = 0.5
 
 
-        dx, dz = RE(zp_rot_alignment(a_start, 
+        *all, dx, dz = RE(zp_rot_alignment(a_start, 
                                 a_end, 
                                 a_num, 
                                 start, 
@@ -1588,9 +1593,9 @@ class Ui(QtWidgets.QMainWindow):
                                 elem=elem, 
                                 move_flag=0, 
                                 threshold = 0.5))
-
-        self.dsb_rot_align_smarx.setValue(dx)
-        self.dsb_rot_align_smarz.setValue(dz)
+        print(dx,dz)
+        self.dsb_rot_align_smarx.setValue(float(dx))
+        self.dsb_rot_align_smarz.setValue(float(dz))
         #self.dsb_rot_align_sbx.setValue(-1*dx)
 
         choice = QMessageBox.question(self, "zp Rot Align",

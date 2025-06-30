@@ -26,7 +26,7 @@ def show_error_message_box(func):
         except Exception as e:
             error_message = f"An error occurred: {str(e)}"
             QMessageBox.critical(None, "Error", error_message)
-            pass
+            return None
     return wrapper
 
 def show_info_box(func):
