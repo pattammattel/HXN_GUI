@@ -803,13 +803,13 @@ class Ui(QtWidgets.QMainWindow):
 
 
     def move_smarx(self, neg_=False):
-         self.moveAMotor(self.db_move_smarx, smarx, 0.001, neg=neg_)
+         self.moveAMotor(self.db_move_smarx, smarx, 1, neg=neg_)
 
     def move_smary(self, neg_=False):
-         self.moveAMotor(self.db_move_smary, smary, 0.001, neg=neg_)
+         self.moveAMotor(self.db_move_smary, smary, 1, neg=neg_)
 
     def move_smarz(self, neg_=False):
-         self.moveAMotor(self.db_move_smarz, smarz, 0.001, neg=neg_)
+         self.moveAMotor(self.db_move_smarz, smarz, 1, neg=neg_)
 
     def move_zpth(self, neg_=False):
         self.moveAMotor(self.db_move_zpsth, zpsth, neg=neg_)

@@ -17,7 +17,7 @@ warnings.simplefilter(action='ignore', category=UserWarning)
 
 if  os.getlogin().startswith("xf03") or os.getlogin().startswith("pattam"):
 
-    sys.path.insert(0,'/nsls2/data2/hxn/shared/config/bluesky_overlay/2023-1.0-py310-tiled/lib/python3.10/site-packages')
+    #sys.path.insert(0,'/nsls2/data2/hxn/shared/config/bluesky_overlay/2023-1.0-py310-tiled/lib/python3.10/site-packages')
     from hxntools.CompositeBroker import db
     from hxntools.scan_info import get_scan_positions
 
@@ -170,37 +170,39 @@ def _load_scan_common(hdr, mon, data_type='float32'):
     """
     # 1) Monitor (Io) if requested
     sd = hdr.start
-    dim1, dim2 = (sd['num1'], sd['num2']) if 'num1' in sd and 'num2' in sd else sd.shape
-    Io = None
-    if mon:
-        Io = np.array(list(hdr.data(str(mon))), dtype=data_type).squeeze().reshape(dim1, dim2)
+    if hdr.start['plan_name'] == 'fly2dpd':
+        dim1, dim2 = (sd['num1'], sd['num2']) if 'num1' in sd and 'num2' in sd else sd.shape
+        Io = None
+        if mon:
+            Io = np.array(list(hdr.data(str(mon))), dtype=data_type).squeeze().reshape(dim1, dim2)
 
-    # 2) Scan positions
-    try:
-        xy = list(get_scan_positions(hdr))
-    except:
-        xy = [np.array(v) for v in df[mots]]  # fallback
+        # 2) Scan positions
+        try:
+            xy = list(get_scan_positions(hdr))
+        except:
+            xy = [np.array(v) for v in df[mots]]  # fallback
 
-    # 3) XRF & scalar
-    xrf_stack, xrf_names = get_all_xrf_roi_data(hdr)
-    scalar_stack, scalar_names = get_all_scalar_data(hdr)
+        # 3) XRF & scalar
+        xrf_stack, xrf_names = get_all_xrf_roi_data(hdr)
+        scalar_stack, scalar_names = get_all_scalar_data(hdr)
 
-    # 4) Scan parameters & metadata table
-    scan_params = get_scan_details(hdr.start["scan_id"])
-    scan_table  = get_scan_metadata(hdr.start["scan_id"])
+        # 4) Scan parameters & metadata table
+        scan_params = get_scan_details(hdr.start["scan_id"])
+        scan_table  = get_scan_metadata(hdr.start["scan_id"])
 
-    return {
-        "Io": Io,
-        "dim1": dim1,
-        "dim2": dim2,
-        "scan_positions": np.array(xy),
-        "xrf_stack": xrf_stack,
-        "xrf_names": xrf_names,
-        "scalar_stack": scalar_stack,
-        "scalar_names": scalar_names,
-        "scan_params": scan_params,
-        "scan_table": scan_table,
-    }
+        return {
+            "Io": Io,
+            "dim1": dim1,
+            "dim2": dim2,
+            "scan_positions": np.array(xy),
+            "xrf_stack": xrf_stack,
+            "xrf_names": xrf_names,
+            "scalar_stack": scalar_stack,
+            "scalar_names": scalar_names,
+            "scan_params": scan_params,
+            "scan_table": scan_table,
+        }
+    else: pass
 
 
 def _load_detector_stack(hdr, det, data_type='float32'):
@@ -371,66 +373,81 @@ def export_diff_data_as_h5_batch(
 
     for sid in sid_list:
         hdr = db[int(sid)]
-        scan_id = hdr.start["scan_id"]
-        common = _load_scan_common(hdr, mon)
-        dim1, dim2 = common["dim1"], common["dim2"]
+        scan_plan = hdr.start['plan_name']
+        print (f" {scan_plan = }")
+        if scan_plan == 'fly2dpd':
+            dets_used = hdr.start['scan']['detectors']
+            if det in dets_used:
+                scan_id = hdr.start["scan_id"]
+                print(f"{scan_id = }")
+                common = _load_scan_common(hdr, mon)
+                dim1, dim2 = common["dim1"], common["dim2"]
 
-        raw_files = get_path(scan_id, det)
-        out_fn = os.path.join(wd, f"scan_{scan_id}_{det}.h5")
+                raw_files = get_path(scan_id, det)
+                out_fn = os.path.join(wd, f"scan_{scan_id}_{det}.h5")
 
-        copied = False
-        if copy_if_possible and len(raw_files) == 1:
-            shutil.copy2(raw_files[0], out_fn)
-            strip_and_rename_entry_data(out_fn, det=det)  # remove unwanted
-            copied = True
-            print(f"Copied detector data from {raw_files[0]} to {out_fn}")
+                copied = False
+                if copy_if_possible and len(raw_files) == 1:
+                    shutil.copy2(raw_files[0], out_fn)
+                    strip_and_rename_entry_data(out_fn, det=det)  # remove unwanted
+                    copied = True
+                    print(f"Copied detector data from {raw_files[0]} to {out_fn}")
 
-        if save_to_disk:
-            mode = 'a' if copied else 'w'
-            with h5py.File(out_fn, mode) as f:
-                if not copied:
-                    # load raw if not copied
-                    raw = _load_detector_stack(hdr, det)
-                    _, roi_y, roi_x = raw.shape
-                    grp = f.require_group(f"/diff_data/{det}")
-                    grp.create_dataset(
-                        "det_images",
-                        data=raw.reshape(dim1, dim2, roi_y, roi_x),
-                        compression=compression
-                    )
-                    if common["Io"] is not None:
-                        grp.create_dataset("Io", data=common["Io"])
-                else:
-                    # detector already in file; skip writing
-                    if common["Io"] is not None:
-                        grp = f.require_group(f"/diff_data/{det}")
-                        grp.create_dataset("Io", data=common["Io"])
+                if save_to_disk:
+                    mode = 'a' if copied else 'w'
+                    with h5py.File(out_fn, mode) as f:
+                        if not copied:
+                            # load raw if not copied
+                            raw = _load_detector_stack(hdr, det)
+                            _, roi_y, roi_x = raw.shape
+                            grp = f.require_group(f"/diff_data/{det}")
+                            grp.create_dataset(
+                                "det_images",
+                                data=raw.reshape(dim1, dim2, roi_y, roi_x),
+                                compression=compression
+                            )
+                            if common["Io"] is not None:
+                                grp.create_dataset("Io", data=common["Io"])
+                        else:
+                            # detector already in file; skip writing
+                            if common["Io"] is not None:
+                                grp = f.require_group(f"/diff_data/{det}")
+                                grp.create_dataset("Io", data=common["Io"])
 
-                # Add scan info
-                sg = f.require_group("scan")
-                sg.create_dataset("scan_positions", data=common["scan_positions"])
-                save_dict_to_h5(sg, common["scan_params"])
-                common["scan_table"].to_csv(out_fn.replace(".h5", "_meta_data.csv"))
+                        # Add scan info
+                        sg = f.require_group("scan")
+                        sg.create_dataset("scan_positions", data=common["scan_positions"])
+                        save_dict_to_h5(sg, common["scan_params"])
+                        common["scan_table"].to_csv(out_fn.replace(".h5", "_meta_data.csv"))
 
-                # Add XRF
-                xg = f.require_group("xrf_roi_data")
-                xg.create_dataset("xrf_roi_array", data=common["xrf_stack"])
-                xg.create_dataset("xrf_elem_names", data=common["xrf_names"])
+                        # Add XRF
+                        xg = f.require_group("xrf_roi_data")
+                        xg.create_dataset("xrf_roi_array", data=common["xrf_stack"])
+                        xg.create_dataset("xrf_elem_names", data=common["xrf_names"])
 
-                # Add scalars
-                sg2 = f.require_group("scalar_data")
-                sg2.create_dataset("scalar_array", data=common["scalar_stack"])
-                sg2.create_dataset("scalar_array_names", data=common["scalar_names"])
+                        # Add scalars
+                        sg2 = f.require_group("scalar_data")
+                        sg2.create_dataset("scalar_array", data=common["scalar_stack"])
+                        sg2.create_dataset("scalar_array_names", data=common["scalar_names"])
 
-        # optionally build return dict
-        size_gb = os.path.getsize(out_fn) / (1024 **3)
-        print(f"Saved: {out_fn} ({size_gb:.3f} GB)")
-        results.append({
-            "filename": out_fn if save_to_disk else None,
-            "copied": copied,
-            "size_gb": round(size_gb, 3)
-        })
-    return results
+                # optionally build return dict
+                size_gb = os.path.getsize(out_fn) / (1024 **3)
+                print(f"Saved: {out_fn} ({size_gb:.3f} GB)")
+                results.append({
+                    "filename": out_fn if save_to_disk else None,
+                    "copied": copied,
+                    "size_gb": round(size_gb, 3)
+                })
+                return results
+            else: 
+                print(f"{det} is not found in the {sid = }; skipped")
+                pass
+                        
+        else: 
+            print(f"{sid = } is not a fly2d plan skipped")
+            pass 
+    
+        
 
 
 def strip_and_rename_entry_data(h5_path, det="merlin1", compression="gzip"):
