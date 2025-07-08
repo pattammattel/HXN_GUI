@@ -7,9 +7,15 @@ import datetime
 import warnings
 import sys
 import numpy as np
+import shutil
 import tifffile as tf
 from tqdm import tqdm
+import pyqtgraph as pg
+import matplotlib.pyplot as plt
+from hxntools.CompositeBroker import db
+from hxntools.scan_info import get_scan_positions
 
+pg.setConfigOption('imageAxisOrder', 'row-major') # best performance
 
 warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -55,7 +61,8 @@ def get_all_scalar_data(hdr):
 
     keys = list(hdr.table().keys())
     scalar_keys = [k for k in keys if k.startswith('sclr1') ]
-    print(f"{scalar_keys = }")
+    #print(f"{scalar_keys = }")
+    print(f"fetching scalar data")
     scan_dim = get_flyscan_dimensions(hdr)
     scalar_stack_list = []
 
@@ -81,8 +88,8 @@ def get_all_xrf_roi_data(hdr):
     det1_keys = [k for k in keys if k.startswith('Det1')]
     elem_list = [k.replace("Det1_", "") for k in det1_keys]
 
-    print(f"{elem_list = }")
-
+    #print(f"{elem_list = }")
+    print(f"fetching XRF ROIs")
     scan_dim = get_flyscan_dimensions(hdr)
     xrf_stack_list = []
 
@@ -170,7 +177,9 @@ def _load_scan_common(hdr, mon, data_type='float32'):
     """
     # 1) Monitor (Io) if requested
     sd = hdr.start
-    if hdr.start['plan_name'] == 'fly2dpd':
+    plan   = hdr.start["scan"].get('type')
+    
+    if plan == "2D_FLY_PANDA":
         dim1, dim2 = (sd['num1'], sd['num2']) if 'num1' in sd and 'num2' in sd else sd.shape
         Io = None
         if mon:
@@ -230,88 +239,6 @@ def _load_detector_stack(hdr, det, data_type='float32'):
     return np.flip(data, axis=1)
 
 
-def export_diff_data_as_h5(
-    sid_list,
-    det="eiger2_image",
-    wd=".",
-    mon="sclr1_ch4",
-    compression="gzip",
-    save_to_disk=True,
-    return_data=False
-):
-    """
-    Export diffraction scan(s) to HDF5. Optionally return in-memory data.
-
-    Parameters
-    ----------
-    sid_list : int or list of int
-        List of scan IDs.
-    det : str
-        Detector name.
-    wd : str
-        Directory to save the HDF5 files.
-    mon : str
-        Monitor signal for normalization.
-    compression : str
-        Compression method for HDF5 datasets.
-    save_to_disk : bool
-        If True, write output to .h5 files.
-    return_data : bool
-        If True, return in-memory data as list of dicts.
-
-    Returns
-    -------
-    list of dicts if return_data is True, otherwise None.
-    """
-    if isinstance(sid_list, (int, float)):
-        sid_list = [int(sid_list)]
-
-    results = []
-
-    for sid in sid_list:
-        hdr = db[int(sid)]
-        common = _load_scan_common(hdr, mon)
-
-        dim1, dim2 = common["dim1"], common["dim2"]
-        raw = _load_detector_stack(hdr, det)
-        _, roi_y, roi_x = raw.shape
-
-        out_fn = os.path.join(wd, f"scan_{sid}_{det}.h5")
-
-        if save_to_disk:
-            with h5py.File(out_fn, 'w') as f:
-                grp = f.require_group(f"/diff_data/{det}")
-                grp.create_dataset("det_images", data=raw.reshape(dim1, dim2, roi_y, roi_x), compression=compression)
-                if common["Io"] is not None:
-                    grp.create_dataset("Io", data=common["Io"])
-
-                sg = f.require_group("scan")
-                sg.create_dataset("scan_positions", data=common["scan_positions"])
-                save_dict_to_h5(sg, common["scan_params"])
-                common["scan_table"].to_csv(out_fn.replace(".h5", "_meta_data.csv"))
-
-                xg = f.require_group("xrf_roi_data")
-                xg.create_dataset("xrf_roi_array", data=common["xrf_stack"])
-                xg.create_dataset("xrf_elem_names", data=common["xrf_names"])
-
-                sg2 = f.require_group("scalar_data")
-                sg2.create_dataset("scalar_array", data=common["scalar_stack"])
-                sg2.create_dataset("scalar_array_names", data=common["scalar_names"])
-
-        if return_data:
-            results.append({
-                "Io": common["Io"],
-                "scan_positions": common["scan_positions"],
-                "xrf_stack": common["xrf_stack"],
-                "xrf_names": common["xrf_names"],
-                "scalar_stack": common["scalar_stack"],
-                "scalar_names": common["scalar_names"],
-                "det_images": raw,
-                "filename": out_fn if save_to_disk else None
-            })
-
-    return results if return_data else None
-
 def _read_group_as_dict(group):
     out = {}
     for key, item in group.items():
@@ -325,130 +252,6 @@ def _read_group_as_dict(group):
                 val = [v.decode('utf-8') if isinstance(v, (bytes, bytearray)) else v for v in val]
             out[key] = val
     return out
-
-
-def unpack_diff_h5(filename, det="eiger2_image"):
-    result = {}
-    with h5py.File(filename, "r") as f:
-        grp = f["/diff_data"][det]
-        result["det_images"] = grp["det_images"][()]
-        result["Io"] = grp.get("Io")[()] if "Io" in grp else None
-
-        result["scan"] = _read_group_as_dict(f["/scan"])
-
-        if "xrf_roi_data" in f:
-            xrf = f["xrf_roi_data"]
-            result["xrf_array"] = xrf["xrf_roi_array"][()]
-            result["xrf_names"] = [n.decode("utf-8") if isinstance(n, (bytes, bytearray)) else n for n in xrf["xrf_elem_names"][()]]
-        else:
-            result["xrf_array"] = None
-            result["xrf_names"] = []
-
-        if "scalar_data" in f:
-            scalar = f["scalar_data"]
-            result["scalar_array"] = scalar["scalar_array"][()]
-            result["scalar_names"] = [s.decode("utf-8") if isinstance(s, (bytes, bytearray)) else s for s in scalar["scalar_array_names"][()]]
-        else:
-            result["scalar_array"] = None
-            result["scalar_names"] = []
-
-    return result
-
-
-import shutil
-
-def export_diff_data_as_h5_batch(
-    sid_list,
-    det="merlin1",
-    wd=".",
-    mon="sclr1_ch4",
-    compression="gzip",
-    save_to_disk=True,
-    copy_if_possible=True
-):
-    if isinstance(sid_list, (int, float)):
-        sid_list = [int(sid_list)]
-
-    results = []
-
-    for sid in sid_list:
-        hdr = db[int(sid)]
-        scan_plan = hdr.start['plan_name']
-        print (f" {scan_plan = }")
-        if scan_plan == 'fly2dpd':
-            dets_used = hdr.start['scan']['detectors']
-            if det in dets_used:
-                scan_id = hdr.start["scan_id"]
-                print(f"{scan_id = }")
-                common = _load_scan_common(hdr, mon)
-                dim1, dim2 = common["dim1"], common["dim2"]
-
-                raw_files = get_path(scan_id, det)
-                out_fn = os.path.join(wd, f"scan_{scan_id}_{det}.h5")
-
-                copied = False
-                if copy_if_possible and len(raw_files) == 1:
-                    shutil.copy2(raw_files[0], out_fn)
-                    strip_and_rename_entry_data(out_fn, det=det)  # remove unwanted
-                    copied = True
-                    print(f"Copied detector data from {raw_files[0]} to {out_fn}")
-
-                if save_to_disk:
-                    mode = 'a' if copied else 'w'
-                    with h5py.File(out_fn, mode) as f:
-                        if not copied:
-                            # load raw if not copied
-                            raw = _load_detector_stack(hdr, det)
-                            _, roi_y, roi_x = raw.shape
-                            grp = f.require_group(f"/diff_data/{det}")
-                            grp.create_dataset(
-                                "det_images",
-                                data=raw.reshape(dim1, dim2, roi_y, roi_x),
-                                compression=compression
-                            )
-                            if common["Io"] is not None:
-                                grp.create_dataset("Io", data=common["Io"])
-                        else:
-                            # detector already in file; skip writing
-                            if common["Io"] is not None:
-                                grp = f.require_group(f"/diff_data/{det}")
-                                grp.create_dataset("Io", data=common["Io"])
-
-                        # Add scan info
-                        sg = f.require_group("scan")
-                        sg.create_dataset("scan_positions", data=common["scan_positions"])
-                        save_dict_to_h5(sg, common["scan_params"])
-                        common["scan_table"].to_csv(out_fn.replace(".h5", "_meta_data.csv"))
-
-                        # Add XRF
-                        xg = f.require_group("xrf_roi_data")
-                        xg.create_dataset("xrf_roi_array", data=common["xrf_stack"])
-                        xg.create_dataset("xrf_elem_names", data=common["xrf_names"])
-
-                        # Add scalars
-                        sg2 = f.require_group("scalar_data")
-                        sg2.create_dataset("scalar_array", data=common["scalar_stack"])
-                        sg2.create_dataset("scalar_array_names", data=common["scalar_names"])
-
-                # optionally build return dict
-                size_gb = os.path.getsize(out_fn) / (1024 **3)
-                print(f"Saved: {out_fn} ({size_gb:.3f} GB)")
-                results.append({
-                    "filename": out_fn if save_to_disk else None,
-                    "copied": copied,
-                    "size_gb": round(size_gb, 3)
-                })
-                return results
-            else: 
-                print(f"{det} is not found in the {sid = }; skipped")
-                pass
-                        
-        else: 
-            print(f"{sid = } is not a fly2d plan skipped")
-            pass 
-    
-        
-
 
 def strip_and_rename_entry_data(h5_path, det="merlin1", compression="gzip"):
     """
@@ -474,6 +277,188 @@ def strip_and_rename_entry_data(h5_path, det="merlin1", compression="gzip"):
             if k != det:
                 del f["diff_data"][k]
 
+def export_diff_data_as_h5_single(
+    sid,
+    det="merlin1",
+    wd=".",
+    mon="sclr1_ch4",
+    compression="gzip",
+    save_to_disk=True,
+    copy_if_possible=True,
+    save_and_return=False
+):
+    """
+    Export one scan (sid) & one detector (det) to HDF5 without any reshaping.
+    - If a single raw file exists & copy_if_possible=True, copies it.
+    - Otherwise loads raw via _load_detector_stack and writes it directly.
+    Always writes:
+      /diff_data/<det>/det_images  (raw shape: n_steps, ry, rx)
+      /diff_data/<det>/Io          (2D monitor, if requested)
+      scan_positions/positions
+      scan_params/*
+      xrf_roi_data/*
+      scalar_data/*
+    If save_and_return=True, returns metadata plus a lazy loader for the raw detector stack.
+    """
+    hdr    = db[int(sid)]
+    plan   = hdr.start["scan"].get('type')
+    if plan != "2D_FLY_PANDA":
+        raise ValueError(f"Scan {sid} uses plan '{plan}', not 'fly2dpd'")
+    if det not in hdr.start["scan"].get("detectors", []):
+        raise ValueError(f"Detector '{det}' not in scan {sid}")
+
+    common = _load_scan_common(hdr, mon)
+    out_fn = os.path.join(wd, f"scan_{sid}_{det}.h5")
+    copied = False
+
+    raw_files = get_path(sid, det)
+    if copy_if_possible and len(raw_files) == 1:
+        shutil.copy2(raw_files[0], out_fn)
+        strip_and_rename_entry_data(out_fn, det=det)
+        copied = True
+
+    if save_to_disk:
+        mode = "a" if copied else "w"
+        with h5py.File(out_fn, mode) as f:
+            grp = f.require_group(f"/diff_data/{det}")
+            if not copied:
+                raw = _load_detector_stack(hdr, det)  # shape (n_steps, ry, rx)
+                grp.create_dataset(
+                    "det_images",
+                    data=raw,
+                    compression=compression
+                )
+            if common["Io"] is not None:
+                grp.create_dataset("Io", data=common["Io"])
+
+            sp = f.require_group("scan_positions")
+            sp.create_dataset("positions", data=common["scan_positions"])
+
+            pp = f.require_group("scan_params")
+            save_dict_to_h5(pp, common["scan_params"])
+
+            xg = f.require_group("xrf_roi_data")
+            xg.create_dataset("xrf_roi_array",  data=common["xrf_stack"])
+            xg.create_dataset("xrf_elem_names", data=common["xrf_names"])
+
+            sg2 = f.require_group("scalar_data")
+            sg2.create_dataset("scalar_array",       data=common["scalar_stack"])
+            sg2.create_dataset("scalar_array_names", data=common["scalar_names"])
+
+    result = {
+        "filename": out_fn if save_to_disk else None,
+        "copied":   copied,
+    }
+
+    if save_and_return:
+        
+        def load_det():
+            with h5py.File(out_fn, "r") as f:
+                print(f"data is flipped along y axis when returned")
+                return np.flip(f[f"/diff_data/{det}/det_images"][()], 1)
+                
+        result.update({
+            "det_images":             load_det(),
+            "Io":              common["Io"],
+            "scan_positions":  common["scan_positions"],
+            "scan_params":     common["scan_params"],
+            "xrf_array":       common["xrf_stack"],
+            "xrf_names":       common["xrf_names"],
+            "scalar_array":    common["scalar_stack"],
+            "scalar_names":    common["scalar_names"],
+        })
+
+    return result
+
+def export_diff_data_as_h5_batch(
+    sid_list,
+    det="merlin1",
+    wd=".",
+    mon="sclr1_ch4",
+    compression="gzip",
+    copy_if_possible=True
+):
+    """
+    Batch‐export one detector from each scan in sid_list:
+      • Calls export_diff_data_as_h5_single(...) with save_to_disk=True,
+        copy_if_possible as given, and save_and_return=False.
+      • Prints a warning if a scan is skipped.
+      • Returns None.
+    """
+    # normalize to list
+    if isinstance(sid_list, (int, float)):
+        sid_list = [int(sid_list)]
+
+    for sid in tqdm(sid_list, desc="Batch exporting scans"):
+        try:
+            export_diff_data_as_h5_single(
+                sid,
+                det=det,
+                wd=wd,
+                mon=mon,
+                compression=compression,
+                save_to_disk=True,
+                copy_if_possible=copy_if_possible,
+                save_and_return=False
+            )
+        except ValueError as e:
+            print(f"Skipping scan {sid!r}: {e}")
+
+
+def unpack_diff_h5(filename, det="merlin1"):
+    """
+    Unpack a single‐detector HDF5 file with this structure:
+
+      diff_data/<det>/{Io, det_images}
+      scalar_data/{scalar_array, scalar_array_names}
+      scan_positions/positions
+      scan_params/...         (possibly nested)
+      xrf_roi_data/{xrf_roi_array, xrf_elem_names}
+
+    Returns a dict with keys:
+      det_images, Io,
+      scalar_array, scalar_names,
+      scan_positions,
+      scan_params,
+      xrf_array, xrf_names
+    """
+    def _decode_list(arr):
+        return [
+            x.decode("utf-8") if isinstance(x, (bytes, bytearray)) else x
+            for x in arr
+        ]
+
+    result = {}
+    with h5py.File(filename, "r") as f:
+        # 1) diff_data
+        dd = f["diff_data"][det]
+        result["det_images"] = dd["det_images"][()]
+        result["Io"] = dd["Io"][()] if "Io" in dd else None
+
+        # 2) scalar_data
+        sd = f["scalar_data"]
+        result["scalar_array"] = sd["scalar_array"][()]
+        raw_sn = sd["scalar_array_names"][()]
+        result["scalar_names"] = _decode_list(raw_sn.tolist())
+
+        # 3) scan_positions
+        sp = f["scan_positions"]
+        result["scan_positions"] = sp["positions"][()]
+
+        # 4) scan_params (recursive)
+        result["scan_params"] = _read_group_as_dict(f["scan_params"])
+
+        # 5) xrf_roi_data
+        if "xrf_roi_data" in f:
+            xg = f["xrf_roi_data"]
+            result["xrf_array"] = xg["xrf_roi_array"][()]
+            raw_xn = xg["xrf_elem_names"][()]
+            result["xrf_names"] = _decode_list(raw_xn.tolist())
+        else:
+            result["xrf_array"] = None
+            result["xrf_names"] = []
+
+    return result
 
 if __name__ == "__main__" or "get_ipython" in globals():
     print("\n✅ Diffraction data I/O module loaded.")
@@ -483,7 +468,7 @@ if __name__ == "__main__" or "get_ipython" in globals():
     print("   → Fast bulk exporter. If only 1 raw HDF5 file exists, it will copy instead of re-saving.")
     
     print("\n#####📘 For export and return/visualize data ######:\n") 
-    print("▶ export_diff_data_as_h5(sid_list, det, wd, mon, compression, save_to_disk, return_data)")
+    print("▶ export_diff_data_as_h5_single(sid_list, det, wd, mon, compression, save_to_disk, return_data)")
     print("   → Saves or returns data for one or more scan IDs.")
     
     print("\n#####📘 To read the h5 saved using export_diff_data_as_h5 function ######:\n") 

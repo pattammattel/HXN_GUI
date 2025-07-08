@@ -17,9 +17,9 @@ from PyQt5.QtCore import Qt,QObject, QTimer, QThread, pyqtSignal
 ui_path = os.path.dirname(os.path.abspath(__file__))
 import warnings
 warnings.filterwarnings('ignore', category=RuntimeWarning)
-from diff_export import *
+from diff_fileio import *
 
-sys.path.insert(0,'/nsls2/data2/hxn/shared/config/bluesky_overlay/2023-1.0-py310-tiled/lib/python3.10/site-packages')
+#sys.path.insert(0,'/nsls2/data2/hxn/shared/config/bluesky_overlay/2023-1.0-py310-tiled/lib/python3.10/site-packages')
 from hxntools.CompositeBroker import db
 from hxntools.scan_info import get_scan_positions
 
@@ -182,6 +182,7 @@ class DiffViewWindow(QtWidgets.QMainWindow):
                             "det":self.cb_det_list.currentText(),
                             "roi":None,
                             "mask":None,
+                            "save_to_disk":True
                             }
         
         if self.load_params['mon'] == 'None':
@@ -199,10 +200,11 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         
         QtTest.QTest.qWait(1000)
         #saves data to a default folder with sid name      
-        export_diff_data_as_h5(int(self.load_params['sid']),
+        self.all_data = export_diff_data_as_h5_single(int(self.load_params['sid']),
                         det=self.load_params['det'],
                         wd= self.load_params['wd'],
-                        mon = self.load_params['mon']
+                        mon = self.load_params['mon'],
+                        save_to_disk= self.load_params.get('save_to_disk', True)
                         )   
         self.load_from_local_and_display() #looks for the filename matching with sid
         #TODO add assertions and exceptions, thread it
@@ -215,7 +217,7 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         self.load_params['sid'] = real_sid
         print(self.load_params)
         print(f"Loading {self.load_params['sid']} please wait...this may take a while...")
-        export_diff_data_as_h5(int(self.load_params['sid']),
+        export_diff_data_as_h5_single(int(self.load_params['sid']),
                                self.load_params['det'],
                                )
         # diff_array = return_diff_array(int(self.load_params['sid']), 
