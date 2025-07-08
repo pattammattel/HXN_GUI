@@ -4,7 +4,7 @@ import os
 import json
 import collections
 import h5py
-import runpy
+#import runpy
 import numpy as np
 import pyqtgraph as pg
 import tifffile as tf
@@ -20,8 +20,8 @@ warnings.filterwarnings('ignore', category=RuntimeWarning)
 from diff_fileio import *
 
 #sys.path.insert(0,'/nsls2/data2/hxn/shared/config/bluesky_overlay/2023-1.0-py310-tiled/lib/python3.10/site-packages')
-from hxntools.CompositeBroker import db
-from hxntools.scan_info import get_scan_positions
+# from hxntools.CompositeBroker import db
+# from hxntools.scan_info import get_scan_positions
 
 #beamline specific
 detector_list = ["merlin1","merlin2", "eiger1", "eiger2_image"]
@@ -105,8 +105,10 @@ class DiffViewWindow(QtWidgets.QMainWindow):
                                      }
                             }
         
-        self.diff_img_view.ui.menuBtn.hide()
-        self.diff_img_view.ui.roiBtn.hide()
+        self.diff_image_view = pg.ImageView(view=pg.PlotItem())
+        self.image_widget.addItem(self.diff_image_view)
+        # self.diff_img_view.ui.menuBtn.hide()
+        # self.diff_img_view.ui.roiBtn.hide()
 
         #beamline specific paramaters
         self.cb_norm_scalars.addItems(scalars_list)
