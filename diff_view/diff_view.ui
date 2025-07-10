@@ -41,7 +41,7 @@
            </sizepolicy>
           </property>
           <property name="text">
-           <string>/data/users/current_user</string>
+           <string>/data/users/2025Q2/Ajith_2025Q2</string>
           </property>
          </widget>
         </item>
@@ -189,7 +189,7 @@
                <bool>true</bool>
               </property>
               <property name="text">
-               <string>-1</string>
+               <string>349821</string>
               </property>
              </widget>
             </item>
@@ -212,11 +212,8 @@
             </item>
             <item row="2" column="6">
              <widget class="QCheckBox" name="cb_save_to_disk">
-              <property name="toolTip">
-               <string>a copy of the whole data will be saved to the working directory, if not checked a copy of diffraction frames will be coped as h5 to the same folder</string>
-              </property>
               <property name="text">
-               <string>save to disk</string>
+               <string>Save to disk </string>
               </property>
              </widget>
             </item>
@@ -340,6 +337,19 @@
       </item>
      </layout>
     </item>
+    <item row="3" column="0">
+     <widget class="QPlainTextEdit" name="pte_status">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="readOnly">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
     <item row="0" column="1" rowspan="4">
      <layout class="QGridLayout" name="gridLayout_12">
       <item row="0" column="0">
@@ -356,16 +366,6 @@
         <layout class="QGridLayout" name="gridLayout_11">
          <item row="0" column="0">
           <layout class="QGridLayout" name="gridLayout_7">
-           <item row="0" column="0">
-            <widget class="GraphicsLayoutWidget" name="diff_sum_plot_canvas">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-            </widget>
-           </item>
            <item row="0" column="1">
             <layout class="QGridLayout" name="gridLayout_6">
              <item row="1" column="0" colspan="2">
@@ -379,6 +379,16 @@
               </widget>
              </item>
             </layout>
+           </item>
+           <item row="0" column="0">
+            <widget class="GraphicsLayoutWidget" name="diff_sum_plot_canvas">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+            </widget>
            </item>
           </layout>
          </item>
@@ -416,7 +426,7 @@
        </widget>
       </item>
       <item row="1" column="0">
-       <widget class="GraphicsLayoutWidget" name="image_widget">
+       <widget class="GraphicsLayoutWidget" name="diff_img_canvas">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
           <horstretch>0</horstretch>
@@ -486,19 +496,6 @@
         </widget>
        </item>
       </layout>
-     </widget>
-    </item>
-    <item row="3" column="0">
-     <widget class="QPlainTextEdit" name="pte_status">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="readOnly">
-       <bool>true</bool>
-      </property>
      </widget>
     </item>
     <item row="4" column="1">
