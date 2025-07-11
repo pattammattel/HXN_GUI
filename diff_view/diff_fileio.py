@@ -31,9 +31,43 @@ else:
     db = None
     print("Offline analysis; No BL data available") 
 
-
-
 det_params = {'merlin1':55, "merlin2":55, "eiger2_images":75}
+
+def parse_scan_range(str_scan_range):
+    """
+    Parse a string representing a list or range of scan numbers.
+
+    Example:
+        "100-103, 105, 108-110" → [100, 101, 102, 103, 105, 108, 109, 110]
+
+    Parameters
+    ----------
+    str_scan_range : str
+        Comma-separated scan numbers and ranges (e.g., "100-102,105,110-112")
+
+    Returns
+    -------
+    np.ndarray
+        Sorted array of unique scan numbers as integers.
+    """
+    scan_numbers = set()
+    for item in str_scan_range.split(","):
+        item = item.strip()
+        if not item:
+            continue
+        if "-" in item:
+            try:
+                start, end = map(int, item.split("-"))
+                scan_numbers.update(range(start, end + 1))
+            except ValueError:
+                raise ValueError(f"Invalid range format: '{item}'")
+        else:
+            try:
+                scan_numbers.add(int(item))
+            except ValueError:
+                raise ValueError(f"Invalid scan number: '{item}'")
+
+    return np.array(sorted(scan_numbers), dtype=int)
 
 
 def get_path(scan_id, key_name='merlin1'):
@@ -389,7 +423,7 @@ def export_diff_data_as_h5_batch(
     if isinstance(sid_list, (int, float)):
         sid_list = [int(sid_list)]
 
-    for sid in tqdm(sid_list, desc="Batch exporting scans"):
+    for sid in tqdm(sid_list, desc="Batch exporting scans", file=sys.stdout):
         try:
             export_diff_data_as_h5_single(
                 sid,
