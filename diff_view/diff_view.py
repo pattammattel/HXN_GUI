@@ -68,6 +68,14 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         print("before ui load")
         uic.loadUi(os.path.join(ui_path,'diff_view.ui'), self)
 
+        self.apply_stylesheet(os.path.join(ui_path,"uswds_style.qss"))
+        # After loading the UI
+        central_widget = self.centralWidget()
+        layout = central_widget.layout()
+
+        # Set margins: left, top, right, bottom
+        layout.setContentsMargins(20, 10, 20, 10)  # e.g., 20px left/right margins
+
         print("ui loaded")
         
         # sys.stdout = EmittingStream(textWritten=self.normalOutputWritten)
@@ -103,7 +111,7 @@ class DiffViewWindow(QtWidgets.QMainWindow):
                                      "display_log":False,
                                     },
                                 "diff_img_settings":
-                                    {"lut":'viridis',
+                                    {"lut":'turbo',
                                      "hist_lim":(None,None),
                                      "remove_hot_pixels":(True,5),
                                      "display_log":False,
@@ -122,14 +130,8 @@ class DiffViewWindow(QtWidgets.QMainWindow):
 
         #connections
         self.pb_select_wd.clicked.connect(self.choose_wd)
-        self.pb_load_xrf.clicked.connect(self.choose_xrf_file)
-        self.pb_load_diff.clicked.connect(self.choose_diff_file)
-        self.pb_set_hist_levels_diff.clicked.connect(lambda:self.toggle_hist_scale_diff(auto = False))
-        self.pb_auto_hist_levels_diff.clicked.connect(lambda:self.toggle_hist_scale_diff(auto = True))
         self.pb_show_mask.clicked.connect(self.get_mask_from_roi)
-        #self.pb_load_data_from_db.clicked.connect(self.load_and_save_from_db)
         self.pb_load_data_from_db.clicked.connect(self.load_from_db)
-        self.pb_swap_diff_axes.clicked.connect(lambda:self.diff_stack.transpose(0,1,3,2))
         self.actionExport_mask_data.triggered.connect(self.save_mask_data)
         self.cb_xrf_elem_list.currentIndexChanged.connect(self.display_xrf_img)
 
@@ -163,6 +165,10 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         self.pte_status.ensureCursorVisible()
 
     '''
+    def apply_stylesheet(self, style_path):
+        if os.path.exists(style_path):
+            with open(style_path, "r") as f:
+                self.setStyleSheet(f.read())
     
     def choose_wd(self):
         """updates the line edit for working directory"""
@@ -266,17 +272,6 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         else:
             pass
 
-    def choose_xrf_file(self):
-
-        filename_ = QtWidgets.QFileDialog.getOpenFileName(self, 'Select XRF File')
-        if filename_[0]:
-            self.xrf_file = filename_[0]
-            self.display_param["xrf_wd"] = self.xrf_file
-            self.display_xrf_img()
-            
-        else:
-            pass
-
 
     def create_pointer(self):
         # Use ScatterPlotItem to draw points
@@ -289,8 +284,6 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         )
         self.scatterItem.setZValue(2) # Ensure scatterPlotItem is always at top
             
-
-
 
     def display_diff_sum_img(self, all_data):
 
@@ -346,12 +339,16 @@ class DiffViewWindow(QtWidgets.QMainWindow):
 
         self.p1_diff_sum = self.diff_sum_plot_canvas.addPlot(title= "Diff_Sum_Image")
         #self.p1_diff_sum.setAspectLocked(True)
-        self.p1_diff_sum.getViewBox().invertY(True)
-        self.p1_diff_sum.getViewBox().setLimits(xMin = 0,
-                                    xMax = xsize,
-                                    yMin = 0,
-                                    yMax = ysize
-                                    )
+        vb = self.p1_diff_sum.getViewBox()
+        vb.setAspectLocked(True)
+        vb.invertY(True)
+
+        # Instead of setLimits, use setRange to define the visible region
+        vb.setRange(
+            xRange=(0, xsize),
+            yRange=(0, ysize),
+            padding=0  # optional: no extra margin
+            )   
         
         self.p1_diff_sum.addItem(self.scatterItem)
         self.set_up_diff_img_canvas()
@@ -363,6 +360,7 @@ class DiffViewWindow(QtWidgets.QMainWindow):
             im_array = np.nan_to_num(np.log10(im_array), nan=np.nan, posinf=np.nan, neginf=np.nan)
         self.img_item_diff_sum.setImage(im_array, opacity=1)
         self.p1_diff_sum.addItem(self.img_item_diff_sum)
+        
     
         self.hist_diff_sum = pg.HistogramLUTItem()
         color_map_diff_sum = pg.colormap.get(self.display_param["diff_sum_img_settings"]["lut"])
@@ -374,6 +372,9 @@ class DiffViewWindow(QtWidgets.QMainWindow):
             self.hist_diff_sum.autoHistogramRange = False
             self.hist_diff_sum.setLevels(min=self.display_param["diff_sum_img_settings"]["hist_lim"][0], 
                                 max=self.display_param["diff_sum_img_settings"]["hist_lim"][1])
+        
+        self.hist_diff_sum.setFixedWidth(80)
+        self.hist_diff_sum.axis.setStyle(tickFont=QtGui.QFont("Arial", 4))
         self.diff_sum_plot_canvas.addItem(self.hist_diff_sum)
         #self.diff_img_view.hoverEvent = self.imageHoverEvent_diff
         self.img_item_diff_sum.mousePressEvent = self.MouseClickEvent_diff_sum
@@ -394,14 +395,18 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         print(f" XRF Image Shape = {np.shape(self.xrf_stack)}")
         # A plot area (ViewBox + axes) for displaying the image
 
-        self.p1_xrf = self.xrf_plot_canvas.addPlot(title= "xrf_Image")
-        #self.p1_xrf.setAspectLocked(True)
-        self.p1_xrf.getViewBox().invertY(True)
-        self.p1_xrf.getViewBox().setLimits(xMin = 0,
-                                    xMax = xsize,
-                                    yMin = 0,
-                                    yMax = ysize
-                                    )
+
+        self.p1_xrf = self.xrf_plot_canvas.addPlot(title="xrf_Image")
+        vb = self.p1_xrf.getViewBox()
+        vb.setAspectLocked(True)
+        vb.invertY(True)
+
+        # Instead of setLimits, use setRange to define the visible region
+        vb.setRange(
+            xRange=(0, xsize),
+            yRange=(0, ysize),
+            padding=0  # optional: no extra margin
+)
             
         self.p1_xrf.addItem(self.scatterItem)
 
@@ -412,8 +417,9 @@ class DiffViewWindow(QtWidgets.QMainWindow):
             self.xrf_stack = np.nan_to_num(np.log10(self.xrf_stack), nan=np.nan, posinf=np.nan, neginf=np.nan)
         self.img_item_xrf.setImage(self.xrf_stack[int(num)], opacity=1)
         self.p1_xrf.addItem(self.img_item_xrf)
+        
     
-        self.hist_xrf = pg.HistogramLUTItem()
+        self.hist_xrf = pg.HistogramLUTItem(fillHistogram=False)
         color_map_xrf = pg.colormap.get(self.display_param["xrf_img_settings"]["lut"])
         self.hist_xrf.gradient.setColorMap(color_map_xrf)
         self.hist_xrf.setImageItem(self.img_item_xrf)
@@ -423,6 +429,9 @@ class DiffViewWindow(QtWidgets.QMainWindow):
             self.hist_xrf.autoHistogramRange = False
             self.hist_xrf.setLevels(min=self.display_param["xrf_img_settings"]["hist_lim"][0], 
                                 max=self.display_param["xrf_img_settings"]["hist_lim"][1])
+        
+        self.hist_xrf.axis.setStyle(tickFont=QtGui.QFont("Arial", 8))
+        self.hist_xrf.setFixedWidth(80)
         self.xrf_plot_canvas.addItem(self.hist_xrf)
         # self.img_item.hoverEvent = self.imageHoverEvent
         self.img_item_xrf.mousePressEvent = self.MouseClickEvent_xrf
@@ -462,19 +471,19 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         except:pass
 
         self.p1_diff_img = self.diff_img_canvas.addPlot(title= "Diff_Image")
-        #self.p1_diff_sum.setAspectLocked(True)
-        self.p1_diff_img.getViewBox().invertY(True)
-        self.p1_diff_img.getViewBox().setLimits(xMin = 0,
-                                    xMax = self.roi_x,
-                                    yMin = 0,
-                                    yMax = self.roi_y
-                                    )
-
-        # Item for displaying image data
-        #self.img_item_diff_sum = pg.ImageItem(axisOrder = 'row-major')
         self.img_item_diff_img = pg.ImageItem()
-
         self.p1_diff_img.addItem(self.img_item_diff_img)
+
+        vb = self.p1_diff_img.getViewBox()
+        vb.setAspectLocked(True)
+        vb.invertY(True)
+
+        # Instead of setLimits, use setRange to define the visible region
+        vb.setRange(
+            xRange=(0, self.roi_x),
+            yRange=(0, self.roi_y),
+            padding=0  # optional: no extra margin
+            )   
             
         self.hist_diff_img = pg.HistogramLUTItem()
         color_map_diff_img = pg.colormap.get(self.display_param["diff_img_settings"]["lut"])
