@@ -392,6 +392,7 @@ def export_fly2d_as_h5_single(
             print(f"[EXPORT] Scan {sid} has scan_table, saving diff_det_config")
             diff_cols = scan_table.columns[scan_table.columns.str.contains("diff", case=False)]
             if len(diff_cols) > 0:
+                print(f"[EXPORT] Scan {sid} has diff columns")
                 diff_config_grp = f.require_group("diff_det_config")
                 for col in diff_cols:
                     # Save the value(s) for this column (first row, or all rows if you want)
