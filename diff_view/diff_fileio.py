@@ -400,6 +400,8 @@ def export_fly2d_as_h5_single(
                         diff_config_grp.create_dataset(col, data=val[0])
                     else:
                         diff_config_grp.create_dataset(col, data=val)
+            else:
+                print(f"[EXPORT ERROR] Scan {sid} has no diff columns, skipping diff_det_config")
         return {"scan_id": sid, "scan_type": scan_type, "detectors": detectors, "exit_status": exit_status or 'success', "status": "exported", "raw_data_path": raw_data_path, "os_user": os_user}
     except Exception as e:
         os_user = os.getlogin() if hasattr(os, 'getlogin') else getpass.getuser()
@@ -518,6 +520,9 @@ def export_relscan_as_h5_single(
                         diff_config_grp.create_dataset(col, data=val[0])
                     else:
                         diff_config_grp.create_dataset(col, data=val)
+            else:
+                print(f"[EXPORT ERROR] Scan {sid} has no diff columns, skipping diff_det_config")
+            
         return {"scan_id": sid, "scan_type": scan_type, "detectors": detectors, "exit_status": exit_status or 'success', "status": "exported", "raw_data_path": raw_data_path, "os_user": os_user}
     except Exception as e:
         os_user = os.getlogin() if hasattr(os, 'getlogin') else getpass.getuser()
