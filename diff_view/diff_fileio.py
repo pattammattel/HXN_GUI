@@ -397,11 +397,13 @@ def export_fly2d_as_h5_single(
                 for col in diff_cols:
                     # Save the value(s) for this column (first row, or all rows if you want)
                     val = scan_table[col].values
+                    print(f"[EXPORT] Scan {sid} has diff column {col}, saving value {val}")
                     # If it's a single value, save as scalar, else as array
                     if len(val) == 1:
                         diff_config_grp.create_dataset(col, data=val[0])
                     else:
                         diff_config_grp.create_dataset(col, data=val)
+                    print(f"[EXPORT] Scan {sid} has diff column {col}, saved value {val}")
                 print(f"[EXPORT] Scan {sid} has diff columns, saving diff_det_config")
             else:
                 print(f"[EXPORT ERROR] Scan {sid} has no diff columns, skipping diff_det_config")
