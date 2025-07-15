@@ -394,6 +394,7 @@ def export_fly2d_as_h5_single(
             if len(diff_cols) > 0:
                 print(f"[EXPORT] Scan {sid} has diff columns")
                 diff_config_grp = f.require_group("diff_det_config")
+                print(f"[EXPORT] Scan {sid} diff columns: {diff_cols}")
                 for col in diff_cols:
                     val = scan_table[col].values
                     print(f"[EXPORT] Scan {sid} diff column {col}, value: {val}, dtype: {val.dtype}")
