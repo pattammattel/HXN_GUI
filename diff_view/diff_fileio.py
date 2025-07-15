@@ -389,6 +389,7 @@ def export_fly2d_as_h5_single(
             csv_fn = out_fn.replace('.h5', '.csv')
             scan_table.to_csv(csv_fn, index=False)
         if scan_table is not None and save_to_disk:
+            print(f"[EXPORT] Scan {sid} has scan_table, saving diff_det_config")
             diff_cols = scan_table.columns[scan_table.columns.str.contains("diff", case=False)]
             if len(diff_cols) > 0:
                 diff_config_grp = f.require_group("diff_det_config")
