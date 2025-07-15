@@ -400,6 +400,7 @@ def export_fly2d_as_h5_single(
                         diff_config_grp.create_dataset(col, data=val[0])
                     else:
                         diff_config_grp.create_dataset(col, data=val)
+                print(f"[EXPORT] Scan {sid} has diff columns, saving diff_det_config")
             else:
                 print(f"[EXPORT ERROR] Scan {sid} has no diff columns, skipping diff_det_config")
         return {"scan_id": sid, "scan_type": scan_type, "detectors": detectors, "exit_status": exit_status or 'success', "status": "exported", "raw_data_path": raw_data_path, "os_user": os_user}
