@@ -388,6 +388,18 @@ def export_fly2d_as_h5_single(
         if scan_table is not None:
             csv_fn = out_fn.replace('.h5', '.csv')
             scan_table.to_csv(csv_fn, index=False)
+        if scan_table is not None and save_to_disk:
+            diff_cols = scan_table.columns[scan_table.columns.str.contains("diff", case=False)]
+            if len(diff_cols) > 0:
+                diff_config_grp = f.require_group("diff_det_config")
+                for col in diff_cols:
+                    # Save the value(s) for this column (first row, or all rows if you want)
+                    val = scan_table[col].values
+                    # If it's a single value, save as scalar, else as array
+                    if len(val) == 1:
+                        diff_config_grp.create_dataset(col, data=val[0])
+                    else:
+                        diff_config_grp.create_dataset(col, data=val)
         return {"scan_id": sid, "scan_type": scan_type, "detectors": detectors, "exit_status": exit_status or 'success', "status": "exported", "raw_data_path": raw_data_path, "os_user": os_user}
     except Exception as e:
         os_user = os.getlogin() if hasattr(os, 'getlogin') else getpass.getuser()
@@ -494,6 +506,18 @@ def export_relscan_as_h5_single(
         if scan_table is not None:
             csv_fn = out_fn.replace('.h5', '.csv')
             scan_table.to_csv(csv_fn, index=False)
+        if scan_table is not None and save_to_disk:
+            diff_cols = scan_table.columns[scan_table.columns.str.contains("diff", case=False)]
+            if len(diff_cols) > 0:
+                diff_config_grp = f.require_group("diff_det_config")
+                for col in diff_cols:
+                    # Save the value(s) for this column (first row, or all rows if you want)
+                    val = scan_table[col].values
+                    # If it's a single value, save as scalar, else as array
+                    if len(val) == 1:
+                        diff_config_grp.create_dataset(col, data=val[0])
+                    else:
+                        diff_config_grp.create_dataset(col, data=val)
         return {"scan_id": sid, "scan_type": scan_type, "detectors": detectors, "exit_status": exit_status or 'success', "status": "exported", "raw_data_path": raw_data_path, "os_user": os_user}
     except Exception as e:
         os_user = os.getlogin() if hasattr(os, 'getlogin') else getpass.getuser()
