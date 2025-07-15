@@ -395,15 +395,18 @@ def export_fly2d_as_h5_single(
                 print(f"[EXPORT] Scan {sid} has diff columns")
                 diff_config_grp = f.require_group("diff_det_config")
                 for col in diff_cols:
-                    # Save the value(s) for this column (first row, or all rows if you want)
                     val = scan_table[col].values
-                    print(f"[EXPORT] Scan {sid} has diff column {col}, saving value {val}")
-                    # If it's a single value, save as scalar, else as array
+                    print(f"[EXPORT] Scan {sid} diff column {col}, value: {val}, dtype: {val.dtype}")
                     if len(val) == 1:
+                        if pd.isna(val[0]):
+                            print(f"[EXPORT WARNING] Scan {sid} diff column {col} is NaN, skipping")
+                            continue
                         diff_config_grp.create_dataset(col, data=val[0])
                     else:
+                        if np.all(pd.isna(val)):
+                            print(f"[EXPORT WARNING] Scan {sid} diff column {col} is all NaN, skipping")
+                            continue
                         diff_config_grp.create_dataset(col, data=val)
-                    print(f"[EXPORT] Scan {sid} has diff column {col}, saved value {val}")
                 print(f"[EXPORT] Scan {sid} has diff columns, saving diff_det_config")
             else:
                 print(f"[EXPORT ERROR] Scan {sid} has no diff columns, skipping diff_det_config")
