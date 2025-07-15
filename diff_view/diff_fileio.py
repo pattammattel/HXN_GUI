@@ -10,29 +10,24 @@ import numpy as np
 import shutil
 import tifffile as tf
 from tqdm import tqdm
-import pyqtgraph as pg
-import matplotlib.pyplot as plt
 from hxntools.CompositeBroker import db
 from hxntools.scan_info import get_scan_positions
 import csv
-
-pg.setConfigOption('imageAxisOrder', 'row-major') # best performance
+import getpass
 
 warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 warnings.simplefilter(action='ignore', category=FutureWarning)
 warnings.simplefilter(action='ignore', category=UserWarning)
 
-if  os.getlogin().startswith("xf03") or os.getlogin().startswith("pattam"):
+# if  os.getlogin().startswith("xf03") or os.getlogin().startswith("pattam"):
 
-    #sys.path.insert(0,'/nsls2/data2/hxn/shared/config/bluesky_overlay/2023-1.0-py310-tiled/lib/python3.10/site-packages')
-    from hxntools.CompositeBroker import db
-    from hxntools.scan_info import get_scan_positions
+#     #sys.path.insert(0,'/nsls2/data2/hxn/shared/config/bluesky_overlay/2023-1.0-py310-tiled/lib/python3.10/site-packages')
+#     from hxntools.CompositeBroker import db
+#     from hxntools.scan_info import get_scan_positions
 
-else: 
-    db = None
-    print("Offline analysis; No BL data available") 
-
-
+# else: 
+#     db = None
+#     print("Offline analysis; No BL data available") 
 
 det_params = {'merlin1':55, "merlin2":55, "eiger2_images":75}
 
@@ -331,6 +326,179 @@ def _ensure_h5_compatible_array(arr):
         return arr.astype('S')
     return arr
 
+def export_fly2d_as_h5_single(
+    hdr,
+    det="merlin1",
+    wd=".",
+    mon="sclr1_ch4",
+    compression="gzip",
+    save_to_disk=True,
+    copy_if_possible=True,
+    save_and_return=False
+):
+    
+    try:
+        
+        start_doc   = hdr.start
+        sid = start_doc["scan_id"]
+        stop_doc = getattr(hdr, 'stop', None)
+        scan_type = start_doc['scan']['type'] if 'scan' in start_doc and 'type' in start_doc['scan'] else ''
+        detectors = ','.join(start_doc.get('detectors', []))
+        exit_status = stop_doc.get('exit_status', '') if stop_doc else ''
+        os_user = os.getlogin() if hasattr(os, 'getlogin') else getpass.getuser()
+        raw_files = get_path(sid, det)
+        raw_data_path = raw_files[0] if raw_files else ''
+        if exit_status != '' and exit_status != 'success':
+            print(f"[EXPORT] Scan {sid} exit_status is {exit_status}, skipping export")
+            return {"scan_id": sid, "scan_type": scan_type, "detectors": detectors, "exit_status": exit_status, "status": "skipped_failed", "raw_data_path": raw_data_path, "os_user": os_user}
+        if det not in start_doc["scan"].get("detectors", []):
+            raise ValueError(f"[DETECTOR] Scan {sid} does not use detector {det}")
+        print(f"[SCAN TYPE] Scan {sid} uses plan 2D_FLY_PANDA")
+        common = _load_scan_common(hdr, mon)
+        out_fn = os.path.join(wd, f"scan_{sid}_{det}.h5")
+        copied = False
+        if copy_if_possible and len(raw_files) == 1:
+            shutil.copy2(raw_files[0], out_fn)
+            strip_and_rename_entry_data(out_fn, det=det)
+            copied = True
+        if save_to_disk:
+            mode = "a" if copied else "w"
+            with h5py.File(out_fn, mode) as f:
+                grp = f.require_group(f"/diff_data/{det}")
+                if not copied:
+                    raw = _load_detector_stack(hdr, det)  # shape (n_steps, ry, rx)
+                    grp.create_dataset(
+                        "det_images",
+                        data=raw,
+                        compression=compression
+                    )
+                if common["Io"] is not None:
+                    grp.create_dataset("Io", data=common["Io"])
+                sp = f.require_group("scan_positions")
+                sp.create_dataset("positions", data=common["scan_positions"])
+                pp = f.require_group("scan_params")
+                save_dict_to_h5(pp, common["scan_params"])
+                xg = f.require_group("xrf_roi_data")
+                xg.create_dataset("xrf_roi_array",  data=_ensure_h5_compatible_array(common["xrf_stack"]))
+                xg.create_dataset("xrf_elem_names", data=np.array(common["xrf_names"], dtype='S'))
+                sg2 = f.require_group("scalar_data")
+                sg2.create_dataset("scalar_array",       data=_ensure_h5_compatible_array(common["scalar_stack"]))
+                sg2.create_dataset("scalar_array_names", data=np.array(common["scalar_names"], dtype='S'))
+        scan_table = common.get("scan_table", None)
+        if scan_table is not None:
+            csv_fn = out_fn.replace('.h5', '.csv')
+            scan_table.to_csv(csv_fn, index=False)
+        return {"scan_id": sid, "scan_type": scan_type, "detectors": detectors, "exit_status": exit_status or 'success', "status": "exported", "raw_data_path": raw_data_path, "os_user": os_user}
+    except Exception as e:
+        os_user = os.getlogin() if hasattr(os, 'getlogin') else getpass.getuser()
+        return {"scan_id": sid, "scan_type": '2D_FLY_PANDA', "detectors": '', "exit_status": '', "status": f"skipped_error: {e}", "raw_data_path": '', "os_user": os_user}
+
+def export_relscan_as_h5_single(
+    hdr,
+    det="merlin1",
+    wd=".",
+    mon="sclr1_ch4",
+    compression="gzip",
+    save_to_disk=True,
+    copy_if_possible=True,
+    save_and_return=False
+):
+    import getpass
+    try:
+        start_doc   = hdr.start
+        sid = start_doc["scan_id"]
+        stop_doc = getattr(hdr, 'stop', None)
+        scan_type = start_doc.get('plan_name', '')
+        detectors = ','.join(start_doc.get('detectors', []))
+        exit_status = stop_doc.get('exit_status', '') if stop_doc else ''
+        os_user = os.getlogin() if hasattr(os, 'getlogin') else getpass.getuser()
+        raw_files = get_path(sid, det)
+        raw_data_path = raw_files[0] if raw_files else ''
+        if exit_status != '' and exit_status != 'success':
+            print(f"[EXPORT] Scan {sid} exit_status is {exit_status}, skipping export")
+            return {"scan_id": sid, "scan_type": scan_type, "detectors": detectors, "exit_status": exit_status, "status": "skipped_failed", "raw_data_path": raw_data_path, "os_user": os_user}
+        print(f"[SCAN TYPE] Scan {sid} uses plan rel_scan")
+        motors = start_doc.get('motors', [])
+        shape = start_doc.get('shape', None)
+        if shape is None:
+            if 'num_points' in start_doc:
+                shape = [start_doc['num_points']]
+            else:
+                raise ValueError(f"Cannot determine scan shape for rel_scan in scan {sid}")
+        try:
+            xy = list(get_scan_positions(hdr))
+            scan_positions = np.array(xy)
+        except Exception:
+            df = hdr.table()
+            if len(motors) == 2:
+                scan_positions = np.stack([df[motors[0]], df[motors[1]]], axis=1)
+            elif len(motors) == 1:
+                scan_positions = np.array(df[motors[0]])[:, None]
+            else:
+                scan_positions = None
+        Io = None
+        if mon and mon in hdr.table().columns:
+            Io = np.array(list(hdr.data(str(mon))), dtype='float32').squeeze()
+            if len(shape) == 2:
+                Io = Io.reshape(shape)
+        try:
+            xrf_stack, xrf_names = get_all_xrf_roi_data(hdr)
+        except Exception:
+            xrf_stack, xrf_names = None, []
+        try:
+            scalar_stack, scalar_names = get_all_scalar_data(hdr)
+        except Exception:
+            scalar_stack, scalar_names = None, []
+        scan_params = get_scan_details(hdr.start["scan_id"])
+        scan_table  = get_scan_metadata(hdr.start["scan_id"])
+        out_fn = os.path.join(wd, f"scan_{sid}_{det}.h5")
+        copied = False
+        raw_files = get_path(sid, det)
+        if raw_files:
+            raw_data_path = raw_files[0]
+        if copy_if_possible and len(raw_files) == 1:
+            shutil.copy2(raw_files[0], out_fn)
+            strip_and_rename_entry_data(out_fn, det=det)
+            copied = True
+        if save_to_disk:
+            mode = "a" if copied else "w"
+            with h5py.File(out_fn, mode) as f:
+                grp = f.require_group(f"/diff_data/{det}")
+                if not copied:
+                    raw = _load_detector_stack(hdr, det)
+                    if len(shape) == 2:
+                        raw = raw.reshape(shape[0], shape[1], *raw.shape[1:])
+                    elif len(shape) == 1:
+                        raw = raw.reshape(shape[0], *raw.shape[1:])
+                    grp.create_dataset(
+                        "det_images",
+                        data=raw,
+                        compression=compression
+                    )
+                if Io is not None:
+                    grp.create_dataset("Io", data=Io)
+                sp = f.require_group("scan_positions")
+                sp.create_dataset("positions", data=scan_positions)
+                pp = f.require_group("scan_params")
+                save_dict_to_h5(pp, scan_params)
+                xg = f.require_group("xrf_roi_data")
+                if xrf_stack is not None:
+                    xg.create_dataset("xrf_roi_array",  data=_ensure_h5_compatible_array(xrf_stack))
+                if xrf_names is not None:
+                    xg.create_dataset("xrf_elem_names", data=np.array(xrf_names, dtype='S'))
+                sg2 = f.require_group("scalar_data")
+                if scalar_stack is not None:
+                    sg2.create_dataset("scalar_array",       data=_ensure_h5_compatible_array(scalar_stack))
+                if scalar_names is not None:
+                    sg2.create_dataset("scalar_array_names", data=np.array(scalar_names, dtype='S'))
+        if scan_table is not None:
+            csv_fn = out_fn.replace('.h5', '.csv')
+            scan_table.to_csv(csv_fn, index=False)
+        return {"scan_id": sid, "scan_type": scan_type, "detectors": detectors, "exit_status": exit_status or 'success', "status": "exported", "raw_data_path": raw_data_path, "os_user": os_user}
+    except Exception as e:
+        os_user = os.getlogin() if hasattr(os, 'getlogin') else getpass.getuser()
+        return {"scan_id": sid, "scan_type": 'rel_scan', "detectors": '', "exit_status": '', "status": f"skipped_error: {e}", "raw_data_path": '', "os_user": os_user}
+
 def export_diff_data_as_h5_single(
     sid,
     det="merlin1",
@@ -342,164 +510,18 @@ def export_diff_data_as_h5_single(
     save_and_return=False
 ):
     """
-    Export one scan (sid) & one detector (det) to HDF5 without any reshaping.
-    Always skips scans whose exit_status is not 'success'.
+    Dispatches to the correct export function based on scan type.
     Returns a dict with logbook info: scan_id, scan_type, detectors, exit_status, status, raw_data_path, os_user.
     """
-    import getpass
     try:
-        hdr    = db[int(sid)]
-        start_doc   = hdr.start
-        stop_doc = getattr(hdr, 'stop', None)
-        scan_type = ''
-        detectors = ''
-        exit_status = ''
-        raw_data_path = ''
-        os_user = ''
-        if 'scan' in start_doc and 'type' in start_doc['scan']:
-            scan_type = start_doc['scan']['type']
-        elif 'plan_name' in start_doc:
-            scan_type = start_doc['plan_name']
-        detectors = ','.join(start_doc.get('detectors', []))
-        exit_status = stop_doc.get('exit_status', '') if stop_doc else ''
-        os_user = os.getlogin() if hasattr(os, 'getlogin') else getpass.getuser()
-        raw_files = []
-        try:
-            raw_files = get_path(sid, det)
-            if raw_files:
-                raw_data_path = raw_files[0]
-        except Exception:
-            raw_data_path = ''
-        # Always skip failed/aborted scans
-        if exit_status != '' and exit_status != 'success':
-            print(f"[EXPORT] Scan {sid} exit_status is {exit_status}, skipping export")
-            return {"scan_id": sid, "scan_type": scan_type, "detectors": detectors, "exit_status": exit_status, "status": "skipped_failed", "raw_data_path": raw_data_path, "os_user": os_user}
-            
+        hdr = db[int(sid)]
+        start_doc = hdr.start
+        sid = start_doc["scan_id"]
         if 'scan' in start_doc and start_doc['scan'].get('type') == '2D_FLY_PANDA':
-            print(f"[SCAN TYPE] Scan {sid} uses plan 2D_FLY_PANDA")
-            if det in hdr.start["scan"].get("detectors", []):
-                pass
-            else:
-                raise ValueError(f"[DETECTOR] Scan {sid} does not use detector {det}")
-            common = _load_scan_common(hdr, mon)
-            out_fn = os.path.join(wd, f"scan_{sid}_{det}.h5")
-            copied = False
-            raw_files = get_path(sid, det)
-            if raw_files:
-                raw_data_path = raw_files[0]
-            if copy_if_possible and len(raw_files) == 1:
-                shutil.copy2(raw_files[0], out_fn)
-                strip_and_rename_entry_data(out_fn, det=det)
-                copied = True
-            if save_to_disk:
-                mode = "a" if copied else "w"
-                with h5py.File(out_fn, mode) as f:
-                    grp = f.require_group(f"/diff_data/{det}")
-                    if not copied:
-                        raw = _load_detector_stack(hdr, det)  # shape (n_steps, ry, rx)
-                        grp.create_dataset(
-                            "det_images",
-                            data=raw,
-                            compression=compression
-                        )
-                    if common["Io"] is not None:
-                        grp.create_dataset("Io", data=common["Io"])
-                    sp = f.require_group("scan_positions")
-                    sp.create_dataset("positions", data=common["scan_positions"])
-                    pp = f.require_group("scan_params")
-                    save_dict_to_h5(pp, common["scan_params"])
-                    xg = f.require_group("xrf_roi_data")
-                    xg.create_dataset("xrf_roi_array",  data=_ensure_h5_compatible_array(common["xrf_stack"]))
-                    xg.create_dataset("xrf_elem_names", data=np.array(common["xrf_names"], dtype='S'))
-                    sg2 = f.require_group("scalar_data")
-                    sg2.create_dataset("scalar_array",       data=_ensure_h5_compatible_array(common["scalar_stack"]))
-                    sg2.create_dataset("scalar_array_names", data=np.array(common["scalar_names"], dtype='S'))
-            scan_table = common.get("scan_table", None)
-            if scan_table is not None:
-                csv_fn = out_fn.replace('.h5', '.csv')
-                scan_table.to_csv(csv_fn, index=False)
-            return {"scan_id": sid, "scan_type": scan_type, "detectors": detectors, "exit_status": exit_status or 'success', "status": "exported", "raw_data_path": raw_data_path, "os_user": os_user}
+            return export_fly2d_as_h5_single(hdr, det, wd, mon, compression, save_to_disk, copy_if_possible, save_and_return)
         elif start_doc.get('plan_name') == 'rel_scan':
-            print(f"[SCAN TYPE] Scan {sid} uses plan rel_scan")
-            motors = start_doc.get('motors', [])
-            shape = start_doc.get('shape', None)
-            if shape is None:
-                if 'num_points' in start_doc:
-                    shape = [start_doc['num_points']]
-                else:
-                    raise ValueError(f"Cannot determine scan shape for rel_scan in scan {sid}")
-            try:
-                xy = list(get_scan_positions(hdr))
-                scan_positions = np.array(xy)
-            except Exception:
-                df = hdr.table()
-                if len(motors) == 2:
-                    scan_positions = np.stack([df[motors[0]], df[motors[1]]], axis=1)
-                elif len(motors) == 1:
-                    scan_positions = np.array(df[motors[0]])[:, None]
-                else:
-                    scan_positions = None
-            Io = None
-            if mon and mon in hdr.table().columns:
-                Io = np.array(list(hdr.data(str(mon))), dtype='float32').squeeze()
-                if len(shape) == 2:
-                    Io = Io.reshape(shape)
-            try:
-                xrf_stack, xrf_names = get_all_xrf_roi_data(hdr)
-            except Exception:
-                xrf_stack, xrf_names = None, []
-            try:
-                scalar_stack, scalar_names = get_all_scalar_data(hdr)
-            except Exception:
-                scalar_stack, scalar_names = None, []
-            scan_params = get_scan_details(hdr.start["scan_id"])
-            scan_table  = get_scan_metadata(hdr.start["scan_id"])
-            out_fn = os.path.join(wd, f"scan_{sid}_{det}.h5")
-            copied = False
-            raw_files = get_path(sid, det)
-            if raw_files:
-                raw_data_path = raw_files[0]
-            if copy_if_possible and len(raw_files) == 1:
-                shutil.copy2(raw_files[0], out_fn)
-                strip_and_rename_entry_data(out_fn, det=det)
-                copied = True
-            if save_to_disk:
-                mode = "a" if copied else "w"
-                with h5py.File(out_fn, mode) as f:
-                    grp = f.require_group(f"/diff_data/{det}")
-                    if not copied:
-                        raw = _load_detector_stack(hdr, det)
-                        if len(shape) == 2:
-                            raw = raw.reshape(shape[0], shape[1], *raw.shape[1:])
-                        elif len(shape) == 1:
-                            raw = raw.reshape(shape[0], *raw.shape[1:])
-                        grp.create_dataset(
-                            "det_images",
-                            data=raw,
-                            compression=compression
-                        )
-                    if Io is not None:
-                        grp.create_dataset("Io", data=Io)
-                    sp = f.require_group("scan_positions")
-                    sp.create_dataset("positions", data=scan_positions)
-                    pp = f.require_group("scan_params")
-                    save_dict_to_h5(pp, scan_params)
-                    xg = f.require_group("xrf_roi_data")
-                    if xrf_stack is not None:
-                        xg.create_dataset("xrf_roi_array",  data=_ensure_h5_compatible_array(xrf_stack))
-                    if xrf_names is not None:
-                        xg.create_dataset("xrf_elem_names", data=np.array(xrf_names, dtype='S'))
-                    sg2 = f.require_group("scalar_data")
-                    if scalar_stack is not None:
-                        sg2.create_dataset("scalar_array",       data=_ensure_h5_compatible_array(scalar_stack))
-                    if scalar_names is not None:
-                        sg2.create_dataset("scalar_array_names", data=np.array(scalar_names, dtype='S'))
-            if scan_table is not None:
-                csv_fn = out_fn.replace('.h5', '.csv')
-                scan_table.to_csv(csv_fn, index=False)
-            return {"scan_id": sid, "scan_type": scan_type, "detectors": detectors, "exit_status": exit_status or 'success', "status": "exported", "raw_data_path": raw_data_path, "os_user": os_user}
+            return export_relscan_as_h5_single(hdr, det, wd, mon, compression, save_to_disk, copy_if_possible, save_and_return)
         else:
-            print(f"[SCAN TYPE] Scan {sid} is of unknown type")
             raise ValueError(f"[SCAN TYPE] Scan {sid} is of unknown type")
     except Exception as e:
         import getpass
