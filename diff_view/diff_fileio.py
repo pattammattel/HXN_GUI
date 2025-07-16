@@ -14,6 +14,7 @@ from hxntools.CompositeBroker import db
 from hxntools.scan_info import get_scan_positions
 import csv
 import getpass
+from typing import List, Optional, Union
 
 warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -700,6 +701,73 @@ def unpack_diff_h5(filename, det="merlin1"):
 
     return result
 
+import csv
+from tqdm import tqdm
+from typing import List, Optional, Union
+import pandas as pd
+
+def export_selected_scan_details_to_csv(
+    scan_ids: List[int],
+    fields_of_interest: List[str],
+    csv_path: str = "selected_scan_details.csv",
+    error_log_path: Optional[str] = None,
+    return_dataframe: bool = False
+) -> Optional[pd.DataFrame]:
+    """
+    Export only selected fields from get_scan_details for each scan in scan_ids.
+    - scan_ids: list of scan IDs (ints)
+    - fields_of_interest: list of column names to export (besides 'scan_id')
+    - csv_path: output CSV file path
+    - error_log_path: optional path to save error logs
+    - return_dataframe: if True, returns the DataFrame of results
+
+    Returns: DataFrame if return_dataframe is True, else None
+    """
+    all_rows = []
+    errors = []
+    all_fields = set(['scan_id'] + fields_of_interest)
+
+    for sid in tqdm(scan_ids, desc="Exporting scans"):
+        try:
+            details = get_scan_details(sid)
+            row = {"scan_id": details.get("scan_id", sid)}
+            for field in fields_of_interest:
+                row[field] = details.get(field, None)
+            all_rows.append(row)
+            all_fields.update(row.keys())
+        except Exception as e:
+            error_msg = f"Skipping scan {sid} due to error: {e}"
+            print(error_msg)
+            errors.append({"scan_id": sid, "error": str(e)})
+
+    # Ensure all rows have all fields
+    all_fields = list(all_fields)
+    for row in all_rows:
+        for field in all_fields:
+            if field not in row:
+                row[field] = None
+
+    # Write to CSV
+    with open(csv_path, mode='w', newline='') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=all_fields)
+        writer.writeheader()
+        for row in all_rows:
+            writer.writerow(row)
+    print(f"Export complete. Data saved to: {csv_path}")
+
+    # Write error log if requested
+    if error_log_path and errors:
+        with open(error_log_path, mode='w', newline='') as errfile:
+            err_writer = csv.DictWriter(errfile, fieldnames=["scan_id", "error"])
+            err_writer.writeheader()
+            for err in errors:
+                err_writer.writerow(err)
+        print(f"Errors logged to: {error_log_path}")
+
+    if return_dataframe:
+        return pd.DataFrame(all_rows)
+    return None
+
 if __name__ == "__main__" or "get_ipython" in globals():
     print("\n✅ Diffraction data I/O module loaded.")
     
@@ -714,4 +782,18 @@ if __name__ == "__main__" or "get_ipython" in globals():
     print("\n#####📘 To read the h5 saved using export_diff_data_as_h5 function ######:\n") 
     print("▶ unpack_diff_h5(filename, det)")
     print("   → Reads saved HDF5 back into a dictionary (diff, scan, XRF, scalar).")
+    print("----------------------------------------------------------")
+    print("\n#####📘 To export selected scan metadata fields to CSV (beamline log) ######:\n")
+    print("▶ export_selected_scan_details_to_csv(scan_ids, fields_of_interest, csv_path='selected_scan_details.csv', error_log_path=None, return_dataframe=False)")
+    print("   → Exports only the specified fields from get_scan_details for each scan in scan_ids to a CSV file.")
+    print("   → Arguments:")
+    print("      - scan_ids: list of scan IDs (ints)")
+    print("      - fields_of_interest: list of column names to export (besides 'scan_id')")
+    print("      - csv_path: output CSV file path (default: 'selected_scan_details.csv')")
+    print("      - error_log_path: optional path to save error logs (default: None)")
+    print("      - return_dataframe: if True, returns the DataFrame of results (default: False)")
+    print("   → Example usage:")
+    print("      fields = ['energy', 'dcm_energy', 'ugap', 'm1', 'm2', 'time']")
+    print("      scan_ids = [200001, 200002, 200003]")
+    print("      export_selected_scan_details_to_csv(scan_ids, fields, csv_path='beamline_log.csv', error_log_path='beamline_log_errors.csv')")
     print("----------------------------------------------------------")
