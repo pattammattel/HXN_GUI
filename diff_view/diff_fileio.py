@@ -394,19 +394,28 @@ def export_fly2d_as_h5_single(
                     if len(diff_cols) > 0:
                         #print(f"[EXPORT] Scan {sid} diff columns: {diff_cols}")
                         diff_config_grp = f.require_group("diff_det_config")
-                        for col in diff_cols:
+                        # Collect keys and values
+                        keys = list(diff_cols)
+                        # Stack values as 2D array (rows: columns, cols: values per column)
+                        values = []
+                        for col in keys:
                             val = scan_table[col].values
-                            #print(f"[EXPORT] Scan {sid} diff column {col}, value: {val}, dtype: {val.dtype}")
-                            if len(val) == 1:
-                                if pd.isna(val[0]):
-                                    print(f"[EXPORT WARNING] Scan {sid} diff column {col} is NaN, skipping")
-                                    continue
-                                diff_config_grp.create_dataset(col, data=val[0])
-                            else:
-                                if np.all(pd.isna(val)):
-                                    print(f"[EXPORT WARNING] Scan {sid} diff column {col} is all NaN, skipping")
-                                    continue
-                                diff_config_grp.create_dataset(col, data=val)
+                            # If all NaN, skip this column
+                            if np.all(pd.isna(val)):
+                                print(f"[EXPORT WARNING] Scan {sid} diff column {col} is all NaN, skipping")
+                                continue
+                            # If single value and NaN, skip
+                            if len(val) == 1 and pd.isna(val[0]):
+                                print(f"[EXPORT WARNING] Scan {sid} diff column {col} is NaN, skipping")
+                                continue
+                            values.append(val)
+                        # Only keep keys/values that were not skipped
+                        valid_keys = [k for k, v in zip(keys, values)]
+                        # Convert to arrays
+                        if values:
+                            # Pad values to same length if needed
+                            diff_config_grp.create_dataset("names", data=np.array(valid_keys, dtype='S'))
+                            diff_config_grp.create_dataset("values", data=values)
                         print(f"[EXPORT] Scan {sid} has diff columns, saving diff_det_config")
                     else:
                         print(f"[EXPORT ERROR] Scan {sid} has no diff columns, skipping diff_det_config")
@@ -521,14 +530,26 @@ def export_relscan_as_h5_single(
                     diff_cols = scan_table.columns[scan_table.columns.str.contains("diff", case=False)]
                     if len(diff_cols) > 0:
                         diff_config_grp = f.require_group("diff_det_config")
-                        for col in diff_cols:
-                            # Save the value(s) for this column (first row, or all rows if you want)
+                        # Collect keys and values
+                        keys = list(diff_cols)
+                        values = []
+                        for col in keys:
                             val = scan_table[col].values
-                            # If it's a single value, save as scalar, else as array
-                            if len(val) == 1:
-                                diff_config_grp.create_dataset(col, data=val[0])
-                            else:
-                                diff_config_grp.create_dataset(col, data=val)
+                            # If all NaN, skip this column
+                            if np.all(pd.isna(val)):
+                                print(f"[EXPORT WARNING] Scan {sid} diff column {col} is all NaN, skipping")
+                                continue
+                            # If single value and NaN, skip
+                            if len(val) == 1 and pd.isna(val[0]):
+                                print(f"[EXPORT WARNING] Scan {sid} diff column {col} is NaN, skipping")
+                                continue
+                            values.append(val)
+                        # Only keep keys/values that were not skipped
+                        valid_keys = [k for k, v in zip(keys, values)]
+                        if values:
+                            diff_config_grp.create_dataset("names", data=np.array(valid_keys, dtype='S'))
+                            diff_config_grp.create_dataset("values", data=values)
+                        print(f"[EXPORT] Scan {sid} has diff columns, saving diff_det_config")
                     else:
                         print(f"[EXPORT ERROR] Scan {sid} has no diff columns, skipping diff_det_config")
             
