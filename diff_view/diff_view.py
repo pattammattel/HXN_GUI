@@ -54,12 +54,15 @@ def show_error_message_box(func):
             pass
     return wrapper
 
-# class EmittingStream(QObject):
 
-#     textWritten = pyqtSignal(str)
+class EmittingStream(QObject):
+    text_written = pyqtSignal(str)
 
-#     def write(self, text):
-#         self.textWritten.emit(str(text))
+    def write(self, text):
+        self.text_written.emit(str(text))
+
+    def flush(self):
+        pass
 
 class DiffViewWindow(QtWidgets.QMainWindow):
 
@@ -78,8 +81,9 @@ class DiffViewWindow(QtWidgets.QMainWindow):
 
         print("ui loaded")
         
-        # sys.stdout = EmittingStream(textWritten=self.normalOutputWritten)
-        # sys.stderr = EmittingStream(textWritten=self.errorOutputWritten)
+        self.setup_terminal_redirect()
+        #sys.stdout = EmittingStream(text_written=self.normalOutputWritten)
+        #sys.stderr = EmittingStream(text_written=self.errorOutputWritten)
 
         self.prev_config = {} # TODO, record the workflow later
         self.wd = None
@@ -134,37 +138,45 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         self.pb_load_data_from_db.clicked.connect(self.load_from_db)
         self.actionExport_mask_data.triggered.connect(self.save_mask_data)
         self.cb_xrf_elem_list.currentIndexChanged.connect(self.display_xrf_img)
+        self.pb_batch_export.clicked.connect(self.do_batch_export)
+    
+        QtWidgets.qApp.aboutToQuit.connect(self.restore_stdout)
+
+    def restore_stdout(self):
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+
+
+    def setup_terminal_redirect(self):
+        self.stdout_stream = EmittingStream()
+        self.stderr_stream = EmittingStream()
+
+        self.stdout_stream.text_written.connect(self.append_stdout)
+        self.stderr_stream.text_written.connect(self.append_stderr)
+
+        sys.stdout = self.stdout_stream
+        sys.stderr = self.stderr_stream
+
+    def append_stdout(self, text):
+        QtTest.QTest.qWait(100)
+        cursor = self.terminal_output.textCursor()
+        cursor.movePosition(QtGui.QTextCursor.End)
+        cursor.insertText(text)
+        self.terminal_output.setTextCursor(cursor)
+        self.terminal_output.ensureCursorVisible()
+
+    def append_stderr(self, text):
+        QtTest.QTest.qWait(100)
+        cursor = self.terminal_output.textCursor()
+        cursor.movePosition(QtGui.QTextCursor.End)
+        fmt = QtGui.QTextCharFormat()
+        fmt.setForeground(QtGui.QColor("red"))
+        cursor.insertText(text, fmt)
+        self.terminal_output.setTextCursor(cursor)
+        self.terminal_output.ensureCursorVisible()
+
 
     
-
-
-    '''
-    def __del__(self):
-        import sys
-        # Restore sys.stdout
-        sys.stdout = sys.__stdout__
-
-
-    def normalOutputWritten(self, text):
-        """Append text to the QTextEdit."""
-        # Maybe QTextEdit.append() works as well, but this is how I do it:
-        cursor = self.pte_status.textCursor()
-        cursor.movePosition(QtGui.QTextCursor.End)
-        cursor.insertText(text)
-        self.pte_status.setTextCursor(cursor)
-        self.pte_status.ensureCursorVisible()
-
-
-    def errorOutputWritten(self, text):
-        """Append text to the QTextEdit."""
-        # Maybe QTextEdit.append() works as well, but this is how I do it:
-        cursor = self.pte_status.textCursor()
-        cursor.movePosition(QtGui.QTextCursor.End)
-        cursor.insertText(text)
-        self.pte_status.setTextCursor(cursor)
-        self.pte_status.ensureCursorVisible()
-
-    '''
     def apply_stylesheet(self, style_path):
         if os.path.exists(style_path):
             with open(style_path, "r") as f:
@@ -647,6 +659,42 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         self.save_folder = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select Folder', self.wd)
         tf.imwrite(os.path.join(self.save_folder,"_masked_diff_sum.tiff"),  self.masked_diff_img)
         tf.imwrite(os.path.join(self.save_folder,"_mask.tiff"),  self.mask2D)
+
+
+    def do_batch_export(self):
+        """Export a batch of scans to HDF5 based on GUI input."""
+        try:
+            # Parse scan range from GUI input (e.g., "12345,12346-12349")
+            scan_list = parse_scan_range(self.le_batch_export.text())
+            if len(scan_list) == 0:
+                QMessageBox.warning(self, "Input Error", "No valid scan numbers found.")
+                return
+
+            self.create_load_params()
+
+            # Extract parameters from load_params
+            det = self.load_params["det"]
+            mon = self.load_params["mon"]
+            wd = self.load_params["wd"]
+            compression = "gzip"
+            copy_if_possible = True
+
+            # Call your batch export function
+            export_diff_data_as_h5_batch(
+                sid_list=scan_list,
+                det=det,
+                wd=wd,
+                mon=mon,
+                compression=compression,
+                copy_if_possible=copy_if_possible
+            )
+
+            QMessageBox.information(
+                self, "Export Complete", f"Exported {len(scan_list)} scans to HDF5."
+            )
+
+        except Exception as e:
+            QMessageBox.critical(self, "Batch Export Failed", str(e))
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
