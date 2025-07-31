@@ -624,30 +624,26 @@ def export_diff_data_as_h5_batch(
     overwrite=False
 ):
     """
-    Batch-export one detector from each scan in sid_list:
+    Batch‐export one detector from each scan in sid_list:
       • Calls export_diff_data_as_h5_single(...) with save_to_disk=True,
         copy_if_possible as given, and save_and_return=False.
       • If overwrite is False, skips scans whose HDF5 file already exists.
       • Always skips scans whose exit_status is not 'success'.
       • Prints a warning if a scan is skipped.
-      • Appends a batch_export_log_<first_sid>-<last_sid>_<datetime>.csv
+      • Writes a batch_export_log.csv file with columns: scan_id, scan_type, detectors, exit_status, status, raw_data_path, os_user.
       • Returns None.
     """
-    import getpass
-    from datetime import datetime
-
-    # Normalize to sorted list of ints
+    # normalize to list
     if isinstance(sid_list, (int, float)):
         sid_list = [int(sid_list)]
-    else:
-        sid_list = sorted([int(s) for s in sid_list])
 
     first_sid = sid_list[0]
     last_sid = sid_list[-1]
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     log_filename = f"batch_export_log_{first_sid}-{last_sid}_{timestamp}.csv"
-    log_path = os.path.join(wd, log_filename)
 
+    log_path = os.path.join(wd, log_filename)
+    log_exists = os.path.exists(log_path)
     log_fields = ["scan_id", "scan_type", "detectors", "exit_status", "status", "raw_data_path", "os_user"]
     log_rows = []
 
@@ -655,50 +651,29 @@ def export_diff_data_as_h5_batch(
         out_fn = os.path.join(wd, f"scan_{sid}_{det}.h5")
         if not overwrite and os.path.exists(out_fn):
             print(f"Skipping scan {sid!r}: {out_fn} already exists (overwrite=False)")
+            import getpass
             os_user = os.getlogin() if hasattr(os, 'getlogin') else getpass.getuser()
-            log_rows.append({
-                "scan_id": sid,
-                "scan_type": '',
-                "detectors": '',
-                "exit_status": '',
-                "status": "skipped_exists",
-                "raw_data_path": '',
-                "os_user": os_user
-            })
+            log_rows.append({"scan_id": sid, "scan_type": '', "detectors": '', "exit_status": '', "status": "skipped_exists", "raw_data_path": '', "os_user": os_user})
             continue
-
-        try:
-            log_info = export_diff_data_as_h5_single(
-                sid,
-                det=det,
-                wd=wd,
-                mon=mon,
-                compression=compression,
-                save_to_disk=True,
-                copy_if_possible=copy_if_possible,
-                save_and_return=False
-            )
-        except Exception as e:
-            log_info = {
-                "scan_id": sid,
-                "scan_type": '',
-                "detectors": '',
-                "exit_status": '',
-                "status": "error",
-                "raw_data_path": '',
-                "os_user": getpass.getuser(),
-                "error": str(e)
-            }
+        log_info = export_diff_data_as_h5_single(
+            sid,
+            det=det,
+            wd=wd,
+            mon=mon,
+            compression=compression,
+            save_to_disk=True,
+            copy_if_possible=copy_if_possible,
+            save_and_return=False
+        )
         log_rows.append(log_info)
-
-    # Write log file
-    with open(log_path, 'w', newline='') as f:
+    # Write log
+    write_header = not log_exists
+    with open(log_path, 'a', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=log_fields)
-        writer.writeheader()
+        if write_header:
+            writer.writeheader()
         for row in log_rows:
             writer.writerow(row)
-
-    print(f"[BATCH EXPORT] Log written to {log_path}")
 
 
 def unpack_diff_h5(filename, det="merlin1"):
