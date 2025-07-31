@@ -633,7 +633,7 @@ def export_diff_data_as_h5_batch(
 
     first_sid = sid_list[0]
     last_sid = sid_list[-1]
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     log_filename = f"batch_export_log_{first_sid}-{last_sid}_{timestamp}.csv"
 
     log_path = os.path.join(wd, log_filename)
