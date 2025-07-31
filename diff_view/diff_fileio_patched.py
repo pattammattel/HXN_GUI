@@ -638,7 +638,14 @@ def export_diff_data_as_h5_batch(
 
     log_path = os.path.join(wd, log_filename)
     log_exists = os.path.exists(log_path)
-    log_fields = ["scan_id", "scan_type", "detectors", "exit_status", "status", "raw_data_path", "os_user"]
+    log_fields = [  "scan_id", 
+                    "scan_type",
+                    "detectors",
+                    "exit_status", 
+                    "status", 
+                    "raw_data_path", 
+                    "os_user", 
+                    "error"]
     log_rows = []
 
     for sid in tqdm(sid_list, desc="Batch exporting scans"):
