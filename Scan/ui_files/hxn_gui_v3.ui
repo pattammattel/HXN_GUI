@@ -2319,13 +2319,16 @@ Show Meta Data
                      <enum>QAbstractSpinBox::NoButtons</enum>
                     </property>
                     <property name="suffix">
-                     <string> mm</string>
+                     <string> um</string>
                     </property>
                     <property name="decimals">
-                     <number>4</number>
+                     <number>1</number>
                     </property>
                     <property name="minimum">
-                     <double>-99.000000000000000</double>
+                     <double>-99999.000000000000000</double>
+                    </property>
+                    <property name="maximum">
+                     <double>99999.000000000000000</double>
                     </property>
                     <property name="value">
                      <double>1.000000000000000</double>
@@ -2388,13 +2391,16 @@ Show Meta Data
                      <enum>QAbstractSpinBox::NoButtons</enum>
                     </property>
                     <property name="suffix">
-                     <string> mm</string>
+                     <string> um</string>
                     </property>
                     <property name="decimals">
-                     <number>4</number>
+                     <number>1</number>
                     </property>
                     <property name="minimum">
-                     <double>-99.000000000000000</double>
+                     <double>-99999.000000000000000</double>
+                    </property>
+                    <property name="maximum">
+                     <double>99999.000000000000000</double>
                     </property>
                     <property name="value">
                      <double>1.000000000000000</double>
@@ -2432,13 +2438,16 @@ Show Meta Data
                      <enum>QAbstractSpinBox::NoButtons</enum>
                     </property>
                     <property name="suffix">
-                     <string> mm</string>
+                     <string> um</string>
                     </property>
                     <property name="decimals">
-                     <number>4</number>
+                     <number>1</number>
                     </property>
                     <property name="minimum">
-                     <double>-99.000000000000000</double>
+                     <double>-99999.000000000000000</double>
+                    </property>
+                    <property name="maximum">
+                     <double>99999.000000000000000</double>
                     </property>
                     <property name="value">
                      <double>1.000000000000000</double>
@@ -10122,7 +10131,7 @@ Move
           </item>
          </layout>
         </item>
-        <item row="1" column="0">
+        <item row="2" column="0">
          <spacer name="verticalSpacer_3">
           <property name="orientation">
            <enum>Qt::Vertical</enum>
@@ -10134,6 +10143,13 @@ Move
            </size>
           </property>
          </spacer>
+        </item>
+        <item row="1" column="0">
+         <widget class="QGroupBox" name="gb_calib_foil">
+          <property name="title">
+           <string>Calibration Foils</string>
+          </property>
+         </widget>
         </item>
        </layout>
       </widget>
