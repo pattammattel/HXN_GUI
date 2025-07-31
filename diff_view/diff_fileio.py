@@ -352,6 +352,7 @@ def export_fly2d_as_h5_single(
     out_fn = os.path.join(wd, f"scan_{sid}_{det}.h5")
     copied = False
     if copy_if_possible and len(raw_files) == 1:
+        print(f"[DATA] Found the raw files; copying to h5")
         shutil.copy2(raw_files[0], out_fn)
         strip_and_rename_entry_data(out_fn, det=det)
         copied = True
@@ -415,8 +416,14 @@ def export_fly2d_as_h5_single(
                 else:
                     print(f"[EXPORT ERROR] Scan {sid} has no diff columns, skipping diff_det_config")
     if save_and_return:
+
+        def load_det():
+            with h5py.File(out_fn, "r") as f:
+                print(f"data is flipped along y axis when returned")
+                return np.flip(f[f"/diff_data/{det}/det_images"][()], 1)
+
         return {
-            "det_images": raw if not copied else None,
+            "det_images": load_det(),
             "Io": common.get("Io"),
             "scan_positions": common.get("scan_positions"),
             "scan_params": common.get("scan_params"),
