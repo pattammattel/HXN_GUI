@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>600</width>
+    <height>800</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>JSON Generator</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <!-- fly2d_scan section -->
+    <item>
+     <widget class="QGroupBox" name="fly2d_scan">
+      <property name="title"><string>fly2d_scan</string></property>
+      <layout class="QFormLayout" name="formLayout_fly2d">
+       <item row="0" column="0"><widget class="QLabel" name="label_det"><property name="text"><string>det</string></property></widget></item>
+       <item row="0" column="1"><widget class="QLineEdit" name="det_edit"/></item>
+
+       <item row="1" column="0"><widget class="QLabel" name="label_x_motor"><property name="text"><string>x_motor</string></property></widget></item>
+       <item row="1" column="1"><widget class="QLineEdit" name="x_motor_edit"/></item>
+
+       <item row="2" column="0"><widget class="QLabel" name="label_x_start"><property name="text"><string>x_start</string></property></widget></item>
+       <item row="2" column="1"><widget class="QDoubleSpinBox" name="x_start_spin"/></item>
+
+       <item row="3" column="0"><widget class="QLabel" name="label_x_end"><property name="text"><string>x_end</string></property></widget></item>
+       <item row="3" column="1"><widget class="QDoubleSpinBox" name="x_end_spin"/></item>
+
+       <item row="4" column="0"><widget class="QLabel" name="label_x_num"><property name="text"><string>x_num</string></property></widget></item>
+       <item row="4" column="1"><widget class="QSpinBox" name="x_num_spin"/></item>
+
+       <item row="5" column="0"><widget class="QLabel" name="label_y_motor"><property name="text"><string>y_motor</string></property></widget></item>
+       <item row="5" column="1"><widget class="QLineEdit" name="y_motor_edit"/></item>
+
+       <item row="6" column="0"><widget class="QLabel" name="label_y_start"><property name="text"><string>y_start</string></property></widget></item>
+       <item row="6" column="1"><widget class="QDoubleSpinBox" name="y_start_spin"/></item>
+
+       <item row="7" column="0"><widget class="QLabel" name="label_y_end"><property name="text"><string>y_end</string></property></widget></item>
+       <item row="7" column="1"><widget class="QDoubleSpinBox" name="y_end_spin"/></item>
+
+       <item row="8" column="0"><widget class="QLabel" name="label_y_num"><property name="text"><string>y_num</string></property></widget></item>
+       <item row="8" column="1"><widget class="QSpinBox" name="y_num_spin"/></item>
+
+       <item row="9" column="0"><widget class="QLabel" name="label_exposure"><property name="text"><string>exposure</string></property></widget></item>
+       <item row="9" column="1"><widget class="QDoubleSpinBox" name="exposure_spin"/></item>
+      </layout>
+     </widget>
+    </item>
+
+    <!-- xalign section -->
+    <item>
+     <widget class="QGroupBox" name="xalign">
+      <property name="title"><string>xalign</string></property>
+      <layout class="QFormLayout" name="formLayout_xalign">
+       <item row="0" column="0"><widget class="QLabel" name="label_do_align_x"><property name="text"><string>do_align</string></property></widget></item>
+       <item row="0" column="1"><widget class="QCheckBox" name="do_align_x_check"/></item>
+
+       <item row="1" column="0"><widget class="QLabel" name="label_start_x"><property name="text"><string>start</string></property></widget></item>
+       <item row="1" column="1"><widget class="QDoubleSpinBox" name="start_x_spin"/></item>
+
+       <item row="2" column="0"><widget class="QLabel" name="label_end_x"><property name="text"><string>end</string></property></widget></item>
+       <item row="2" column="1"><widget class="QDoubleSpinBox" name="end_x_spin"/></item>
+
+       <item row="3" column="0"><widget class="QLabel" name="label_num_x"><property name="text"><string>num</string></property></widget></item>
+       <item row="3" column="1"><widget class="QSpinBox" name="num_x_spin"/></item>
+
+       <item row="4" column="0"><widget class="QLabel" name="label_exposure_x"><property name="text"><string>exposure</string></property></widget></item>
+       <item row="4" column="1"><widget class="QDoubleSpinBox" name="exposure_x_spin"/></item>
+
+       <item row="5" column="0"><widget class="QLabel" name="label_elem_x"><property name="text"><string>elem</string></property></widget></item>
+       <item row="5" column="1"><widget class="QLineEdit" name="elem_x_edit"/></item>
+
+       <item row="6" column="0"><widget class="QLabel" name="label_center_x"><property name="text"><string>center_with</string></property></widget></item>
+       <item row="6" column="1"><widget class="QLineEdit" name="center_x_edit"/></item>
+
+       <item row="7" column="0"><widget class="QLabel" name="label_threshold_x"><property name="text"><string>threshold</string></property></widget></item>
+       <item row="7" column="1"><widget class="QDoubleSpinBox" name="threshold_x_spin"/></item>
+
+       <item row="8" column="0"><widget class="QLabel" name="label_negative_flag_x"><property name="text"><string>negative_flag</string></property></widget></item>
+       <item row="8" column="1"><widget class="QCheckBox" name="negative_flag_x_check"/></item>
+
+       <item row="9" column="0"><widget class="QLabel" name="label_offset_x"><property name="text"><string>offset</string></property></widget></item>
+       <item row="9" column="1"><widget class="QDoubleSpinBox" name="offset_x_spin"/></item>
+      </layout>
+     </widget>
+    </item>
+
+    <!-- Save button -->
+    <item>
+     <widget class="QPushButton" name="saveButton">
+      <property name="text">
+       <string>Save JSON</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar"/>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
