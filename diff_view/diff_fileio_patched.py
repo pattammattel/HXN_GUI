@@ -420,9 +420,6 @@ def export_fly2d_as_h5_single(
                     print(f"[EXPORT] Scan {sid} has diff columns, saving diff_det_config")
                 else:
                     print(f"[EXPORT ERROR] Scan {sid} has no diff columns, skipping diff_det_config")
-    return {"scan_id": sid, "scan_type": scan_type, "detectors": detectors, "exit_status": exit_status or 'success', "status": "exported", "raw_data_path": raw_data_path, "os_user": os_user}
-    # except Exception as e:
-    #     os_user = os.getlogin() if hasattr(os, 'getlogin') else getpass.getuser()
     if save_and_return:
         return {
             "det_images": raw if not copied else None,
@@ -434,6 +431,16 @@ def export_fly2d_as_h5_single(
             "scalar_array": common.get("scalar_array"),
             "scalar_names": common.get("scalar_names"),
         }
+
+    return {
+        "scan_id": sid,
+        "scan_type": scan_type,
+        "detectors": detectors,
+        "exit_status": exit_status or 'success',
+        "status": "exported",
+        "raw_data_path": raw_data_path,
+        "os_user": os_user
+    }
 
 
     #     return {"scan_id": sid, "scan_type": '2D_FLY_PANDA', "detectors": '', "exit_status": '', "status": f"skipped_error: {e}", "raw_data_path": '', "os_user": os_user}
