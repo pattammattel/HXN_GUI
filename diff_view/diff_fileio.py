@@ -419,7 +419,7 @@ def export_fly2d_as_h5_single(
 
         def load_det():
             with h5py.File(out_fn, "r") as f:
-                print(f"data is flipped along y axis when returned")
+                print(f"[RETURN DATA] diff data is flipped along y axis when returned")
                 return np.flip(f[f"/diff_data/{det}/det_images"][()], 1)
 
         return {
