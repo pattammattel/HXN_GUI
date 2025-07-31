@@ -653,7 +653,7 @@ def export_diff_data_as_h5_batch(
         out_fn = os.path.join(wd, f"scan_{sid}_{det}.h5")
         if not overwrite and os.path.exists(out_fn):
             print(f"Skipping scan {sid!r}: {out_fn} already exists (overwrite=False)")
-            import getpass
+            
             os_user = os.getlogin() if hasattr(os, 'getlogin') else getpass.getuser()
             log_rows.append({   "scan_id": sid, 
                                 "scan_type": '', 
@@ -683,7 +683,7 @@ def export_diff_data_as_h5_batch(
                 "exit_status": '',
                 "status": "error",
                 "raw_data_path": '',
-                "os_user": getpass.getuser(),
+                "os_user": os_user,
                 "error": str(e)
             }
         log_rows.append(log_info)
