@@ -455,142 +455,137 @@ def export_relscan_as_h5_single(
     copy_if_possible=True,
     save_and_return=False
 ):
-    import getpass
+    
+    start_doc   = hdr.start
+    sid = start_doc["scan_id"]
+    stop_doc = getattr(hdr, 'stop', None)
+    scan_type = start_doc.get('plan_name', '')
+    detectors = ','.join(start_doc.get('detectors', []))
+    exit_status = stop_doc.get('exit_status', '') if stop_doc else ''
+    os_user = os.getlogin() if hasattr(os, 'getlogin') else getpass.getuser()
+    raw_files = get_path(sid, det)
+    raw_data_path = raw_files[0] if raw_files else ''
+    if exit_status != '' and exit_status != 'success':
+        print(f"[EXPORT] Scan {sid} exit_status is {exit_status}, skipping export")
+        return {"scan_id": sid, "scan_type": scan_type, "detectors": detectors, "exit_status": exit_status, "status": "skipped_failed", "raw_data_path": raw_data_path, "os_user": os_user}
+    print(f"[SCAN TYPE] Scan {sid} uses plan rel_scan")
+    motors = start_doc.get('motors', [])
+    shape = start_doc.get('shape', None)
+    if shape is None:
+        if 'num_points' in start_doc:
+            shape = [start_doc['num_points']]
+        else:
+            raise ValueError(f"Cannot determine scan shape for rel_scan in scan {sid}")
     try:
-        start_doc   = hdr.start
-        sid = start_doc["scan_id"]
-        stop_doc = getattr(hdr, 'stop', None)
-        scan_type = start_doc.get('plan_name', '')
-        detectors = ','.join(start_doc.get('detectors', []))
-        exit_status = stop_doc.get('exit_status', '') if stop_doc else ''
-        os_user = os.getlogin() if hasattr(os, 'getlogin') else getpass.getuser()
-        raw_files = get_path(sid, det)
-        raw_data_path = raw_files[0] if raw_files else ''
-        if exit_status != '' and exit_status != 'success':
-            print(f"[EXPORT] Scan {sid} exit_status is {exit_status}, skipping export")
-            return {"scan_id": sid, "scan_type": scan_type, "detectors": detectors, "exit_status": exit_status, "status": "skipped_failed", "raw_data_path": raw_data_path, "os_user": os_user}
-        print(f"[SCAN TYPE] Scan {sid} uses plan rel_scan")
-        motors = start_doc.get('motors', [])
-        shape = start_doc.get('shape', None)
-        if shape is None:
-            if 'num_points' in start_doc:
-                shape = [start_doc['num_points']]
-            else:
-                raise ValueError(f"Cannot determine scan shape for rel_scan in scan {sid}")
-        try:
-            xy = list(get_scan_positions(hdr))
-            scan_positions = np.array(xy)
-        except Exception:
-            df = hdr.table()
-            if len(motors) == 2:
-                scan_positions = np.stack([df[motors[0]], df[motors[1]]], axis=1)
-            elif len(motors) == 1:
-                scan_positions = np.array(df[motors[0]])[:, None]
-            else:
-                scan_positions = None
-        Io = None
-        if mon and mon in hdr.table().columns:
-            Io = np.array(list(hdr.data(str(mon))), dtype='float32').squeeze()
-            if len(shape) == 2:
-                Io = Io.reshape(shape)
-        try:
-            xrf_stack, xrf_names = get_all_xrf_roi_data(hdr)
-        except Exception:
-            xrf_stack, xrf_names = None, []
-        try:
-            scalar_stack, scalar_names = get_all_scalar_data(hdr)
-        except Exception:
-            scalar_stack, scalar_names = None, []
-        scan_params = get_scan_details(hdr.start["scan_id"])
-        scan_table  = get_scan_metadata(hdr.start["scan_id"])
-        out_fn = os.path.join(wd, f"scan_{sid}_{det}.h5")
-        copied = False
-        raw_files = get_path(sid, det)
-        if raw_files:
-            raw_data_path = raw_files[0]
-        if copy_if_possible and len(raw_files) == 1:
-            shutil.copy2(raw_files[0], out_fn)
-            strip_and_rename_entry_data(out_fn, det=det)
-            copied = True
-        if save_to_disk:
-            mode = "a" if copied else "w"
-            with h5py.File(out_fn, mode) as f:
-                grp = f.require_group(f"/diff_data/{det}")
-                if not copied:
-                    raw = _load_detector_stack(hdr, det)
-                    if len(shape) == 2:
-                        raw = raw.reshape(shape[0], shape[1], *raw.shape[1:])
-                    elif len(shape) == 1:
-                        raw = raw.reshape(shape[0], *raw.shape[1:])
-                    grp.create_dataset(
-                        "det_images",
-                        data=raw,
-                        compression=compression
-                    )
-                if Io is not None:
-                    grp.create_dataset("Io", data=Io)
-                sp = f.require_group("scan_positions")
-                sp.create_dataset("positions", data=scan_positions)
-                pp = f.require_group("scan_params")
-                save_dict_to_h5(pp, scan_params)
-                xg = f.require_group("xrf_roi_data")
-                if xrf_stack is not None:
-                    xg.create_dataset("xrf_roi_array",  data=_ensure_h5_compatible_array(xrf_stack))
-                if xrf_names is not None:
-                    xg.create_dataset("xrf_elem_names", data=np.array(xrf_names, dtype='S'))
-                sg2 = f.require_group("scalar_data")
-                if scalar_stack is not None:
-                    sg2.create_dataset("scalar_array",       data=_ensure_h5_compatible_array(scalar_stack))
-                if scalar_names is not None:
-                    sg2.create_dataset("scalar_array_names", data=np.array(scalar_names, dtype='S'))
-                scan_table = common.get("scan_table", None)
-                if scan_table is not None:
-                    csv_fn = out_fn.replace('.h5', '.csv')
-                    scan_table.to_csv(csv_fn, index=False)
-                if scan_table is not None and save_to_disk:
-                    diff_cols = scan_table.columns[scan_table.columns.str.contains("diff", case=False)]
-                    if len(diff_cols) > 0:
-                        diff_config_grp = f.require_group("diff_det_config")
-                        # Collect keys and values
-                        keys = list(diff_cols)
-                        values = []
-                        for col in keys:
-                            val = scan_table[col].values
-                            # If all NaN, skip this column
-                            if np.all(pd.isna(val)):
-                                print(f"[EXPORT WARNING] Scan {sid} diff column {col} is all NaN, skipping")
-                                continue
-                            # If single value and NaN, skip
-                            if len(val) == 1 and pd.isna(val[0]):
-                                print(f"[EXPORT WARNING] Scan {sid} diff column {col} is NaN, skipping")
-                                continue
-                            values.append(val)
-                        # Only keep keys/values that were not skipped
-                        valid_keys = [k for k, v in zip(keys, values)]
-                        if values:
-                            diff_config_grp.create_dataset("names", data=np.array(valid_keys, dtype='S'))
-                            diff_config_grp.create_dataset("values", data=values)
-                        print(f"[EXPORT] Scan {sid} has diff columns, saving diff_det_config")
-                    else:
-                        print(f"[EXPORT ERROR] Scan {sid} has no diff columns, skipping diff_det_config")
-            
-        return {"scan_id": sid, "scan_type": scan_type, "detectors": detectors, "exit_status": exit_status or 'success', "status": "exported", "raw_data_path": raw_data_path, "os_user": os_user}
-    except Exception as e:
-        os_user = os.getlogin() if hasattr(os, 'getlogin') else getpass.getuser()
-        if save_and_return:
-            return {
-                "det_images": raw,
-                "Io": Io,
-                "scan_positions": scan_positions,
-                "scan_params": {"motors": motors, "shape": shape},
-                "xrf_array": xrf_array,
-                "xrf_names": xrf_names,
-                "scalar_array": scalar_array,
-                "scalar_names": scalar_names,
-            }
-
-
-        return {"scan_id": sid, "scan_type": 'rel_scan', "detectors": '', "exit_status": '', "status": f"skipped_error: {e}", "raw_data_path": '', "os_user": os_user}
+        xy = list(get_scan_positions(hdr))
+        scan_positions = np.array(xy)
+    except Exception:
+        df = hdr.table()
+        if len(motors) == 2:
+            scan_positions = np.stack([df[motors[0]], df[motors[1]]], axis=1)
+        elif len(motors) == 1:
+            scan_positions = np.array(df[motors[0]])[:, None]
+        else:
+            scan_positions = None
+    Io = None
+    if mon and mon in hdr.table().columns:
+        Io = np.array(list(hdr.data(str(mon))), dtype='float32').squeeze()
+        if len(shape) == 2:
+            Io = Io.reshape(shape)
+    try:
+        xrf_stack, xrf_names = get_all_xrf_roi_data(hdr)
+    except Exception:
+        xrf_stack, xrf_names = None, []
+    try:
+        scalar_stack, scalar_names = get_all_scalar_data(hdr)
+    except Exception:
+        scalar_stack, scalar_names = None, []
+    scan_params = get_scan_details(hdr.start["scan_id"])
+    scan_table  = get_scan_metadata(hdr.start["scan_id"])
+    out_fn = os.path.join(wd, f"scan_{sid}_{det}.h5")
+    copied = False
+    raw_files = get_path(sid, det)
+    if raw_files:
+        raw_data_path = raw_files[0]
+    if copy_if_possible and len(raw_files) == 1:
+        shutil.copy2(raw_files[0], out_fn)
+        strip_and_rename_entry_data(out_fn, det=det)
+        copied = True
+    if save_to_disk:
+        mode = "a" if copied else "w"
+        with h5py.File(out_fn, mode) as f:
+            grp = f.require_group(f"/diff_data/{det}")
+            if not copied:
+                raw = _load_detector_stack(hdr, det)
+                if len(shape) == 2:
+                    raw = raw.reshape(shape[0], shape[1], *raw.shape[1:])
+                elif len(shape) == 1:
+                    raw = raw.reshape(shape[0], *raw.shape[1:])
+                grp.create_dataset(
+                    "det_images",
+                    data=raw,
+                    compression=compression
+                )
+            if Io is not None:
+                grp.create_dataset("Io", data=Io)
+            sp = f.require_group("scan_positions")
+            sp.create_dataset("positions", data=scan_positions)
+            pp = f.require_group("scan_params")
+            save_dict_to_h5(pp, scan_params)
+            xg = f.require_group("xrf_roi_data")
+            if xrf_stack is not None:
+                xg.create_dataset("xrf_roi_array",  data=_ensure_h5_compatible_array(xrf_stack))
+            if xrf_names is not None:
+                xg.create_dataset("xrf_elem_names", data=np.array(xrf_names, dtype='S'))
+            sg2 = f.require_group("scalar_data")
+            if scalar_stack is not None:
+                sg2.create_dataset("scalar_array",       data=_ensure_h5_compatible_array(scalar_stack))
+            if scalar_names is not None:
+                sg2.create_dataset("scalar_array_names", data=np.array(scalar_names, dtype='S'))
+            scan_table = common.get("scan_table", None)
+            if scan_table is not None:
+                csv_fn = out_fn.replace('.h5', '.csv')
+                scan_table.to_csv(csv_fn, index=False)
+            if scan_table is not None and save_to_disk:
+                diff_cols = scan_table.columns[scan_table.columns.str.contains("diff", case=False)]
+                if len(diff_cols) > 0:
+                    diff_config_grp = f.require_group("diff_det_config")
+                    # Collect keys and values
+                    keys = list(diff_cols)
+                    values = []
+                    for col in keys:
+                        val = scan_table[col].values
+                        # If all NaN, skip this column
+                        if np.all(pd.isna(val)):
+                            print(f"[EXPORT WARNING] Scan {sid} diff column {col} is all NaN, skipping")
+                            continue
+                        # If single value and NaN, skip
+                        if len(val) == 1 and pd.isna(val[0]):
+                            print(f"[EXPORT WARNING] Scan {sid} diff column {col} is NaN, skipping")
+                            continue
+                        values.append(val)
+                    # Only keep keys/values that were not skipped
+                    valid_keys = [k for k, v in zip(keys, values)]
+                    if values:
+                        diff_config_grp.create_dataset("names", data=np.array(valid_keys, dtype='S'))
+                        diff_config_grp.create_dataset("values", data=values)
+                    print(f"[EXPORT] Scan {sid} has diff columns, saving diff_det_config")
+                else:
+                    print(f"[EXPORT ERROR] Scan {sid} has no diff columns, skipping diff_det_config")
+    if save_and_return:
+        return {
+            "det_images": raw,
+            "Io": Io,
+            "scan_positions": scan_positions,
+            "scan_params": {"motors": motors, "shape": shape},
+            "xrf_array": xrf_array,
+            "xrf_names": xrf_names,
+            "scalar_array": scalar_array,
+            "scalar_names": scalar_names,
+        }
+        
+    return {"scan_id": sid, "scan_type": scan_type, "detectors": detectors, "exit_status": exit_status or 'success', "status": "exported", "raw_data_path": raw_data_path, "os_user": os_user}
+    
 
 def export_diff_data_as_h5_single(
     sid,
