@@ -25,7 +25,7 @@ from collections import deque
 
 
 from PyQt5 import QtWidgets, uic, QtCore, QtGui, QtTest
-from PyQt5.QtWidgets import QMessageBox, QFileDialog, QApplication, QLCDNumber, QLabel, QErrorMessage, QPushButton
+from PyQt5.QtWidgets import QMessageBox, QFileDialog, QApplication, QLCDNumber, QLabel, QErrorMessage, QPushButton, QCheckBox
 from PyQt5.QtCore import QObject, QTimer, QThread, pyqtSignal, pyqtSlot, QRunnable, QThreadPool, QDate, QTime
 
 #import custom functions
@@ -35,6 +35,7 @@ from utilities import *
 from element_lines import *
 from mll_tomo_gui import *
 ui_path = os.path.dirname(os.path.abspath(__file__))
+style_path = os.path.join(os.path.dirname(ui_path),'uswds_style.qss')
 det_and_camera_names_motion = ['cam11','merlin','eiger']
 det_and_camera_names_data = ['cam11','merlin1','merlin2','eiger1']
 
@@ -47,6 +48,8 @@ class Ui(QtWidgets.QMainWindow):
         print("Loading UI... Please wait")
         uic.loadUi(os.path.join(ui_path,'ui_files/hxn_gui_v3.ui'), self)
         print("UI File loaded")
+        with open(style_path, "r") as f:
+            self.setStyleSheet(f.read())
 
         self.fly_motor_dict = {'zpssx': zpssx,
                                'zpssy': zpssy,
@@ -589,6 +592,28 @@ class Ui(QtWidgets.QMainWindow):
 
             else:
                 pass
+        if caget("XF:03IDC-ES{Det:Vort-Ax:X}Mtr.VAL") > 25:
+            if not getattr(self, "ignore_vortical_warning", False):
+                msg_box = QMessageBox(self)
+                msg_box.setIcon(QMessageBox.Warning)
+                msg_box.setWindowTitle("Warning")
+                msg_box.setText("Vortical detector is out, ignore and continue?")
+                yes_button = msg_box.addButton(QMessageBox.Yes)
+                no_button = msg_box.addButton(QMessageBox.No)
+                msg_box.setDefaultButton(no_button)
+
+                # Add the checkbox
+                dont_show = QCheckBox("Don't show this message again")
+                msg_box.setCheckBox(dont_show)
+
+                msg_box.exec_()
+
+                if msg_box.clickedButton() == yes_button:
+                    if dont_show.isChecked():
+                        self.ignore_vortical_warning = True
+                    pass
+                else:
+                    return
 
         if self.rb_1d.isChecked():
 

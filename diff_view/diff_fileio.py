@@ -338,92 +338,92 @@ def export_fly2d_as_h5_single(
     save_and_return=False
 ):
     
-    try:
         
-        start_doc   = hdr.start
-        sid = start_doc["scan_id"]
-        stop_doc = getattr(hdr, 'stop', None)
-        scan_type = start_doc['scan']['type'] if 'scan' in start_doc and 'type' in start_doc['scan'] else ''
-        detectors = ','.join(start_doc.get('detectors', []))
-        exit_status = stop_doc.get('exit_status', '') if stop_doc else ''
-        os_user = os.getlogin() if hasattr(os, 'getlogin') else getpass.getuser()
-        raw_files = get_path(sid, det)
-        raw_data_path = raw_files[0] if raw_files else ''
-        if exit_status != '' and exit_status != 'success':
-            print(f"[EXPORT] Scan {sid} exit_status is {exit_status}, skipping export")
-            return {"scan_id": sid, "scan_type": scan_type, "detectors": detectors, "exit_status": exit_status, "status": "skipped_failed", "raw_data_path": raw_data_path, "os_user": os_user}
-        if det not in start_doc["scan"].get("detectors", []):
-            raise ValueError(f"[DETECTOR] Scan {sid} does not use detector {det}")
-        print(f"[SCAN TYPE] Scan {sid} uses plan 2D_FLY_PANDA")
-        common = _load_scan_common(hdr, mon)
-        out_fn = os.path.join(wd, f"scan_{sid}_{det}.h5")
-        copied = False
-        if copy_if_possible and len(raw_files) == 1:
-            shutil.copy2(raw_files[0], out_fn)
-            strip_and_rename_entry_data(out_fn, det=det)
-            copied = True
-        if save_to_disk:
-            mode = "a" if copied else "w"
-            with h5py.File(out_fn, mode) as f:
-                grp = f.require_group(f"/diff_data/{det}")
-                if not copied:
-                    raw = _load_detector_stack(hdr, det)  # shape (n_steps, ry, rx)
-                    grp.create_dataset(
-                        "det_images",
-                        data=raw,
-                        compression=compression
-                    )
-                if common["Io"] is not None:
-                    grp.create_dataset("Io", data=common["Io"])
-                sp = f.require_group("scan_positions")
-                sp.create_dataset("positions", data=common["scan_positions"])
-                pp = f.require_group("scan_params")
-                save_dict_to_h5(pp, common["scan_params"])
-                xg = f.require_group("xrf_roi_data")
-                xg.create_dataset("xrf_roi_array",  data=_ensure_h5_compatible_array(common["xrf_stack"]))
-                xg.create_dataset("xrf_elem_names", data=np.array(common["xrf_names"], dtype='S'))
-                sg2 = f.require_group("scalar_data")
-                sg2.create_dataset("scalar_array",       data=_ensure_h5_compatible_array(common["scalar_stack"]))
-                sg2.create_dataset("scalar_array_names", data=np.array(common["scalar_names"], dtype='S'))
-                scan_table = common.get("scan_table", None)
-                if scan_table is not None:
-                    csv_fn = out_fn.replace('.h5', '.csv')
-                    scan_table.to_csv(csv_fn, index=False)
-                if scan_table is not None and save_to_disk:
-                    print(f"[EXPORT] Scan {sid} has scan_table, saving diff_det_config")
-                    diff_cols = scan_table.columns[scan_table.columns.str.contains("diff", case=False)]
-                    if len(diff_cols) > 0:
-                        #print(f"[EXPORT] Scan {sid} diff columns: {diff_cols}")
-                        diff_config_grp = f.require_group("diff_det_config")
-                        # Collect keys and values
-                        keys = list(diff_cols)
-                        # Stack values as 2D array (rows: columns, cols: values per column)
-                        values = []
-                        for col in keys:
-                            val = scan_table[col].values
-                            # If all NaN, skip this column
-                            if np.all(pd.isna(val)):
-                                print(f"[EXPORT WARNING] Scan {sid} diff column {col} is all NaN, skipping")
-                                continue
-                            # If single value and NaN, skip
-                            if len(val) == 1 and pd.isna(val[0]):
-                                print(f"[EXPORT WARNING] Scan {sid} diff column {col} is NaN, skipping")
-                                continue
-                            values.append(val)
-                        # Only keep keys/values that were not skipped
-                        valid_keys = [k for k, v in zip(keys, values)]
-                        # Convert to arrays
-                        if values:
-                            # Pad values to same length if needed
-                            diff_config_grp.create_dataset("names", data=np.array(valid_keys, dtype='S'))
-                            diff_config_grp.create_dataset("values", data=values)
-                        print(f"[EXPORT] Scan {sid} has diff columns, saving diff_det_config")
-                    else:
-                        print(f"[EXPORT ERROR] Scan {sid} has no diff columns, skipping diff_det_config")
-        return {"scan_id": sid, "scan_type": scan_type, "detectors": detectors, "exit_status": exit_status or 'success', "status": "exported", "raw_data_path": raw_data_path, "os_user": os_user}
-    except Exception as e:
-        os_user = os.getlogin() if hasattr(os, 'getlogin') else getpass.getuser()
-        return {"scan_id": sid, "scan_type": '2D_FLY_PANDA', "detectors": '', "exit_status": '', "status": f"skipped_error: {e}", "raw_data_path": '', "os_user": os_user}
+    start_doc   = hdr.start
+    sid = start_doc["scan_id"]
+    stop_doc = getattr(hdr, 'stop', None)
+    scan_type = start_doc['scan']['type'] if 'scan' in start_doc and 'type' in start_doc['scan'] else ''
+    detectors = ','.join(start_doc.get('detectors', []))
+    exit_status = stop_doc.get('exit_status', '') if stop_doc else ''
+    os_user = os.getlogin() if hasattr(os, 'getlogin') else getpass.getuser()
+    raw_files = get_path(sid, det)
+    raw_data_path = raw_files[0] if raw_files else ''
+    if exit_status != '' and exit_status != 'success':
+        print(f"[EXPORT] Scan {sid} exit_status is {exit_status}, skipping export")
+        return {"scan_id": sid, "scan_type": scan_type, "detectors": detectors, "exit_status": exit_status, "status": "skipped_failed", "raw_data_path": raw_data_path, "os_user": os_user}
+    if det not in start_doc["scan"].get("detectors", []):
+        raise ValueError(f"[DETECTOR] Scan {sid} does not use detector {det}")
+    print(f"[SCAN TYPE] Scan {sid} uses plan 2D_FLY_PANDA")
+    common = _load_scan_common(hdr, mon)
+    out_fn = os.path.join(wd, f"scan_{sid}_{det}.h5")
+    copied = False
+    if copy_if_possible and len(raw_files) == 1:
+        shutil.copy2(raw_files[0], out_fn)
+        strip_and_rename_entry_data(out_fn, det=det)
+        copied = True
+    if save_to_disk:
+        mode = "a" if copied else "w"
+        with h5py.File(out_fn, mode) as f:
+            grp = f.require_group(f"/diff_data/{det}")
+            if not copied:
+                raw = _load_detector_stack(hdr, det)  # shape (n_steps, ry, rx)
+                grp.create_dataset(
+                    "det_images",
+                    data=raw,
+                    compression=compression
+                )
+            if common["Io"] is not None:
+                grp.create_dataset("Io", data=common["Io"])
+            print("[SCAN] fetching scan positions")
+            sp = f.require_group("scan_positions")
+            sp.create_dataset("positions", data=common["scan_positions"])
+            pp = f.require_group("scan_params")
+            save_dict_to_h5(pp, common["scan_params"])
+            xg = f.require_group("xrf_roi_data")
+            xg.create_dataset("xrf_roi_array",  data=_ensure_h5_compatible_array(common["xrf_stack"]))
+            xg.create_dataset("xrf_elem_names", data=np.array(common["xrf_names"], dtype='S'))
+            sg2 = f.require_group("scalar_data")
+            sg2.create_dataset("scalar_array",       data=_ensure_h5_compatible_array(common["scalar_stack"]))
+            sg2.create_dataset("scalar_array_names", data=np.array(common["scalar_names"], dtype='S'))
+            scan_table = common.get("scan_table", None)
+            if scan_table is not None:
+                csv_fn = out_fn.replace('.h5', '.csv')
+                scan_table.to_csv(csv_fn, index=False)
+            if scan_table is not None and save_to_disk:
+                print(f"[EXPORT] Scan {sid} has scan_table, saving diff_det_config")
+                diff_cols = scan_table.columns[scan_table.columns.str.contains("diff", case=False)]
+                if len(diff_cols) > 0:
+                    #print(f"[EXPORT] Scan {sid} diff columns: {diff_cols}")
+                    diff_config_grp = f.require_group("diff_det_config")
+                    # Collect keys and values
+                    keys = list(diff_cols)
+                    # Stack values as 2D array (rows: columns, cols: values per column)
+                    values = []
+                    for col in keys:
+                        val = scan_table[col].values
+                        # If all NaN, skip this column
+                        if np.all(pd.isna(val)):
+                            print(f"[EXPORT WARNING] Scan {sid} diff column {col} is all NaN, skipping")
+                            continue
+                        # If single value and NaN, skip
+                        if len(val) == 1 and pd.isna(val[0]):
+                            print(f"[EXPORT WARNING] Scan {sid} diff column {col} is NaN, skipping")
+                            continue
+                        values.append(val)
+                    # Only keep keys/values that were not skipped
+                    valid_keys = [k for k, v in zip(keys, values)]
+                    # Convert to arrays
+                    if values:
+                        # Pad values to same length if needed
+                        diff_config_grp.create_dataset("names", data=np.array(valid_keys, dtype='S'))
+                        diff_config_grp.create_dataset("values", data=values)
+                    print(f"[EXPORT] Scan {sid} has diff columns, saving diff_det_config")
+                else:
+                    print(f"[EXPORT ERROR] Scan {sid} has no diff columns, skipping diff_det_config")
+    return {"scan_id": sid, "scan_type": scan_type, "detectors": detectors, "exit_status": exit_status or 'success', "status": "exported", "raw_data_path": raw_data_path, "os_user": os_user}
+    # except Exception as e:
+    #     os_user = os.getlogin() if hasattr(os, 'getlogin') else getpass.getuser()
+    #     return {"scan_id": sid, "scan_type": '2D_FLY_PANDA', "detectors": '', "exit_status": '', "status": f"skipped_error: {e}", "raw_data_path": '', "os_user": os_user}
 
 def export_relscan_as_h5_single(
     hdr,
