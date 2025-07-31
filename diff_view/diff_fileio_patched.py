@@ -642,23 +642,43 @@ def export_diff_data_as_h5_batch(
     log_rows = []
 
     for sid in tqdm(sid_list, desc="Batch exporting scans"):
+        
         out_fn = os.path.join(wd, f"scan_{sid}_{det}.h5")
         if not overwrite and os.path.exists(out_fn):
             print(f"Skipping scan {sid!r}: {out_fn} already exists (overwrite=False)")
             import getpass
             os_user = os.getlogin() if hasattr(os, 'getlogin') else getpass.getuser()
-            log_rows.append({"scan_id": sid, "scan_type": '', "detectors": '', "exit_status": '', "status": "skipped_exists", "raw_data_path": '', "os_user": os_user})
+            log_rows.append({   "scan_id": sid, 
+                                "scan_type": '', 
+                                "detectors": '', 
+                                "exit_status": '', 
+                                "status": "skipped_exists", 
+                                "raw_data_path": '', 
+                                "os_user": os_user})
             continue
-        log_info = export_diff_data_as_h5_single(
-            sid,
-            det=det,
-            wd=wd,
-            mon=mon,
-            compression=compression,
-            save_to_disk=True,
-            copy_if_possible=copy_if_possible,
-            save_and_return=False
-        )
+        try:
+            log_info = export_diff_data_as_h5_single(
+                sid,
+                det=det,
+                wd=wd,
+                mon=mon,
+                compression=compression,
+                save_to_disk=True,
+                copy_if_possible=copy_if_possible,
+                save_and_return=False
+            )
+        
+        except Exception as e:
+            log_info = {
+                "scan_id": sid,
+                "scan_type": '',
+                "detectors": '',
+                "exit_status": '',
+                "status": "error",
+                "raw_data_path": '',
+                "os_user": getpass.getuser(),
+                "error": str(e)
+            }
         log_rows.append(log_info)
     # Write log
     write_header = not log_exists
