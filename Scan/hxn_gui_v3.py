@@ -48,8 +48,8 @@ class Ui(QtWidgets.QMainWindow):
         print("Loading UI... Please wait")
         uic.loadUi(os.path.join(ui_path,'ui_files/hxn_gui_v3.ui'), self)
         print("UI File loaded")
-        with open(style_path, "r") as f:
-            self.setStyleSheet(f.read())
+        # with open(style_path, "r") as f:
+        #     self.setStyleSheet(f.read())
 
         self.fly_motor_dict = {'zpssx': zpssx,
                                'zpssy': zpssy,
