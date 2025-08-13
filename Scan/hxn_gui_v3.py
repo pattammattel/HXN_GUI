@@ -387,7 +387,8 @@ class Ui(QtWidgets.QMainWindow):
                 return
 
         xrf_elems["roi_elems"] = [re.sub("[^A-Z,_]", '', i,0,re.IGNORECASE) for i in self.le_roi_elems.text().split(",")]
-        xrf_elems["live_plot_elems"] = [re.sub("[^A-Z,_]", '', i,0,re.IGNORECASE) for i in self.le_live_elems.text().split(",")]
+        # xrf_elems["live_plot_elems"] = [re.sub("[^A-Z,_]", '', i,0,re.IGNORECASE) for i in self.le_live_elems.text().split(",")]
+        xrf_elems["live_plot_elems"] = [re.sub("[\', ]", '', i,0,re.IGNORECASE) for i in self.le_live_elems.text().split(",")]
         xrf_elems["line_plot_elem"] = [re.sub("[^A-Z,_]", '', i,0,re.IGNORECASE) for i in self.le_line_elem.text().split(",")]
 
         with open(json_param_file, "w") as fp:

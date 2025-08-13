@@ -20,9 +20,6 @@ import warnings
 warnings.filterwarnings('ignore', category=RuntimeWarning)
 from diff_fileio import *
 
-#sys.path.insert(0,'/nsls2/data2/hxn/shared/config/bluesky_overlay/2023-1.0-py310-tiled/lib/python3.10/site-packages')
-# from hxntools.CompositeBroker import db
-# from hxntools.scan_info import get_scan_positions
 
 #beamline specific
 detector_list = ["merlin1","merlin2", "eiger1", "eiger2_image"]
@@ -136,6 +133,7 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         self.pb_select_wd.clicked.connect(self.choose_wd)
         self.pb_show_mask.clicked.connect(self.get_mask_from_roi)
         self.pb_load_data_from_db.clicked.connect(self.load_from_db)
+        self.pb_load_from_h5.clicked.connect(self.load_from_h5)
         self.actionExport_mask_data.triggered.connect(self.save_mask_data)
         self.cb_xrf_elem_list.currentIndexChanged.connect(self.display_xrf_img)
         self.pb_batch_export.clicked.connect(self.do_batch_export)
@@ -268,21 +266,86 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         QtTest.QTest.qWait(1000)
         self.display_xrf_img()
 
-    def choose_diff_file(self):
 
-        """updates the line edit for working directory"""
+    def load_from_h5(self):
+        """
+        Open an HDF5 diffraction file, unpack it, update UI elements,
+        and display both the summed diffraction image and the XRF image.
+        """
+        self.create_load_params()
 
-        filename_ = QtWidgets.QFileDialog.getOpenFileName(self, 'Select DiffFile')
-        if filename_[0]:
-            self.diff_file = filename_[0]
-            self.display_param["diff_wd"] = self.diff_file
-            print(f"Loading {filename_[0]} please wait...\n this may take a while...")
-            self.display_diff_sum_img()
-            QtTest.QTest.qWait(1000)
-            self.display_xrf_img()
-            print("Done")
+        file_filter = "HDF5 Files (*.h5 *.hdf5);;All Files (*.*)"
+        filename, _ = QtWidgets.QFileDialog.getOpenFileName(
+            self,
+            "Select Diffraction File",
+            self.load_params.get("wd", '.'),
+            file_filter
+        )
+        if not filename:
+            return
+
+        fpath = Path(filename)
+
+        # --- Resolve detector with your precedence rules ---
+        user_det = (self.load_params.get("det") or "").strip()
+        user_det_l = user_det.lower()
+
+        # Extract trailing token before extension after an underscore (scan_xxx_<det>.h5)
+        # e.g., "scan_279757_merlin1.h5" -> "merlin1"
+        fname_token = fpath.stem.split("_")[-1].lower() if "_" in fpath.stem else ""
+
+        # Case-insensitive membership check and canonicalization
+        allowed_lower = {d.lower(): d for d in detector_list}
+        file_det = allowed_lower.get(fname_token)  # canonical name or None
+
+        if file_det:
+            # Filename matches an allowed detector
+            if user_det and user_det_l != file_det.lower():
+                print(f"Detector '{user_det}' does not match filename; using '{file_det}' from filename.")
+            det = file_det
         else:
-            pass
+            # Filename does not encode a known detector -> use user's input
+            det = user_det if user_det else ""
+            if not det:
+                print("No detector found in filename and none provided by user.")
+            elif user_det_l not in allowed_lower:
+                # Not blocking, just warn (per your rule we still go with user's input)
+                print(f"Warning: '{user_det}' is not in the allowed list {detector_list}; proceeding with user's value.")
+
+        try:
+            print(f"Loading {fpath.name}; this may take a while")
+            self.all_data = unpack_diff_h5(str(fpath), det)
+            print(f"{self.all_data.keys() = }")
+
+            if hasattr(self, "le_workdir") and isinstance(self.le_workdir, QtWidgets.QLineEdit):
+                self.le_workdir.setText(str(fpath.parent))
+
+            self.display_diff_sum_img(self.all_data)
+
+            QtWidgets.QApplication.processEvents(
+                QtCore.QEventLoop.ProcessEventsFlag.AllEvents, 50
+            )
+
+            if hasattr(self, "cb_xrf_elem_list") and hasattr(self, "xrf_elem_list"):
+                blocker = QtCore.QSignalBlocker(self.cb_xrf_elem_list)
+                try:
+                    self.cb_xrf_elem_list.clear()
+                    items = [str(x) for x in self.xrf_elem_list] if self.xrf_elem_list else []
+                    self.cb_xrf_elem_list.addItems(items)
+                finally:
+                    del blocker
+
+            self.display_xrf_img()
+
+            # remember last dir:
+            self.load_params["wd"] = str(fpath.parent)
+
+        except Exception as exc:
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Failed to Load HDF5",
+                f"An error occurred while loading:\n{fpath}\n\n{exc}"
+            )
 
 
     def create_pointer(self):

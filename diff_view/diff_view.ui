@@ -83,7 +83,15 @@
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
-           <widget class="QWidget" name="toolBox_2Page1" native="true">
+           <widget class="QWidget" name="toolBox_2Page1">
+            <property name="geometry">
+             <rect>
+              <x>0</x>
+              <y>0</y>
+              <width>329</width>
+              <height>239</height>
+             </rect>
+            </property>
             <attribute name="label">
              <string>Load Data</string>
             </attribute>
@@ -158,12 +166,12 @@
                 <string notr="true"/>
                </property>
                <property name="text">
-                <string>Load Data from db</string>
+                <string>Load from db</string>
                </property>
               </widget>
              </item>
              <item row="4" column="0">
-              <widget class="QPushButton" name="pushButton">
+              <widget class="QPushButton" name="pb_load_from_h5">
                <property name="text">
                 <string>Load from h5</string>
                </property>
@@ -172,6 +180,14 @@
             </layout>
            </widget>
            <widget class="QWidget" name="page">
+            <property name="geometry">
+             <rect>
+              <x>0</x>
+              <y>0</y>
+              <width>332</width>
+              <height>239</height>
+             </rect>
+            </property>
             <attribute name="label">
              <string>Batch Export</string>
             </attribute>

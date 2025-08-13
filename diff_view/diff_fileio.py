@@ -10,12 +10,24 @@ import numpy as np
 import shutil
 import tifffile as tf
 from tqdm import tqdm
-try:    
+from pathlib import Path
+
+try:
     from hxntools.CompositeBroker import db
     from hxntools.scan_info import get_scan_positions
-except:
-    print("Offline analysis; No BL data available")
-    pass
+except ImportError:
+    print("Trying overlay environment...")
+    sys.path.insert(0, '/nsls2/data2/hxn/shared/config/bluesky_overlay/2023-1.0-py310-tiled/lib/python3.10/site-packages')
+    try:
+        from hxntools.CompositeBroker import db
+        from hxntools.scan_info import get_scan_positions
+        #print("Offline analysis; loaded hxntools manually")
+    except ImportError:
+        db = None
+        get_scan_positions = None
+        print("Offline analysis; hxntools not found")
+
+
 import csv
 import getpass
 from typing import List, Optional, Union
@@ -24,15 +36,7 @@ warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 warnings.simplefilter(action='ignore', category=FutureWarning)
 warnings.simplefilter(action='ignore', category=UserWarning)
 
-if  os.getlogin().startswith("xf03") or os.getlogin().startswith("pattam"):
 
-    #sys.path.insert(0,'/nsls2/data2/hxn/shared/config/bluesky_overlay/2023-1.0-py310-tiled/lib/python3.10/site-packages')
-    from hxntools.CompositeBroker import db
-    from hxntools.scan_info import get_scan_positions
-
-else: 
-    db = None
-    print("Offline analysis; No BL data available") 
 
 
 
