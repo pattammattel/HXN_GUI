@@ -2108,7 +2108,9 @@ class Ui(QtWidgets.QMainWindow):
                                       QMessageBox.No, QMessageBox.No)
 
         if choice == QMessageBox.Yes:
-
+            zps.zero.put(1)
+            smll.zero.put(1)
+            panda_zero_all_encoders()
             # reset the progress bar
             self.prb_sample_exchange.reset()
 
@@ -2139,6 +2141,7 @@ class Ui(QtWidgets.QMainWindow):
                 pass
 
             self.pump_worker_thread.start()
+            
 
         else:
             return
@@ -2151,7 +2154,8 @@ class Ui(QtWidgets.QMainWindow):
                                       QMessageBox.No, QMessageBox.No)
 
         if choice == QMessageBox.Yes:
-
+            zps.kill.put(1)
+            smll.kill.put(1)
             # reset the progress bar
             self.prb_sample_exchange.reset()
 
