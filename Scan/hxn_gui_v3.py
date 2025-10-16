@@ -20,13 +20,13 @@ log = logging.getLogger(__name__)
 handler = logging.StreamHandler(stream=sys.stdout)
 log.addHandler(handler)
 
-from epics import caget, caput
+from epics import caget, caput, Motor
 from collections import deque
 
 
 from PyQt5 import QtWidgets, uic, QtCore, QtGui, QtTest
-from PyQt5.QtWidgets import QMessageBox, QFileDialog, QApplication, QLCDNumber, QLabel, QErrorMessage, QPushButton, QCheckBox
-from PyQt5.QtCore import QObject, QTimer, QThread, pyqtSignal, pyqtSlot, QRunnable, QThreadPool, QDate, QTime
+from PyQt5.QtWidgets import QMessageBox, QFileDialog, QApplication, QLCDNumber, QLabel, QErrorMessage, QPushButton, QCheckBox, QProgressDialog
+from PyQt5.QtCore import QObject, QTimer, QThread, pyqtSignal, pyqtSlot, QRunnable, QThreadPool, QDate, QTime, Qt
 
 #import custom functions
 from HXNSampleExchange import *
@@ -908,6 +908,7 @@ class Ui(QtWidgets.QMainWindow):
         print("calculating energy values")
 
         ugap,hrm,dcm_p,dcm_r,hfm_p,mirror_coating = Energy.get_values(target_energy)
+        calc_zpz1 = calc_zpz_with_energy(target_energy)
         '''
         target_pitch = Energy.calculatePitch(target_energy)
         target_mirror_coating = Energy.findAMirror(target_energy)
@@ -925,6 +926,7 @@ class Ui(QtWidgets.QMainWindow):
         self.sb_calc_harmonic.setValue(hrm)
         self.dsb_target_roll.setValue(dcm_r)
         self.dsb_hfm_target_pitch.setValue(hfm_p)
+        self.dsb_ZPZ1TargetPos_energy.setValue(calc_zpz1)
 
         return ugap,hrm,dcm_p,dcm_r,hfm_p,mirror_coating
     
@@ -994,9 +996,63 @@ class Ui(QtWidgets.QMainWindow):
         print(f"{target_ugap = }, {taget_e =}, {target_p =} \n {target_m2_p = },{target_r=}, {target_zpz1=}")
 
 
-
-
     @show_error_message_box
+    @with_motion_feedback(title="Energy Move", success_msg="Energy change complete.")
+    def change_energy_(self, target_energy):
+        target_energy = self.dsb_target_e.value()
+
+        if not caget('XF:03IDA-OP{FS:1-Ax:Y}Mtr.VAL') < -50:
+            fs_choice = QMessageBox.question(
+                self, 'Info',
+                "Do you want to insert front end fluorescence camera?",
+                QMessageBox.Yes | QMessageBox.No, QMessageBox.No
+            )
+            if fs_choice == QMessageBox.Yes:
+                caput('XF:03IDA-OP{FS:1-Ax:Y}Mtr.VAL', -57.)
+                caput("XF:03IDA-BI{FS:1-CAM:1}cam1:Acquire", 1)
+
+        choice = QMessageBox.question(
+            self, 'Confirm Motion',
+            f"Target energy: {target_energy:.2f} eV\n"
+            f"Move mirrors: {self.cb_change_energy_only.isChecked()}\n\nContinue?",
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.No
+        )
+
+        if choice != QMessageBox.Yes:
+            return
+
+        # Show motion in progress dialog
+        progress = QProgressDialog("Motion in progress...", None, 0, 0, self)
+        progress.setWindowTitle("Please Wait")
+        progress.setWindowModality(Qt.ApplicationModal)
+        progress.setCancelButton(None)
+        progress.show()
+        QApplication.processEvents()  # Make sure the dialog appears
+
+        try:
+            if self.cb_change_energy_only.isChecked():
+                RE(Energy.move(
+                    target_energy,
+                    self.sb_harmonic.value(),
+                    moveMonoPitch=False,
+                    moveMirror="ignore",
+                    move_dcm_roll=False,
+                    move_hfm_pitch=False
+                ))
+            else:
+                RE(Energy.move(target_energy, self.sb_harmonic.value()))
+
+            if self.cb_beam_at_ssa2.isChecked():
+                RE(find_beam_at_ssa2(max_iter=self.sb_max_iter.value()))
+
+            QMessageBox.information(self, "Done", "Motion complete.")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Motion failed:\n{str(e)}")
+        finally:
+            progress.close()
+    
+    @show_error_message_box
+    @with_motion_feedback(title="Energy Move", success_msg="Energy change complete.")
     def change_energy(self,target_energy):
 
         target_energy = self.dsb_target_e.value()
@@ -1045,49 +1101,38 @@ class Ui(QtWidgets.QMainWindow):
             return
 
     @show_error_message_box
+    @with_motion_feedback(title="ZP to cam 11", success_msg="ZP microscope is ready for cam11 view.")
     def zp_to_cam11_view_(self):
         RE(zp_to_cam11_view())
 
     @show_error_message_box
+    @with_motion_feedback(title="ZP to nanobeam", success_msg="ZP microscope is ready for nanobeam.")
     def zp_to_nanobeam_(self):
         RE(zp_to_nanobeam())
 
     @show_error_message_box
+    @with_motion_feedback(title="MLL to cam11", success_msg="MLL microscope is ready for cam11 view.")
     def mll_to_cam11_view_(self):
         RE(mll_to_cam11_view())
 
     @show_error_message_box
+    @with_motion_feedback(title="ZP to nanobeam", success_msg="ZP microscope is ready for nanobeam.")
     def mll_to_nanobeam_(self):
         RE(mll_to_nanobeam())
 
 
     @show_error_message_box
+    @with_motion_feedback(title="ZP OSA Move", success_msg="ZP OSA Y moved OUT.")
     def ZP_OSA_OUT(self):
-        
-        curr_pos = caget("XF:03IDC-ES{ANC350:5-Ax:1}Mtr.RBV")
-        if curr_pos >2000:
-            raise ValueError('OSAY is out of IN range')
-        else:
-            # qmsg = QMessageBox.information(self, "info","OSAY is moving")
-            # qmsg.setAutoClose(True)
-            # qmsg.exec()
-            caput("XF:03IDC-ES{ANC350:5-Ax:1}Mtr.VAL",curr_pos+2700)
-            
-        QtTest.QTest.qWait(5000)
+        RE(zp_osa_out())
         self.statusbar.showMessage('OSA Y moved OUT')
 
 
     @show_error_message_box
+    @with_motion_feedback(title="ZP OSA Move", success_msg="ZP OSA Y moved IN.")
     def ZP_OSA_IN(self):
-        curr_pos = caget("XF:03IDC-ES{ANC350:5-Ax:1}Mtr.RBV")
-
-        if curr_pos < 2500:
-            raise ValueError('OSAY is already close to IN position')
-        else:
-            caput("XF:03IDC-ES{ANC350:5-Ax:1}Mtr.VAL",curr_pos-2700)
-
-        QtTest.QTest.qWait(5000)
-        self.statusbar.showMessage('OSA Y is IN')
+        RE(zp_osa_in())
+        self.statusbar.showMessage('OSA Y IN')
 
     @show_error_message_box
     def mll_osa_IN(self):
@@ -1111,33 +1156,18 @@ class Ui(QtWidgets.QMainWindow):
             raise ValueError(f"OSA_X position not close to zero osax = {mllosa.osax.position :.1f}")
 
         
-
+    @with_motion_feedback(title="ZP BSY Move", success_msg="ZP BSY motion completed.")
     @show_error_message_box
     def ZP_BS_OUT(self):
 
-        curr_pos = caget("XF:03IDC-ES{ANC350:8-Ax:1}Mtr.RBV")
-        if abs(curr_pos)>10:
-            raise ValueError('BSY is out of IN range')
-        else:
-            # qmsg = QMessageBox.information(self, "info","OSAY is moving")
-            # qmsg.setAutoClose(True)
-            # qmsg.exec()
-            caput("XF:03IDC-ES{ANC350:8-Ax:1}Mtr.VAL",curr_pos+100)
-            
-        QtTest.QTest.qWait(5000)
-        self.statusbar.showMessage('OSA Y moved OUT')
+        RE(zp_bs_out())
+        self.statusbar.showMessage('BS Y moved OUT')
 
-
+    @with_motion_feedback(title="ZP BSY Move", success_msg="ZP BSY motion completed.")
     @show_error_message_box
     def ZP_BS_IN(self):
-        curr_pos = caget("XF:03IDC-ES{ANC350:8-Ax:1}Mtr.RBV")
-
-        if abs(curr_pos) > 100:
-            caput("XF:03IDC-ES{ANC350:8-Ax:1}Mtr.VAL",curr_pos-100)
-            QtTest.QTest.qWait(5000)
-            self.statusbar.showMessage('OSA Y is IN')
-        else:
-            raise ValueError('BSY is already close to IN position')
+        RE(zp_bs_in())
+        self.statusbar.showMessage('BS Y moved in')
             
 
     def connect_detectors_and_cameras(self):
@@ -1197,6 +1227,7 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_copy_pos2angle.clicked.connect(lambda:self.copy_pos2angle_results())
 
     @show_error_message_box
+    @with_motion_feedback(title="Merlin Stage Move", success_msg="Merlin Motion completed.")
     def merlinIN(self):
         self.client.open('http://10.66.17.43')
         choice = QMessageBox.question(self, 'Detector Motion Warning',
@@ -1209,6 +1240,7 @@ class Ui(QtWidgets.QMainWindow):
             pass
 
     @show_error_message_box
+    @with_motion_feedback(title="Merlin Stage Move", success_msg="Merlin Motion completed.")
     def merlinOUT(self):
         self.client.open('http://10.66.17.43')
         QtTest.QTest.qWait(2000)
@@ -1222,6 +1254,7 @@ class Ui(QtWidgets.QMainWindow):
             pass
 
     @show_error_message_box
+    @with_motion_feedback(title="Eiger Stage Move", success_msg="Eiger Motion completed.")
     def eigerIN(self):
         self.client.open('http://10.66.17.43')
         QtTest.QTest.qWait(2000)
@@ -1236,6 +1269,7 @@ class Ui(QtWidgets.QMainWindow):
             pass
 
     @show_error_message_box
+    @with_motion_feedback(title="Dexela Stage Move", success_msg="Dexela  Motion completed.")
     def dexela_motion(self, move_to = 0):
 
         self.client.open('http://10.66.17.48')
@@ -1246,27 +1280,40 @@ class Ui(QtWidgets.QMainWindow):
                                 QMessageBox.No, QMessageBox.No)
 
         if choice == QMessageBox.Yes:
-            caput("XF:03IDC-ES{Stg:FPDet-Ax:Y}Mtr.VAL",move_to)
+            
+            RE(move_dexela(0, move_to))
 
             QMessageBox.information(self, "info","Dexela motion in progress")
         else:
             pass
 
+
     @show_error_message_box
     @show_confirm_box
+    @with_motion_feedback(title="XRF Det Stage Move", success_msg="XRF Detector motion completed.")
     def vortexIN(self):
-        #RE(bps.mov(fdet1.x, -7))
-        caput("XF:03IDC-ES{Det:Vort-Ax:X}Mtr.VAL", self.dsb_flur_in_pos.value())
-        self.statusbar.showMessage('FS det Moving')
-        QMessageBox.information(self, "info","Fluor. Det motion in progress")
+        """Move XRF detector into beam position."""
+        #motor = Motor("XF:03IDC-ES{Det:Vort-Ax:X}Mtr")
+        target_pos = self.dsb_flur_in_pos.value()
+        self.statusbar.showMessage("Moving XRF detector IN...")
+        RE(move_xrf_det(target_pos))
+        #motor.move(target_pos,wait=True)
+        self.statusbar.showMessage("XRF detector IN position reached.")
+
 
     @show_error_message_box
+    @with_motion_feedback(title="XRF Det Stage Move", success_msg="XRF Detector motion completed.")
     def vortexOUT(self):
-        #RE(bps.mov(fdet1.x, -107))
-        caput("XF:03IDC-ES{Det:Vort-Ax:X}Mtr.VAL", -107)
-        self.statusbar.showMessage('FS det Moving')
+        """Move XRF detector out of beam position."""
+        #motor = Motor("XF:03IDC-ES{Det:Vort-Ax:X}Mtr")
+        target_pos = -107.0
+        RE(move_xrf_det(target_pos))
+        self.statusbar.showMessage("Moving XRF detector OUT...")
+        #motor.move(target_pos, wait=True)
+        self.statusbar.showMessage("XRF detector OUT position reached.")
 
     @show_error_message_box
+    @with_motion_feedback(title="CAM11 Stage Move", success_msg="CAM11  Motion completed.")
     def cam11IN(self):
         self.client.open('http://10.66.17.43')
         QtTest.QTest.qWait(2000)
@@ -1282,42 +1329,42 @@ class Ui(QtWidgets.QMainWindow):
             pass
 
     @show_error_message_box
+    @with_motion_feedback(title="CAM06 Stage Move", success_msg="CAM06  Motion completed.")
     def cam6IN(self):
         caput("XF:03IDC-ES{CAM:06}cam1:Acquire",1)
-        caput('XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.VAL', 0)
-        caput('XF:03IDC-OP{Stg:CAM6-Ax:Y}Mtr.VAL', 0)
+        RE(cam6_in())
         QtTest.QTest.qWait(1000)
         self.statusbar.showMessage('CAM6 Moving!')
 
     @show_error_message_box
+    @with_motion_feedback(title="CAM06 Stage Move", success_msg="CAM06  Motion completed.")
     def cam6OUT(self):
         caput("XF:03IDC-ES{CAM:06}cam1:Acquire",0)
-        caput('XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.VAL', -60)
-        caput('XF:03IDC-OP{Stg:CAM6-Ax:Y}Mtr.VAL', 0)
-        QtTest.QTest.qWait(1000)
+        RE(cam6_out())
         self.statusbar.showMessage('CAM6 Moving!')
 
     @show_error_message_box
+    @with_motion_feedback(title="CAM06 Stage Move", success_msg="CAM06  Motion completed.")
     def cam6LASER(self):
         caput("XF:03IDC-ES{CAM:06}cam1:Acquire",0)
-        caput('XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.VAL', -32.5)
-        caput('XF:03IDC-OP{Stg:CAM6-Ax:Y}Mtr.VAL', 1.5)
+        RE(cam6_to_laser())
         QtTest.QTest.qWait(1000)
         self.statusbar.showMessage('CAM6 Moving!')
 
     @show_error_message_box
+    @with_motion_feedback(title="FS Stage Move", success_msg="FS Motion completed.")
     def FS_IN(self):
-        caput('XF:03IDA-OP{FS:1-Ax:Y}Mtr.VAL', -57.)
-        caput("XF:03IDA-BI{FS:1-CAM:1}cam1:Acquire",1)
-        QtTest.QTest.qWait(20000)
+        #caput('XF:03IDA-OP{FS:1-Ax:Y}Mtr.VAL', -57.)
+        RE(fs_in())
+        #caput("XF:03IDA-BI{FS:1-CAM:1}cam1:Acquire",1)
         #self.statusbar.showMessage('FS Motion Done!')
 
     @show_error_message_box
+    @with_motion_feedback(title="FS Stage Move", success_msg="FS Motion completed.")
     def FS_OUT(self):
-        caput("XF:03IDA-BI{FS:1-CAM:1}cam1:Acquire",0)
-        caput('XF:03IDA-OP{FS:1-Ax:Y}Mtr.VAL', -20.)
-
-        QtTest.QTest.qWait(20000)
+        #caput("XF:03IDA-BI{FS:1-CAM:1}cam1:Acquire",0)
+        #caput('XF:03IDA-OP{FS:1-Ax:Y}Mtr.VAL', -20.)
+        RE(fs_out())
         #self.statusbar.showMessage('FS Motion Done!')
 
 
@@ -1362,6 +1409,7 @@ class Ui(QtWidgets.QMainWindow):
 
 
     @show_error_message_box
+    @with_motion_feedback(title="Diff Stage Move", success_msg="Diff Motion completed.")
     def move_diff_stage(self):
 
         delta = self.sp_diff_det_calc_x.value()
@@ -1467,11 +1515,10 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_FS_OUT.clicked.connect(lambda:self.FS_OUT())
 
         #OSA Y Pos
-        self.pb_osa_out.clicked.connect(lambda: self.runTask(lambda:self.ZP_OSA_OUT()))
-        #self.pb_osa_out.clicked.connect(lambda:self.ZP_OSA_OUT())
-        self.pb_osa_in.clicked.connect(lambda: self.runTask(lambda:self.ZP_OSA_IN()))
-        self.pb_zpbsy_in.clicked.connect(lambda: self.runTask(lambda:self.ZP_BS_IN()))
-        self.pb_zpbsy_out.clicked.connect(lambda: self.runTask(lambda:self.ZP_BS_OUT()))
+        self.pb_osa_out.clicked.connect(lambda:self.ZP_OSA_OUT())
+        self.pb_osa_in.clicked.connect(lambda:self.ZP_OSA_IN())
+        self.pb_zpbsy_in.clicked.connect(lambda:self.ZP_BS_IN())
+        self.pb_zpbsy_out.clicked.connect(lambda:self.ZP_BS_OUT())
 
         self.pb_zp_cam11_view.clicked.connect(lambda:self.zp_to_cam11_view_())
         self.pb_zp_nanobeam.clicked.connect(lambda:self.zp_to_nanobeam_())
@@ -1486,13 +1533,16 @@ class Ui(QtWidgets.QMainWindow):
 
         #alignment
         self.pb_ZPZFocusScanStart.clicked.connect(lambda:self.zpFocusScan())
-        self.pb_MoveZPZ1AbsPos.clicked.connect(lambda:self.zpMoveAbs())
+        self.pb_MoveZPZ1AbsPos.clicked.connect(lambda:self.zpMoveAbs(self.dsb_ZPZ1TargetPos.value()))
+        self.pb_movezpz1_energy.clicked.connect(lambda:self.zpMoveAbs(self.dsb_ZPZ1TargetPos_energy.value()))
+
 
         self.pb_mll_z_focus_start.clicked.connect(lambda:self.mll_focus_scan())
         self.pb_mll_z_focus_move.clicked.connect(lambda:RE(bps.mov(sbz, self.dsb_mll_z_target_pos.value())))
         
         self.pb_mll_rot_align_start.clicked.connect(lambda:self.mll_rot_alignment_())
         self.pb_zp_rot_align_start.clicked.connect(lambda:self.zp_rot_alignment_())
+        self.pb_apply_zp_rot_align_corr.clicked.connect(lambda:self.apply_zp_rot_algn_corr_())
         #self.pb_mll_z_focus_move.clicked.connect(lambda:RE(self.move_with_confirmation(sbz, self.dsb_mll_z_target_pos.value()))) #not tested
 
         #recover from beamdump
@@ -1609,7 +1659,7 @@ class Ui(QtWidgets.QMainWindow):
         threshold = 0.5
 
 
-        *all, dx, dz = RE(zp_rot_alignment(a_start, 
+        RE(zp_rot_alignment(a_start, 
                                 a_end, 
                                 a_num, 
                                 start, 
@@ -1619,7 +1669,10 @@ class Ui(QtWidgets.QMainWindow):
                                 elem=elem, 
                                 move_flag=0, 
                                 threshold = 0.5))
-        print(dx,dz)
+        
+        dx,dz = get_zp_rot_alignment_result(int(-1*a_num), elem=elem, threshold=threshold,
+                            neg_flag=0, edge_flag=0, skip_scans=None, plot_flag=False)
+                            
         self.dsb_rot_align_smarx.setValue(float(dx))
         self.dsb_rot_align_smarz.setValue(float(dz))
         #self.dsb_rot_align_sbx.setValue(-1*dx)
@@ -1631,7 +1684,7 @@ class Ui(QtWidgets.QMainWindow):
                                       QMessageBox.No, QMessageBox.No)
         QtTest.QTest.qWait(500)
         if choice == QMessageBox.Yes:
-            RE(self.apply_zp_rot_algn_corr())
+            self.apply_zp_rot_algn_corr_()
 
         else:
             pass
@@ -1645,21 +1698,15 @@ class Ui(QtWidgets.QMainWindow):
 
         RE(bps.movr(dsx, dx, dsz, dz, sbx, -1*dx))
 
-    def apply_zp_rot_algn_corr(self):
+    def apply_zp_rot_algn_corr_(self):
 
-        dx = self.dsb_rot_align_smarx.value(dx)
-        dz = self.dsb_rot_align_smarz.value(dz)
+        dx = self.dsb_rot_align_smarx.value()
+        dz = self.dsb_rot_align_smarz.value()
 
-        RE(bps.movr(smarx, dx, smarz, dz, zpsx, -1*dx))
+        RE(apply_zp_rot_algn_corr(dx, dz))
 
-
-        
-
-
-
-
-    def zpMoveAbs(self):
-        zpTarget = self.dsb_ZPZ1TargetPos.value()
+    @with_motion_feedback(title="ZPZ1 Stage Move", success_msg="ZPZ1 Motion completed.")
+    def zpMoveAbs(self, zpTarget):
         choice = QMessageBox.question(self, "Zone Plate Z Motion",
                                       f"You're making an Absolute motion of ZP to {zpTarget}. \n Proceed?",
                                       QMessageBox.Yes |
@@ -2108,9 +2155,9 @@ class Ui(QtWidgets.QMainWindow):
                                       QMessageBox.No, QMessageBox.No)
 
         if choice == QMessageBox.Yes:
-            zps.zero.put(1)
-            smll.zero.put(1)
-            panda_zero_all_encoders()
+            #zps.zero.put(1)
+            #smll.zero.put(1)
+            #panda_zero_all_encoders(si)
             # reset the progress bar
             self.prb_sample_exchange.reset()
 
@@ -2154,8 +2201,8 @@ class Ui(QtWidgets.QMainWindow):
                                       QMessageBox.No, QMessageBox.No)
 
         if choice == QMessageBox.Yes:
-            zps.kill.put(1)
-            smll.kill.put(1)
+            #zps.kill.put(1)
+            #smll.kill.put(1)
             # reset the progress bar
             self.prb_sample_exchange.reset()
 

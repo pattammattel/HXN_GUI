@@ -1,7 +1,31 @@
 import numpy as np
 from contextlib import contextmanager
 from functools import wraps
-from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtWidgets import QProgressDialog, QMessageBox, QApplication
+from PyQt5.QtCore import Qt, QRunnable, QThreadPool, pyqtSlot, QObject, pyqtSignal
+
+def with_motion_feedback(title="Motion", success_msg="Motion complete.", error_msg="Motion failed"):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            progress = QProgressDialog("Motion in progress...", None, 0, 0, self)
+            progress.setWindowTitle(title)
+            progress.setWindowModality(Qt.NonModal)
+            progress.setCancelButton(None)
+            progress.show()
+            QApplication.processEvents()  # Let the dialog render
+
+            try:
+                result = func(self, *args, **kwargs)
+                QMessageBox.information(self, title, success_msg)
+                return result
+            except Exception as e:
+                QMessageBox.critical(self, title, f"{error_msg}:\n{str(e)}")
+            finally:
+                progress.close()
+        return wrapper
+    return decorator
+
 
 @contextmanager
 def try_ignored(*exceptions):
@@ -92,3 +116,28 @@ def parse_angle_range(str_scan_range,seperator = ":"):
     
     return scan_numbers
 
+
+
+class WorkerSignals(QObject):
+    finished = pyqtSignal()
+    error = pyqtSignal(str)
+
+class MotorWorker(QRunnable):
+    def __init__(self, pvname, position, on_done=None):
+        super().__init__()
+        self.pvname = pvname
+        self.position = position
+        self.on_done = on_done
+        self.signals = WorkerSignals()
+
+    @pyqtSlot()
+    def run(self):
+        from epics import Motor
+        try:
+            motor = Motor(self.pvname)
+            motor.move(self.position, wait=True)  # Blocking here, but not in GUI thread
+            if self.on_done:
+                self.on_done(motor, self.position)
+            self.signals.finished.emit()
+        except Exception as e:
+            self.signals.error.emit(str(e))

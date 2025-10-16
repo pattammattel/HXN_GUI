@@ -380,7 +380,7 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         self.xrf_stack = all_data.get('xrf_array')
         self.xrf_elem_list = all_data.get('xrf_names')
         self.scan_params = all_data.get('scan_params')
-        scan_y, scan_x = self.scan_params['scan']['shape']
+        scan_x, scan_y = self.scan_params['scan']['shape']
         
         data = all_data.get('det_images')  # shape: (scan_y * scan_x, roi_y, self.roi_x)
         num_frames, self.roi_y, self.roi_x = data.shape

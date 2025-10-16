@@ -145,19 +145,23 @@ def get_flyscan_dimensions(hdr):
     # 2D_FLY_PANDA: prefer 'dimensions', fallback to 'shape'
     if 'scan' in start_doc and start_doc['scan'].get('type') == '2D_FLY_PANDA':
         if 'dimensions' in start_doc:
-            return start_doc['dimensions']
+            dim = start_doc['dimensions']
         elif 'shape' in start_doc:
-            return start_doc['shape']
+            dim = start_doc['shape']
         else:
             raise ValueError("No dimensions or shape found for 2D_FLY_PANDA scan")
+
+        return dim[::-1]
     # rel_scan: use 'shape' or 'num_points'
     elif start_doc.get('plan_name') == 'rel_scan':
         if 'shape' in start_doc:
-            return start_doc['shape']
+            dim = start_doc['shape']
         elif 'num_points' in start_doc:
-            return [start_doc['num_points']]
+            dim = [start_doc['num_points']]
         else:
             raise ValueError("No shape or num_points found for rel_scan")
+
+        return dim[::-1]
     else:
         raise ValueError("Unknown scan type for get_flyscan_dimensions")
 
@@ -786,14 +790,14 @@ def export_diff_data_as_h5_batch(
                     "os_user", 
                     "error"]
     log_rows = []
-
+    os_user = os.getlogin() if hasattr(os, 'getlogin') else getpass.getuser()
     for sid in tqdm(sid_list, desc="Batch exporting scans"):
         
         out_fn = os.path.join(wd, f"scan_{sid}_{det}.h5")
         if not overwrite and os.path.exists(out_fn):
             print(f"Skipping scan {sid!r}: {out_fn} already exists (overwrite=False)")
             
-            os_user = os.getlogin() if hasattr(os, 'getlogin') else getpass.getuser()
+            
             log_rows.append({   "scan_id": sid, 
                                 "scan_type": '', 
                                 "detectors": '', 
