@@ -58,7 +58,10 @@ class ProbePropagationGUI(QtWidgets.QMainWindow):
         det_dist = config.getfloat('GUI','z_m',fallback=2.05)
         det_pixel_size = config.getfloat('GUI','ccd_pixel_um', fallback=75)
 
-        return energy,det_dist,det_pixel_size
+        nx = config.getint('GUI','nx', fallback=None)
+        ny = config.getint('GUI','ny', fallback=None)
+
+        return energy,det_dist,det_pixel_size,nx,ny
 
 
     def toggle_pixel_size(self):
@@ -100,15 +103,16 @@ class ProbePropagationGUI(QtWidgets.QMainWindow):
 
             energy,\
             det_dist,\
-            det_pixel_size = self.parse_ptycho_txtfile(os.path.join(folder,txtfile))
+            det_pixel_size,nx,ny = self.parse_ptycho_txtfile(os.path.join(folder,txtfile))
 
             shape = np.shape(np.abs(np.load(self.probe_file)))
-            if len(shape) == 2:
-                nx = shape[0]
-                ny = shape[1]
-            else:
-                nx = shape[1]
-                ny = shape[2]
+            if nx is None or ny is None:
+                if len(shape) == 2:
+                    nx = shape[0]
+                    ny = shape[1]
+                else:
+                    nx = shape[1]
+                    ny = shape[2]
 
             #nx, ny = np.shape(np.abs(np.load(self.probe_file)))
             self.dsb_energy.setValue(energy)
@@ -139,6 +143,7 @@ class ProbePropagationGUI(QtWidgets.QMainWindow):
 
             probe_array = np.load(probe)
             if probe_array.ndim > 2:
+                # probe_array = probe_array[0]
                 probe_array = np.mean(probe_array,axis=0)
 
             nx,ny = np.shape(np.abs(probe_array))
@@ -214,11 +219,16 @@ class ProbePropagationGUI(QtWidgets.QMainWindow):
     def update_with_slider(self,im_stack):
         
         def phase_unwrap(array):
-            if np.max(array)-np.min(array) > 5:
-                array[array<0] += 2*np.pi
+            try:
+                from skimage.restoration import unwrap_phase
+                return unwrap_phase(array)
+            except:
                 return array
-            else:
-                return array
+            # if False: #np.max(array)-np.min(array) > 5:
+            #     array[array<0] += 2*np.pi
+            #     return array
+            # else:
+            #     return array
 
         self.plot_xfit.clear()
         self.plot_yfit.clear()

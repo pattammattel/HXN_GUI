@@ -84,6 +84,7 @@ class Ui(QtWidgets.QMainWindow):
         #TODO add a qbox with mll or zp option to set the configs
 
         self.cb_dets.addItems([det_name for det_name in self.fly_det_dict.keys()])
+        self.cb_det_list_mosaic.addItems([det_name for det_name in self.fly_det_dict.keys()])
         self.cb_motor1.addItems([name for name in self.fly_motor_dict.keys()])
         self.cb_motor2.addItems([name for name in self.fly_motor_dict.keys()])
         self.cb_motor2.setCurrentIndex(1)
@@ -102,6 +103,8 @@ class Ui(QtWidgets.QMainWindow):
         self.connect_advanced_scans()
         self.set_input_validators()
         self.connect_troubleshooting()
+
+        
 
         # close/reload the application
         self.actionClose_Application.triggered.connect(self.close_application)
@@ -461,6 +464,12 @@ class Ui(QtWidgets.QMainWindow):
 
         #q server
         self.pb_flyplan_to_qserver.clicked.connect(lambda:self.send_to_queue())
+        self.pb_send_mosaic_to_queue.clicked.connect(lambda:self.send_mosaic_to_queue())
+
+        self.cb_queue_use_curr_pos.stateChanged.connect(self.toggle_manual_roi_box)
+
+        self.pb_get_current_position.clicked.connect(self.fill_current_pos)
+        
 
         self.set_tooltip_for_dets()
 
@@ -528,6 +537,46 @@ class Ui(QtWidgets.QMainWindow):
         self.text_scan_plan.selectAll()
         self.text_scan_plan.copy()
 
+    def get_manual_roi(self):
+
+        if self.motor1.startswith("ds"):
+            roi = get_current_position(zp_flag = False)
+        elif self.motor1.startswith("zp"):
+            roi = get_current_position(zp_flag = True)
+            roi['zpssx'] = self.dsb_zpssx_manual_roi.value()
+            roi['zpssy'] = self.dsb_zpssy_manual_roi.value()
+            roi['zpssz'] = self.dsb_zpssz_manual_roi.value()
+            roi['smarx'] = self.dsb_smarx_manual_roi.value()
+            roi['smary'] = self.dsb_smary_manual_roi.value()
+            roi['smarz'] = self.dsb_smarz_manual_roi.value()
+            roi['zp.zpz1'] = self.dsb_zpz1_manual_roi.value()
+            roi['zpsth'] = self.dsb_zpsth_manual_roi.value()
+
+        
+        return roi
+    
+    def toggle_manual_roi_box(self, state):
+
+        self.gb_queue_server_plan.setEnabled(not(bool(state)))
+        self.fill_current_pos()
+
+
+    def fill_current_pos(self):
+
+        roi = get_current_position(zp_flag = True) #TODO figure out mll later
+
+        if "zpssx" in roi:
+            self.dsb_zpssx_manual_roi.setValue(roi.get('zpssx', 0))
+            self.dsb_zpssy_manual_roi.setValue(roi.get('zpssy', 0))
+            self.dsb_zpssz_manual_roi.setValue(roi.get('zpssz', 0))
+            self.dsb_zpz1_manual_roi.setValue(roi.get('zp.zpz1', -25))
+            self.dsb_zpsth_manual_roi.setValue(roi.get('zpsth', 0))
+        if "smarx" in roi:
+            self.dsb_smarx_manual_roi.setValue(roi.get('smarx', 0))
+            self.dsb_smary_manual_roi.setValue(roi.get('smary', 0))
+            self.dsb_smarz_manual_roi.setValue(roi.get('smarz', 0))
+
+
     @show_error_message_box
     def send_to_queue(self):
         self.getScanValues()
@@ -545,11 +594,14 @@ class Ui(QtWidgets.QMainWindow):
                 self.dwell_t)))
 
         else:
-
-            if self.motor1.startswith("ds"):
-                roi = get_current_position(zp_flag = False)
-            elif self.motor1.startswith("zp"):
-                roi = get_current_position(zp_flag = True)
+            if self.cb_queue_use_curr_pos.isChecked():
+                if self.motor1.startswith("ds"):
+                    roi = get_current_position(zp_flag = False)
+                elif self.motor1.startswith("zp"):
+                    roi = get_current_position(zp_flag = True)
+            else:
+                roi = self.get_manual_roi()
+                
 
             ic = sclr2_ch2.get()
             scan_time = self.mot1_steps * self.mot2_steps * self.dwell_t / 60
@@ -574,9 +626,54 @@ class Ui(QtWidgets.QMainWindow):
                             ic1_count = ic,
                             scan_time_min = scan_time)))
 
+    @show_error_message_box
+    def send_mosaic_to_queue(self):
+        """
+        Queue a mosaic overlap scan for execution by QServer.
+        Uses current GUI widget values.
+        """
+        self.getScanValues()
+
+        # --- Collect detectors and scan metadata ---
+        det_names = [d.name for d in eval(self.cb_det_list_mosaic.currentText())]
+        scan_name = self.le_mosaic_plan_name.text()
+
+        # --- Determine ROI based on motor type ---
+        if self.motor1.startswith("ds"):
+            roi = get_current_position(zp_flag=False)
+        elif self.motor1.startswith("zp"):
+            roi = get_current_position(zp_flag=True)
+        else:
+            raise ValueError(f"Unknown motor prefix: {self.motor1}")
+
+        ic = sclr2_ch2.get()
+        scan_time = 0.1  # Placeholder; can compute estimated time if desired
+
+        # --- Submit to QServer queue ---
+        RM.item_add(
+            BPlan(
+                "recover_pos_and_mosaic_qserver_plan",
+                scan_name,
+                roi,
+                det_names,
+                self.sb_yrange_mosaic.value(),       # ylen
+                self.sb_xrange_mosaic.value(),       # xlen
+                self.dsb_overlap_mosaic.value(),     # overlap %
+                self.dsb_dwell.value(),              # dwell time
+                self.sb_stepsize_mosaic.value(),     # step size
+                ["Cr"],                              # plot_elem
+                self.rb_mosaic_mll.isChecked(),      # mll flag
+                ic,                                  # IC reading
+                scan_time,                           # estimated scan time
+                False,                               # do_confirm=False for queued
+            )
+        )
+
+        print(f" Added mosaic overlap scan '{scan_name}' to QServer queue (do_confirm=False).")
 
 
-#@show_error_message_box
+
+    #@show_error_message_box
     def run_fly_scan(self):
         #if self.initParams() is None:
             #return  # Stop scan due to earlier error
@@ -865,7 +962,7 @@ class Ui(QtWidgets.QMainWindow):
         #self.pb_osa_out.clicked.connect(lambda: self.runTask(lambda:self.ZP_OSA_OUT()))
         self.pb_mll_osa_out.clicked.connect(lambda:self.mll_osa_OUT())
         self.pb_mll_osa_in.clicked.connect(lambda:self.mll_osa_IN())
-        self.pb_mll_bs_out.clicked.connect(lambda:RE(mll_bs_in()))
+        self.pb_mll_bs_out.clicked.connect(lambda:RE(mll_bs_out()))
         self.pb_mll_bs_in.clicked.connect(lambda:RE(mll_bs_in()))
         #self.pb_mll_lens_out.clicked.connect(lambda: self.runTask(lambda:RE(mll_lens_out())))
         #self.pb_mll_lens_in.clicked.connect(lambda: self.runTask(lambda:RE(mll_lens_in())))
@@ -1454,6 +1551,7 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_plot.clicked.connect(lambda:self.plot_me())
         self.pb_erf_fit.clicked.connect(lambda:self.plot_erf_fit())
         self.pb_plot_line_center.clicked.connect(lambda:self.plot_line_center())
+        self.pb_plot_last.clicked.connect(lambda:self.load_last_scan_to_plot())
 
 
     @show_error_message_box
@@ -1474,6 +1572,11 @@ class Ui(QtWidgets.QMainWindow):
 
         else:
             plot_data(int(sd), elem, 'sclr1_ch4')
+
+    @show_error_message_box
+    def load_last_scan_to_plot(self):
+        sd = str(db[-1].start['scan_id'])
+        self.le_plot_sd.setText(sd)
 
     @show_error_message_box
     def plot_erf_fit(self):

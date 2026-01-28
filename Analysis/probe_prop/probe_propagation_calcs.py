@@ -31,13 +31,13 @@ def gaussian_fit(data):
 
     return popt, pcov, y_fit
 
-def propagate(probe_np_array,energy,dist,dx, dy):
+def propagate(probe_np_array,energy_kev,dist,dx, dy):
 
     """"dist,dx,dy in microns"""
 
-    wavelength_m = 12.398*1.e-4/energy
+    wavelength_um = 12.398*1.e-4/energy_kev
 
-    k = 2. * np.pi / wavelength_m
+    k = 2. * np.pi / wavelength_um
     nx, ny = np.shape(probe_np_array)
     spectrum = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(probe_np_array)))
 
@@ -118,8 +118,13 @@ def propagate_probe(probe_array,energy,nx_size_m,ny_size_m, start_um=-50,end_um=
         deviation[0, i] = distance
 
         pha = np.angle(tmp)
-        if np.max(pha)-np.min(pha) > 5:
-                pha[pha<0] += 2*np.pi
+        try:
+            from skimage.restoration import unwrap_phase
+            pha = unwrap_phase(pha)
+        except:
+            pass
+        #if np.max(pha)-np.min(pha) > 5:
+        #        pha[pha<0] += 2*np.pi
         deviation[1, i] = np.sqrt(np.mean((pha-np.mean(pha))**2))
 
         amp = np.abs(tmp)
