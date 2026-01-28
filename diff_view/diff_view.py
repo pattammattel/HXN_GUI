@@ -718,10 +718,16 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         return self.masked_diff_sum,self.masked_diff_img
     
     def save_mask_data(self):
-        """updates the line edit for working directory"""
+        """Save mask and masked diff sum data as both TIFF and CSV files"""
         self.save_folder = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select Folder', self.wd)
+        
+        # Save as TIFF files
         tf.imwrite(os.path.join(self.save_folder,"_masked_diff_sum.tiff"),  self.masked_diff_img)
         tf.imwrite(os.path.join(self.save_folder,"_mask.tiff"),  self.mask2D)
+        
+        # Save as CSV files
+        np.savetxt(os.path.join(self.save_folder,"_masked_diff_sum.csv"), self.masked_diff_sum, delimiter=',')
+        np.savetxt(os.path.join(self.save_folder,"_mask.csv"), self.mask2D, delimiter=',')
 
 
     def do_batch_export(self):
