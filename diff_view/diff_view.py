@@ -719,8 +719,9 @@ class DiffViewWindow(QtWidgets.QMainWindow):
     
     def save_mask_data(self):
         """Save mask and masked diff sum data as both TIFF and CSV files in a versioned folder"""
-        # Select base directory
-        base_folder = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select Folder', self.wd)
+        # Select base directory - default to working directory from load_params
+        default_dir = self.load_params.get('wd', self.wd) if hasattr(self, 'load_params') else self.wd
+        base_folder = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select Folder', default_dir)
         if not base_folder:
             return  # User cancelled
         
@@ -740,6 +741,34 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         # Create the folder
         os.makedirs(save_folder, exist_ok=True)
         print(f"Saving results to: {save_folder}")
+        
+        # Save ROI parameters as JSON
+        roi_params = {}
+        if self.roi is not None:
+            # Get ROI state
+            roi_state = self.roi.saveState()
+            # Convert to serializable format
+            roi_params = {
+                'roi_position': list(self.roi.pos()),
+                'roi_size': list(self.roi.size()),
+                'roi_angle': self.roi.angle() if hasattr(self.roi, 'angle') else 0,
+                'roi_handles': [[float(h['pos'][0]), float(h['pos'][1])] for h in roi_state['points']],
+                'roi_state': {k: (v.tolist() if isinstance(v, np.ndarray) else v) 
+                             for k, v in roi_state.items() if k != 'points'},
+                'mask_shape': list(self.mask2D.shape),
+                'scan_id': scan_id,
+            }
+        else:
+            roi_params = {
+                'roi_position': None,
+                'roi_size': None,
+                'message': 'No ROI was defined',
+                'mask_shape': list(self.mask2D.shape) if hasattr(self, 'mask2D') else None,
+                'scan_id': scan_id,
+            }
+        
+        with open(os.path.join(save_folder, "roi_parameters.json"), 'w') as f:
+            json.dump(roi_params, f, indent=4)
         
         # Save as TIFF files
         tf.imwrite(os.path.join(save_folder, "masked_diff_sum.tiff"), self.masked_diff_img)
