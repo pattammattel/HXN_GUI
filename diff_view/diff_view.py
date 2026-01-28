@@ -743,16 +743,38 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         print(f"Saving results to: {save_folder}")
         
         # Save ROI parameters as JSON
+        from datetime import datetime
         roi_params = {}
         if self.roi is not None:
             # Get ROI state
             roi_state = self.roi.saveState()
             # Convert to serializable format
+            # Handle roi_handles - points can be in different formats
+            try:
+                if 'points' in roi_state:
+                    points = roi_state['points']
+                    if len(points) > 0:
+                        # Check if points are tuples or dicts
+                        if isinstance(points[0], (tuple, list)):
+                            roi_handles = [[float(p[0]), float(p[1])] for p in points]
+                        elif isinstance(points[0], dict) and 'pos' in points[0]:
+                            roi_handles = [[float(h['pos'][0]), float(h['pos'][1])] for h in points]
+                        else:
+                            roi_handles = []
+                    else:
+                        roi_handles = []
+                else:
+                    roi_handles = []
+            except Exception as e:
+                print(f"Warning: Could not extract ROI handles: {e}")
+                roi_handles = []
+            
             roi_params = {
+                'timestamp': datetime.now().isoformat(),
                 'roi_position': list(self.roi.pos()),
                 'roi_size': list(self.roi.size()),
                 'roi_angle': self.roi.angle() if hasattr(self.roi, 'angle') else 0,
-                'roi_handles': [[float(h['pos'][0]), float(h['pos'][1])] for h in roi_state['points']],
+                'roi_handles': roi_handles,
                 'roi_state': {k: (v.tolist() if isinstance(v, np.ndarray) else v) 
                              for k, v in roi_state.items() if k != 'points'},
                 'mask_shape': list(self.mask2D.shape),
@@ -760,6 +782,7 @@ class DiffViewWindow(QtWidgets.QMainWindow):
             }
         else:
             roi_params = {
+                'timestamp': datetime.now().isoformat(),
                 'roi_position': None,
                 'roi_size': None,
                 'message': 'No ROI was defined',
