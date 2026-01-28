@@ -718,16 +718,60 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         return self.masked_diff_sum,self.masked_diff_img
     
     def save_mask_data(self):
-        """Save mask and masked diff sum data as both TIFF and CSV files"""
-        self.save_folder = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select Folder', self.wd)
+        """Save mask and masked diff sum data as both TIFF and CSV files in a versioned folder"""
+        # Select base directory
+        base_folder = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select Folder', self.wd)
+        if not base_folder:
+            return  # User cancelled
+        
+        # Get scan ID from load_params
+        scan_id = self.load_params.get('sid', 'unknown')
+        
+        # Create versioned folder name
+        folder_name = f"roi_results_{scan_id}"
+        version = 1
+        save_folder = os.path.join(base_folder, folder_name)
+        
+        # Check if folder exists and increment version if needed
+        while os.path.exists(save_folder):
+            save_folder = os.path.join(base_folder, f"{folder_name}_v{version}")
+            version += 1
+        
+        # Create the folder
+        os.makedirs(save_folder, exist_ok=True)
+        print(f"Saving results to: {save_folder}")
         
         # Save as TIFF files
-        tf.imwrite(os.path.join(self.save_folder,"_masked_diff_sum.tiff"),  self.masked_diff_img)
-        tf.imwrite(os.path.join(self.save_folder,"_mask.tiff"),  self.mask2D)
+        tf.imwrite(os.path.join(save_folder, "masked_diff_sum.tiff"), self.masked_diff_img)
+        tf.imwrite(os.path.join(save_folder, "mask.tiff"), self.mask2D)
         
-        # Save as CSV files
-        np.savetxt(os.path.join(self.save_folder,"_masked_diff_sum.csv"), self.masked_diff_sum, delimiter=',')
-        np.savetxt(os.path.join(self.save_folder,"_mask.csv"), self.mask2D, delimiter=',')
+        # Save as 2D CSV files (preserving array structure)
+        np.savetxt(os.path.join(save_folder, "masked_diff_sum.csv"), self.masked_diff_sum, delimiter=',')
+        np.savetxt(os.path.join(save_folder, "mask.csv"), self.mask2D, delimiter=',')
+        
+        # Save as flattened CSV files with pixel number and intensity columns
+        # For masked_diff_sum
+        masked_diff_sum_flat = self.masked_diff_sum.flatten()
+        pixel_numbers = np.arange(len(masked_diff_sum_flat))
+        masked_diff_sum_data = np.column_stack((pixel_numbers, masked_diff_sum_flat))
+        np.savetxt(os.path.join(save_folder, "masked_diff_sum_flattened.csv"), 
+                   masked_diff_sum_data, 
+                   delimiter=',', 
+                   header='pixel_number,intensity',
+                   comments='')
+        
+        # For mask
+        mask_flat = self.mask2D.flatten()
+        pixel_numbers_mask = np.arange(len(mask_flat))
+        mask_data = np.column_stack((pixel_numbers_mask, mask_flat))
+        np.savetxt(os.path.join(save_folder, "mask_flattened.csv"), 
+                   mask_data, 
+                   delimiter=',', 
+                   header='pixel_number,value',
+                   comments='')
+        
+        print(f"Successfully saved mask and masked diff sum data")
+        QMessageBox.information(self, "Save Complete", f"Data saved to:\n{save_folder}")
 
 
     def do_batch_export(self):
