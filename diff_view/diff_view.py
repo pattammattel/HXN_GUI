@@ -743,12 +743,14 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         print(f"Saving results to: {save_folder}")
         
         # Save ROI parameters as JSON
+        from datetime import datetime
         roi_params = {}
         if self.roi is not None:
             # Get ROI state
             roi_state = self.roi.saveState()
             # Convert to serializable format
             roi_params = {
+                'timestamp': datetime.now().isoformat(),
                 'roi_position': list(self.roi.pos()),
                 'roi_size': list(self.roi.size()),
                 'roi_angle': self.roi.angle() if hasattr(self.roi, 'angle') else 0,
@@ -760,6 +762,7 @@ class DiffViewWindow(QtWidgets.QMainWindow):
             }
         else:
             roi_params = {
+                'timestamp': datetime.now().isoformat(),
                 'roi_position': None,
                 'roi_size': None,
                 'message': 'No ROI was defined',
