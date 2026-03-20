@@ -510,7 +510,7 @@ QRadioButton::indicator:unchecked {
          <enum>QTabWidget::North</enum>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>1</number>
         </property>
         <property name="documentMode">
          <bool>true</bool>
@@ -1094,6 +1094,21 @@ li.checked::marker { content: &quot;\2612&quot;; }
                </item>
               </layout>
              </item>
+             <item row="3" column="2">
+              <widget class="QPushButton" name="pb_create_new_pdf_log">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>
+Create PDF log
+</string>
+               </property>
+              </widget>
+             </item>
              <item row="2" column="0">
               <layout class="QHBoxLayout" name="horizontalLayout_16">
                <item>
@@ -1111,6 +1126,21 @@ li.checked::marker { content: &quot;\2612&quot;; }
                 </widget>
                </item>
               </layout>
+             </item>
+             <item row="3" column="1">
+              <widget class="QPushButton" name="pb_create_user">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>
+Create PDF and User Directory
+</string>
+               </property>
+              </widget>
              </item>
              <item row="0" column="0">
               <widget class="QLabel" name="label_15">
@@ -1152,21 +1182,21 @@ li.checked::marker { content: &quot;\2612&quot;; }
                </property>
                <layout class="QGridLayout" name="gridLayout_141">
                 <item row="3" column="0">
-                 <widget class="QCheckBox" name="checkBox_3">
+                 <widget class="QCheckBox" name="cb_technique_diff">
                   <property name="text">
                    <string>Nanodiffraction</string>
                   </property>
                  </widget>
                 </item>
                 <item row="4" column="0">
-                 <widget class="QCheckBox" name="checkBox_4">
+                 <widget class="QCheckBox" name="cb_technique_xanes">
                   <property name="text">
                    <string>Nano-XANES</string>
                   </property>
                  </widget>
                 </item>
                 <item row="1" column="0">
-                 <widget class="QCheckBox" name="checkBox">
+                 <widget class="QCheckBox" name="cb_technique_xrf">
                   <property name="text">
                    <string>XRF</string>
                   </property>
@@ -1176,7 +1206,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
                  </widget>
                 </item>
                 <item row="2" column="0">
-                 <widget class="QCheckBox" name="checkBox_2">
+                 <widget class="QCheckBox" name="cb_technique_ptycho">
                   <property name="text">
                    <string>Ptycho</string>
                   </property>
@@ -1192,35 +1222,18 @@ li.checked::marker { content: &quot;\2612&quot;; }
                </layout>
               </widget>
              </item>
-             <item row="3" column="1">
-              <widget class="QPushButton" name="pb_create_user">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
+             <item row="4" column="1">
+              <spacer name="verticalSpacer_4">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
                </property>
-               <property name="text">
-                <string>
-Create PDF and User Directory
-</string>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>40</height>
+                </size>
                </property>
-              </widget>
-             </item>
-             <item row="3" column="2">
-              <widget class="QPushButton" name="pb_create_new_pdf_log">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string>
-Create PDF log
-</string>
-               </property>
-              </widget>
+              </spacer>
              </item>
             </layout>
            </widget>

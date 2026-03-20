@@ -324,7 +324,7 @@ class Ui(QtWidgets.QMainWindow):
                             pdf_file_name = self.le_pdf_name.text()
                             )
 
-        if self.cb_technique_diffraction.isChecked():
+        if self.cb_technique_diff.isChecked():
             copy_diff_analysis()
 
         QMessageBox.information(self,
