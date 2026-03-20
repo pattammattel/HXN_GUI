@@ -328,11 +328,11 @@ class Ui(QtWidgets.QMainWindow):
             copy_diff_analysis()
 
         if self.cb_technique_xanes.isChecked():
-            os.path.makedirs("/data/users/current_user/xanes_analysis", exist_ok = True)
+            os.makedirs("/data/users/current_user/xanes", exist_ok = True)
         if self.cb_technique_xrf.isChecked():
-            os.path.makedirs("/data/users/current_user/xrf", exist_ok = True)
+            os.makedirs("/data/users/current_user/xrf", exist_ok = True)
         if self.cb_technique_ptycho.isChecked():
-            os.path.makedirs("/data/users/current_user/ptycho", exist_ok = True)
+            os.makedirs("/data/users/current_user/ptycho", exist_ok = True)
 
         QMessageBox.information(self,
                                 "Info",
