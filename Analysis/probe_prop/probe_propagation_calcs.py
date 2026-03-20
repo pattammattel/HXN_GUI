@@ -64,7 +64,12 @@ def propagate_probe(probe_array,energy,nx_size_m,ny_size_m, start_um=-50,end_um=
 
     # load the probe file
     prb_ini = probe_array
-    nx, ny = np.shape(prb_ini)
+    if prb_ini.shape[0] == 1:
+        prb_ini = prb_ini[0]
+    if prb_ini.ndim == 2:
+        nx, ny = np.shape(prb_ini)
+    else:
+        n_mode, nx, ny = np.shape(prb_ini)
 
     # propagation distance and steps
     num_steps = int((end_um - start_um) / step_size_um) + 1
@@ -83,10 +88,18 @@ def propagate_probe(probe_array,energy,nx_size_m,ny_size_m, start_um=-50,end_um=
     yfits = np.zeros((num_steps, 2, ny))
 
     #initial probe
-    prb = propagate(prb_ini,
-                    energy,0,
-                    nx_size_m*10**6,
-                    ny_size_m*10**6)
+    if prb_ini.ndim == 2:
+        prb = propagate(prb_ini,
+                        energy,0,
+                        nx_size_m*10**6,
+                        ny_size_m*10**6)
+    else:
+        prb = np.zeros_like(prb_ini)
+        for m in range(n_mode):
+            prb[m] = propagate(prb_ini[m],
+                            energy,0,
+                            nx_size_m*10**6,
+                            ny_size_m*10**6)
 
     # create an image stack with probe at each propogated distance
     prop_data = np.zeros((nx, ny, num_steps)).astype(complex)
@@ -95,13 +108,22 @@ def propagate_probe(probe_array,energy,nx_size_m,ny_size_m, start_um=-50,end_um=
     for i, distance in enumerate(projection_points):
 
         #print(i)
-        tmp = propagate(prb,
-                        energy,
-                        distance,
-                        nx_size_m*10**6,
-                        ny_size_m*10**6)
+        if prb.ndim == 2:
+            tmp = propagate(prb,
+                            energy,
+                            distance,
+                            nx_size_m*10**6,
+                            ny_size_m*10**6)
+        else:
+            tmp = np.zeros_like(prb)
+            for m in range(n_mode):
+                tmp[m] = propagate(prb[m],
+                                energy,distance,
+                                nx_size_m*10**6,
+                                ny_size_m*10**6)
+            tmp = np.sum(np.abs(tmp),0)
+        prop_data[:,:,i] = tmp
 
-        prop_data[:, :, i] = tmp
 
         if i == 0:
             sig_x, sig_y,data_x,data_y = probe_img_to_linefit(tmp,

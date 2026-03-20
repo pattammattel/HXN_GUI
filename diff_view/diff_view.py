@@ -242,7 +242,8 @@ class DiffViewWindow(QtWidgets.QMainWindow):
         print(self.load_params)
         print(f"Loading {self.load_params['sid']} please wait...this may take a while...")
         self.all_data = export_diff_data_as_h5_single(int(self.load_params['sid']),
-                               self.load_params['det'],save_and_return=True
+                               self.load_params['det'],save_and_return=True,
+                               wd = self.load_params['wd']
                                )
         print(f"{self.all_data.keys() = }")
         

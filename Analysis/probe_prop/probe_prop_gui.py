@@ -143,10 +143,9 @@ class ProbePropagationGUI(QtWidgets.QMainWindow):
 
             probe_array = np.load(probe)
             if probe_array.ndim > 2:
-                # probe_array = probe_array[0]
-                probe_array = np.mean(probe_array,axis=0)
-
-            nx,ny = np.shape(np.abs(probe_array))
+                n_mode, nx,ny = np.shape(np.abs(probe_array))
+            else:
+                nx,ny = np.shape(np.abs(probe_array))
 
             if self.ck_pixel_size.isChecked():
                 self.pixel_size = self.dsb_calc_pixel_size.value()*1e-9
