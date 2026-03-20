@@ -324,9 +324,12 @@ class Ui(QtWidgets.QMainWindow):
                             pdf_file_name = self.le_pdf_name.text()
                             )
 
+        if self.cb_technique_diffraction.isChecked():
+            copy_diff_analysis()
+
         QMessageBox.information(self,
                                 "Info",
-                                f"UUser setup completed. \n {user_dir =} \n {pdf_note_name =}.pdf")
+                                f"User setup completed. \n {user_dir =} \n {pdf_note_name =}.pdf")
 
     def existing_user_setup(self):
         pass

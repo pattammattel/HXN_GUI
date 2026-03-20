@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1452</width>
-    <height>1507</height>
+    <width>1334</width>
+    <height>1738</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -20,7 +20,6 @@
    <font>
     <family>Segoe UI</family>
     <pointsize>12</pointsize>
-    <weight>50</weight>
     <italic>false</italic>
     <bold>false</bold>
    </font>
@@ -29,7 +28,7 @@
    <string>HXN GUI</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="../../../../../../../../../data/home/xf03id/user_macros/HXN_GUI/Scan/hxn_image.qrc">
+   <iconset>
     <normaloff>:/hxnlogo/Profile-NEW-NSLS-II.jpg</normaloff>:/hxnlogo/Profile-NEW-NSLS-II.jpg</iconset>
   </property>
   <property name="statusTip">
@@ -427,7 +426,6 @@ Close Fast Shutter (C)
          <font>
           <family>Segoe UI</family>
           <pointsize>12</pointsize>
-          <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
          </font>
@@ -512,7 +510,7 @@ QRadioButton::indicator:unchecked {
          <enum>QTabWidget::North</enum>
         </property>
         <property name="currentIndex">
-         <number>1</number>
+         <number>0</number>
         </property>
         <property name="documentMode">
          <bool>true</bool>
@@ -531,218 +529,6 @@ QRadioButton::indicator:unchecked {
           <string>User Setup</string>
          </attribute>
          <layout class="QGridLayout" name="gridLayout_142">
-          <item row="0" column="0">
-           <widget class="QGroupBox" name="groupBox_5">
-            <property name="title">
-             <string>Create Directory</string>
-            </property>
-            <layout class="QGridLayout" name="gridLayout_34">
-             <item row="0" column="0">
-              <widget class="QLabel" name="label_15">
-               <property name="text">
-                <string/>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="0" colspan="2">
-              <layout class="QHBoxLayout" name="horizontalLayout_3">
-               <property name="rightMargin">
-                <number>15</number>
-               </property>
-               <item>
-                <widget class="QLabel" name="label_11">
-                 <property name="text">
-                  <string>PI Name             </string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLineEdit" name="le_username">
-                 <property name="toolTip">
-                  <string/>
-                 </property>
-                 <property name="placeholderText">
-                  <string>Professor</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item row="1" column="2">
-              <layout class="QHBoxLayout" name="horizontalLayout_2">
-               <property name="leftMargin">
-                <number>20</number>
-               </property>
-               <item>
-                <widget class="QLabel" name="label_12">
-                 <property name="text">
-                  <string>Experimenters     </string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLineEdit" name="le_experimenters">
-                 <property name="placeholderText">
-                  <string>HX,NU,SER</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item row="1" column="3" rowspan="2">
-              <widget class="QPushButton" name="pb_create_user">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string>
-Create PDF and User Directory
-</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="4" rowspan="2">
-              <widget class="QPushButton" name="pb_create_new_pdf_log">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string>
-Create PDF log
-</string>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="0">
-              <layout class="QHBoxLayout" name="horizontalLayout_16">
-               <item>
-                <widget class="QLabel" name="label_69">
-                 <property name="text">
-                  <string>PDF Filename</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLineEdit" name="le_pdf_name">
-                 <property name="text">
-                  <string>elog</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item row="2" column="1">
-              <layout class="QHBoxLayout" name="horizontalLayout">
-               <property name="rightMargin">
-                <number>15</number>
-               </property>
-               <item>
-                <widget class="QLabel" name="label_13">
-                 <property name="text">
-                  <string>Sample Name    </string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLineEdit" name="le_sample_name">
-                 <property name="placeholderText">
-                  <string>Precious</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item row="2" column="2">
-              <layout class="QGridLayout" name="gridLayout_33">
-               <property name="leftMargin">
-                <number>15</number>
-               </property>
-               <item row="0" column="0">
-                <widget class="QPushButton" name="pb_insert_user_image">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="text">
-                  <string> Insert An image   </string>
-                 </property>
-                </widget>
-               </item>
-               <item row="0" column="1">
-                <widget class="QLineEdit" name="le_image_path"/>
-               </item>
-              </layout>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QGroupBox" name="groupBox_16">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="title">
-             <string>Set Existing Directory as Current</string>
-            </property>
-            <layout class="QGridLayout" name="gridLayout_141">
-             <item row="1" column="0">
-              <layout class="QGridLayout" name="gridLayout_42">
-               <item row="0" column="0">
-                <widget class="QLineEdit" name="lineEdit"/>
-               </item>
-               <item row="0" column="1">
-                <widget class="QPushButton" name="pushButton_13">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="text">
-                  <string>Browse</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item row="0" column="0">
-              <widget class="QLabel" name="label_66">
-               <property name="text">
-                <string/>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="1">
-              <layout class="QGridLayout" name="gridLayout_43">
-               <item row="0" column="0">
-                <widget class="QLineEdit" name="lineEdit_2"/>
-               </item>
-               <item row="0" column="1">
-                <widget class="QPushButton" name="pushButton_17">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="text">
-                  <string>Browse</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-            </layout>
-           </widget>
-          </item>
           <item row="2" column="0">
            <widget class="QGroupBox" name="groupBox_7">
             <property name="title">
@@ -1205,9 +991,12 @@ Export List
                </property>
                <property name="html">
                 <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;meta charset=&quot;utf-8&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Sans Serif'; font-size:9pt; font-weight:400; font-style:normal;&quot;&gt;
+hr { height: 1px; border-width: 0; }
+li.unchecked::marker { content: &quot;\2610&quot;; }
+li.checked::marker { content: &quot;\2612&quot;; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'.AppleSystemUIFont'; font-size:13pt; font-weight:400; font-style:normal;&quot;&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Segoe UI'; font-size:12pt;&quot;&gt;Please note that this list is only for creating plots during data aquistion. Complete XRF spectrum is saved for all data collected. &lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'Segoe UI'; font-size:12pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Segoe UI'; font-size:12pt;&quot;&gt;If you make any changes to the list click &amp;quot;Apply Element Selection &amp;quot;. The program will restart to load those changes.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -1232,6 +1021,209 @@ p, li { white-space: pre-wrap; }
              </size>
             </property>
            </spacer>
+          </item>
+          <item row="0" column="0">
+           <widget class="QGroupBox" name="groupBox_5">
+            <property name="title">
+             <string>Create Directory</string>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_34">
+             <item row="1" column="0" colspan="2">
+              <layout class="QHBoxLayout" name="horizontalLayout_3">
+               <property name="rightMargin">
+                <number>15</number>
+               </property>
+               <item>
+                <widget class="QLabel" name="label_11">
+                 <property name="text">
+                  <string>PI Name             </string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="le_username">
+                 <property name="toolTip">
+                  <string/>
+                 </property>
+                 <property name="placeholderText">
+                  <string>Professor</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item row="2" column="1">
+              <layout class="QHBoxLayout" name="horizontalLayout">
+               <property name="rightMargin">
+                <number>15</number>
+               </property>
+               <item>
+                <widget class="QLabel" name="label_13">
+                 <property name="text">
+                  <string>Sample Name    </string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="le_sample_name">
+                 <property name="placeholderText">
+                  <string>Precious</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item row="1" column="2">
+              <layout class="QHBoxLayout" name="horizontalLayout_2">
+               <property name="leftMargin">
+                <number>20</number>
+               </property>
+               <item>
+                <widget class="QLabel" name="label_12">
+                 <property name="text">
+                  <string>Experimenters     </string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="le_experimenters">
+                 <property name="placeholderText">
+                  <string>HX,NU,SER</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item row="2" column="0">
+              <layout class="QHBoxLayout" name="horizontalLayout_16">
+               <item>
+                <widget class="QLabel" name="label_69">
+                 <property name="text">
+                  <string>PDF Filename</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="le_pdf_name">
+                 <property name="text">
+                  <string>elog</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_15">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="2">
+              <layout class="QGridLayout" name="gridLayout_33">
+               <property name="leftMargin">
+                <number>15</number>
+               </property>
+               <item row="0" column="0">
+                <widget class="QPushButton" name="pb_insert_user_image">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="text">
+                  <string> Insert An image   </string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QLineEdit" name="le_image_path"/>
+               </item>
+              </layout>
+             </item>
+             <item row="0" column="1" colspan="2">
+              <widget class="QGroupBox" name="groupBox_16">
+               <property name="enabled">
+                <bool>true</bool>
+               </property>
+               <property name="title">
+                <string>Techniques</string>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_141">
+                <item row="3" column="0">
+                 <widget class="QCheckBox" name="checkBox_3">
+                  <property name="text">
+                   <string>Nanodiffraction</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="4" column="0">
+                 <widget class="QCheckBox" name="checkBox_4">
+                  <property name="text">
+                   <string>Nano-XANES</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <widget class="QCheckBox" name="checkBox">
+                  <property name="text">
+                   <string>XRF</string>
+                  </property>
+                  <property name="checked">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="0">
+                 <widget class="QCheckBox" name="checkBox_2">
+                  <property name="text">
+                   <string>Ptycho</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="0">
+                 <widget class="QLabel" name="label_50">
+                  <property name="text">
+                   <string/>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QPushButton" name="pb_create_user">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>
+Create PDF and User Directory
+</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="2">
+              <widget class="QPushButton" name="pb_create_new_pdf_log">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>
+Create PDF log
+</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -1282,7 +1274,6 @@ p, li { white-space: pre-wrap; }
                    <font>
                     <family>Segoe UI</family>
                     <pointsize>12</pointsize>
-                    <weight>50</weight>
                     <italic>false</italic>
                     <bold>false</bold>
                    </font>
@@ -1320,7 +1311,6 @@ p, li { white-space: pre-wrap; }
                    <font>
                     <family>Segoe UI</family>
                     <pointsize>12</pointsize>
-                    <weight>50</weight>
                     <italic>false</italic>
                     <bold>false</bold>
                    </font>
@@ -1524,7 +1514,6 @@ p, li { white-space: pre-wrap; }
                    <font>
                     <family>Segoe UI</family>
                     <pointsize>12</pointsize>
-                    <weight>50</weight>
                     <italic>false</italic>
                     <bold>false</bold>
                    </font>
@@ -1605,7 +1594,6 @@ p, li { white-space: pre-wrap; }
                    <font>
                     <family>Segoe UI</family>
                     <pointsize>12</pointsize>
-                    <weight>50</weight>
                     <italic>false</italic>
                     <bold>false</bold>
                    </font>
@@ -1821,8 +1809,8 @@ p, li { white-space: pre-wrap; }
                  <rect>
                   <x>0</x>
                   <y>0</y>
-                  <width>710</width>
-                  <height>268</height>
+                  <width>574</width>
+                  <height>326</height>
                  </rect>
                 </property>
                 <attribute name="label">
@@ -1894,7 +1882,6 @@ p, li { white-space: pre-wrap; }
                     <font>
                      <family>Modern No. 20</family>
                      <pointsize>15</pointsize>
-                     <weight>50</weight>
                      <italic>false</italic>
                      <bold>false</bold>
                     </font>
@@ -1944,7 +1931,6 @@ font: 15pt &quot;Modern No. 20&quot;;
                       <font>
                        <family>MS Shell Dlg 2</family>
                        <pointsize>24</pointsize>
-                       <weight>50</weight>
                        <italic>false</italic>
                        <bold>false</bold>
                       </font>
@@ -1988,8 +1974,8 @@ QPushButton:pressed{
                  <rect>
                   <x>0</x>
                   <y>0</y>
-                  <width>428</width>
-                  <height>250</height>
+                  <width>462</width>
+                  <height>281</height>
                  </rect>
                 </property>
                 <attribute name="label">
@@ -5516,7 +5502,6 @@ Plot
                    <font>
                     <family>Segoe UI</family>
                     <pointsize>12</pointsize>
-                    <weight>50</weight>
                     <italic>false</italic>
                     <bold>false</bold>
                    </font>
@@ -5704,7 +5689,6 @@ Plot
                    <font>
                     <family>Segoe UI</family>
                     <pointsize>12</pointsize>
-                    <weight>50</weight>
                     <italic>false</italic>
                     <bold>false</bold>
                    </font>
@@ -5735,7 +5719,6 @@ Plot
                    <font>
                     <family>Segoe UI</family>
                     <pointsize>12</pointsize>
-                    <weight>50</weight>
                     <italic>false</italic>
                     <bold>false</bold>
                    </font>
@@ -6073,7 +6056,6 @@ ZP Diff Widget
                    <font>
                     <family>Segoe UI</family>
                     <pointsize>12</pointsize>
-                    <weight>50</weight>
                     <italic>false</italic>
                     <bold>false</bold>
                    </font>
@@ -6132,7 +6114,6 @@ ZP Diff Widget
                    <font>
                     <family>Segoe UI</family>
                     <pointsize>12</pointsize>
-                    <weight>50</weight>
                     <italic>false</italic>
                     <bold>false</bold>
                    </font>
@@ -6253,7 +6234,6 @@ ZP Diff Widget
                    <font>
                     <family>Segoe UI</family>
                     <pointsize>12</pointsize>
-                    <weight>50</weight>
                     <italic>false</italic>
                     <bold>false</bold>
                    </font>
@@ -6376,7 +6356,6 @@ ZP Diff Widget
                    <font>
                     <family>Segoe UI</family>
                     <pointsize>12</pointsize>
-                    <weight>50</weight>
                     <italic>false</italic>
                     <bold>false</bold>
                    </font>
@@ -6535,9 +6514,12 @@ ZP Diff Widget
               </property>
               <property name="html">
                <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;meta charset=&quot;utf-8&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Sans Serif'; font-size:9pt; font-weight:400; font-style:normal;&quot;&gt;
+hr { height: 1px; border-width: 0; }
+li.unchecked::marker { content: &quot;\2610&quot;; }
+li.checked::marker { content: &quot;\2612&quot;; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'.AppleSystemUIFont'; font-size:13pt; font-weight:400; font-style:normal;&quot;&gt;
 &lt;p align=&quot;center&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Segoe UI'; font-size:12pt;&quot;&gt;Read Me&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'Segoe UI'; font-size:12pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Segoe UI'; font-size:12pt;&quot;&gt;- Please don't close the window while pumping/venting/He-backfill. &lt;/span&gt;&lt;/p&gt;
@@ -11199,8 +11181,8 @@ Move
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1452</width>
-     <height>26</height>
+     <width>1334</width>
+     <height>30</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp_2">
@@ -11360,11 +11342,8 @@ Move
   <tabstop>db_zpz1</tabstop>
   <tabstop>tabWidget</tabstop>
   <tabstop>rb_2d</tabstop>
-  <tabstop>pb_create_user</tabstop>
-  <tabstop>pushButton_13</tabstop>
   <tabstop>le_sid_position_zp</tabstop>
   <tabstop>pb_22</tabstop>
-  <tabstop>lineEdit</tabstop>
   <tabstop>pb_66</tabstop>
   <tabstop>pb_2020</tabstop>
   <tabstop>pb_zp_stop_all_sample</tabstop>
@@ -11389,7 +11368,6 @@ Move
   <tabstop>cb_elem_12</tabstop>
   <tabstop>cb_elem_15</tabstop>
   <tabstop>lcd_scanNumber</tabstop>
-  <tabstop>pb_create_new_pdf_log</tabstop>
   <tabstop>le_sample_name</tabstop>
   <tabstop>pb_mll_stop_all_sample</tabstop>
   <tabstop>pb_move_pos_mll</tabstop>
@@ -11420,7 +11398,6 @@ Move
   <tabstop>pb_stop_dexela</tabstop>
   <tabstop>pb_stop_cam11</tabstop>
   <tabstop>pb_stop_merlin</tabstop>
-  <tabstop>lineEdit_2</tabstop>
   <tabstop>pb_update_xrf_elems</tabstop>
   <tabstop>pb_export_xrf_elem_list</tabstop>
   <tabstop>sb_live_elem_num</tabstop>
@@ -11428,7 +11405,6 @@ Move
   <tabstop>pb_import_xrf_elem_list</tabstop>
   <tabstop>le_roi_elems</tabstop>
   <tabstop>le_live_elems</tabstop>
-  <tabstop>pushButton_17</tabstop>
   <tabstop>cb_elem_1</tabstop>
   <tabstop>db_fs_det</tabstop>
   <tabstop>db_cam06x</tabstop>
