@@ -140,6 +140,11 @@ class Ui(QtWidgets.QMainWindow):
         self.le_sid_position_mll.setValidator(only_int_le)
         self.le_plot_sd.setValidator(only_int_le)
 
+        #proposal number validator - exactly 6 digits
+        reg_ex_proposal = QtCore.QRegularExpression("^\\d{6}$")
+        proposal_validator = QtGui.QRegularExpressionValidator(reg_ex_proposal)
+        self.le_proposal_num.setValidator(proposal_validator)
+
         #text only validator for xrf elem
         reg_ex_xrf = QtCore.QRegularExpression("[A-Za-z]+")
         only_lett_le = QtGui.QRegularExpressionValidator(reg_ex_xrf)
@@ -313,6 +318,58 @@ class Ui(QtWidgets.QMainWindow):
             lambda:self.export_xrf_elem_list(auto = False))
         self.sb_live_elem_num.valueChanged.connect(self.populate_elems_from_combobox)
         self.roi_elements = [cb.currentText() for cb in self.xrf_combo_boxes]
+        self.pb_get_proposal_info.clicked.connect(lambda:self.fill_user_info())
+
+
+    @show_error_message_box
+    def fill_user_info(self):
+        """
+        Auto-fill user information fields from proposal database.
+        
+        Retrieves proposal information using the proposal number entered in 
+        le_proposal_num and populates the following fields:
+        - Username (PI last name)
+        - Experimenters (comma-separated list of all users)
+        - Sample name (proposal title)
+        
+        Raises:
+            ValueError: If proposal number is empty, invalid, or not 6 digits
+            KeyError: If required fields are missing from proposal info
+        """
+        # Get and validate proposal number
+        self.proposal_num = self.le_proposal_num.text().strip()
+        
+        if not self.proposal_num:
+            raise ValueError("Proposal number cannot be empty")
+        
+        # Validate format: exactly 6 digits
+        if not self.proposal_num.isdigit() or len(self.proposal_num) != 6:
+            raise ValueError("Proposal number must be exactly 6 digits")
+        
+        # Fetch proposal information
+        proposal_info_dict = get_proposal_info(self.proposal_num)
+        
+        if not proposal_info_dict:
+            raise ValueError(f"No proposal information found for proposal {self.proposal_num}")
+        
+        # Safely extract and set PI lastname
+        pi_lastname = proposal_info_dict.get('pi_lastname', '')
+        if pi_lastname:
+            self.le_username.setText(pi_lastname)
+        
+        # Safely extract and set experimenters
+        users = proposal_info_dict.get('users', [])
+        if users:
+            experimenters = ", ".join([user.get('name', '') for user in users if user.get('username')])
+            self.le_experimenters.setText(experimenters)
+        
+        # Safely extract and set sample name (title)
+        title = proposal_info_dict.get('title', '')
+        if title:
+            self.le_sample_name.setText(title)
+        
+        self.statusbar.showMessage(f"User information loaded from proposal {self.proposal_num}")
+
 
 
     @show_error_message_box

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1334</width>
-    <height>1738</height>
+    <width>1452</width>
+    <height>1741</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -510,7 +510,7 @@ QRadioButton::indicator:unchecked {
          <enum>QTabWidget::North</enum>
         </property>
         <property name="currentIndex">
-         <number>1</number>
+         <number>0</number>
         </property>
         <property name="documentMode">
          <bool>true</bool>
@@ -1028,31 +1028,32 @@ li.checked::marker { content: &quot;\2612&quot;; }
              <string>Create Directory</string>
             </property>
             <layout class="QGridLayout" name="gridLayout_34">
-             <item row="1" column="0" colspan="2">
-              <layout class="QHBoxLayout" name="horizontalLayout_3">
-               <property name="rightMargin">
-                <number>15</number>
+             <item row="2" column="0">
+              <widget class="QLabel" name="label_66">
+               <property name="text">
+                <string>Proposal Number </string>
                </property>
-               <item>
-                <widget class="QLabel" name="label_11">
-                 <property name="text">
-                  <string>PI Name             </string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLineEdit" name="le_username">
-                 <property name="toolTip">
-                  <string/>
-                 </property>
-                 <property name="placeholderText">
-                  <string>Professor</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
              </item>
-             <item row="2" column="1">
+             <item row="5" column="1">
+              <widget class="QPushButton" name="pb_create_user">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>
+Create PDF and User Directory
+</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="1">
               <layout class="QHBoxLayout" name="horizontalLayout">
                <property name="rightMargin">
                 <number>15</number>
@@ -1073,43 +1074,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
                </item>
               </layout>
              </item>
-             <item row="1" column="2">
-              <layout class="QHBoxLayout" name="horizontalLayout_2">
-               <property name="leftMargin">
-                <number>20</number>
-               </property>
-               <item>
-                <widget class="QLabel" name="label_12">
-                 <property name="text">
-                  <string>Experimenters     </string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLineEdit" name="le_experimenters">
-                 <property name="placeholderText">
-                  <string>HX,NU,SER</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item row="3" column="2">
-              <widget class="QPushButton" name="pb_create_new_pdf_log">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string>
-Create PDF log
-</string>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="0">
+             <item row="4" column="0">
               <layout class="QHBoxLayout" name="horizontalLayout_16">
                <item>
                 <widget class="QLabel" name="label_69">
@@ -1127,29 +1092,7 @@ Create PDF log
                </item>
               </layout>
              </item>
-             <item row="3" column="1">
-              <widget class="QPushButton" name="pb_create_user">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string>
-Create PDF and User Directory
-</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="0">
-              <widget class="QLabel" name="label_15">
-               <property name="text">
-                <string/>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="2">
+             <item row="4" column="2">
               <layout class="QGridLayout" name="gridLayout_33">
                <property name="leftMargin">
                 <number>15</number>
@@ -1171,6 +1114,30 @@ Create PDF and User Directory
                 <widget class="QLineEdit" name="le_image_path"/>
                </item>
               </layout>
+             </item>
+             <item row="3" column="2">
+              <layout class="QHBoxLayout" name="horizontalLayout_2">
+               <property name="leftMargin">
+                <number>20</number>
+               </property>
+               <item>
+                <widget class="QLabel" name="label_12">
+                 <property name="text">
+                  <string>Experimenters     </string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="le_experimenters">
+                 <property name="placeholderText">
+                  <string>HX,NU,SER</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item row="2" column="1">
+              <widget class="QLineEdit" name="le_proposal_num"/>
              </item>
              <item row="0" column="1" colspan="2">
               <widget class="QGroupBox" name="groupBox_16">
@@ -1222,7 +1189,7 @@ Create PDF and User Directory
                </layout>
               </widget>
              </item>
-             <item row="4" column="1">
+             <item row="6" column="1">
               <spacer name="verticalSpacer_4">
                <property name="orientation">
                 <enum>Qt::Vertical</enum>
@@ -1234,6 +1201,59 @@ Create PDF and User Directory
                 </size>
                </property>
               </spacer>
+             </item>
+             <item row="3" column="0" colspan="2">
+              <layout class="QHBoxLayout" name="horizontalLayout_3">
+               <property name="rightMargin">
+                <number>15</number>
+               </property>
+               <item>
+                <widget class="QLabel" name="label_11">
+                 <property name="text">
+                  <string>PI Name             </string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="le_username">
+                 <property name="toolTip">
+                  <string/>
+                 </property>
+                 <property name="placeholderText">
+                  <string>Professor</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item row="5" column="2">
+              <widget class="QPushButton" name="pb_create_new_pdf_log">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>
+Create PDF log
+</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_15">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="2">
+              <widget class="QPushButton" name="pb_get_proposal_info">
+               <property name="text">
+                <string>Get Proposal Info</string>
+               </property>
+              </widget>
              </item>
             </layout>
            </widget>
@@ -1822,8 +1842,8 @@ Create PDF and User Directory
                  <rect>
                   <x>0</x>
                   <y>0</y>
-                  <width>574</width>
-                  <height>326</height>
+                  <width>692</width>
+                  <height>327</height>
                  </rect>
                 </property>
                 <attribute name="label">
@@ -11194,7 +11214,7 @@ Move
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1334</width>
+     <width>1452</width>
      <height>30</height>
     </rect>
    </property>
@@ -11574,8 +11594,6 @@ Move
   <tabstop>pte_log</tabstop>
   <tabstop>tw_hxn_contact</tabstop>
  </tabstops>
- <resources>
-  <include location="../../../../../../../../../data/home/xf03id/user_macros/HXN_GUI/Scan/hxn_image.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>
