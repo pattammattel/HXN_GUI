@@ -1428,7 +1428,7 @@ class Ui(QtWidgets.QMainWindow):
 
         if choice == QMessageBox.Yes:
             RE(go_det("eiger_pos2"))
-            QMessageBox.information(self, "info","Eiger motion completed")
+            #QMessageBox.information(self, "info","Eiger motion completed")
         else:
             pass
 
@@ -1439,15 +1439,23 @@ class Ui(QtWidgets.QMainWindow):
         self.client.open('http://10.66.17.48')
         self.client.open('http://10.66.17.43')
         QtTest.QTest.qWait(2000)
-        choice = QMessageBox.question(self, 'Detector Motion Warning',
-                                "Make sure this motion is safe. \n Move?", QMessageBox.Yes |
+
+        choice = QMessageBox.question(self, 'Dexela Motion Warning',
+                                f"Have you removed the plastic cover?", QMessageBox.Yes |
+                                 QMessageBox.No, QMessageBox.No)
+        if choice != QMessageBox.Yes:
+            QMessageBox.information(self, "info","Please remove the plastic cover before moving Dexela. Aborting motion.")
+            return
+
+        choice2 = QMessageBox.question(self, 'Detector Motion Warning',
+                                f"Dexela will move to position {move_to} mm. Continue?", QMessageBox.Yes |
                                 QMessageBox.No, QMessageBox.No)
 
-        if choice == QMessageBox.Yes:
+
+        if choice == QMessageBox.Yes and choice2 == QMessageBox.Yes:
             
             RE(move_dexela(0, move_to))
 
-            QMessageBox.information(self, "info","Dexela motion in progress")
         else:
             pass
 
