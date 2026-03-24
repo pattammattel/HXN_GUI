@@ -1389,6 +1389,7 @@ class Ui(QtWidgets.QMainWindow):
         self.pb_pos_to_angle.clicked.connect(lambda:self.calc_and_fill_pos_2angle())
         self.pb_move_diff.clicked.connect(lambda:self.move_diff_stage())
         self.pb_copy_pos2angle.clicked.connect(lambda:self.copy_pos2angle_results())
+        self.pb_move_diff_z.clicked.connect(lambda:self.move_diff_z())
 
     @show_error_message_box
     @with_motion_feedback(title="Merlin Stage Move", success_msg="Merlin Motion completed.")
@@ -1598,6 +1599,24 @@ class Ui(QtWidgets.QMainWindow):
             QtTest.QTest.qWait(5000)
             RE(mov_diff(delta, gamma, dist))
 
+        else:
+            pass
+    
+    @show_error_message_box
+    @with_motion_feedback(title="Diff Z Stage Move", success_msg="Diff Motion Z completed.")
+    def move_diff_z(self):
+        dist = self.dsb_move_diff_z_rel_value.value()
+
+        self.client.open('http://10.66.17.43')
+        QtTest.QTest.qWait(4000)
+
+        choice = QMessageBox.question(self, "diff z stage motion",
+                                f"You're moving diff_z stage by {dist}. \n Proceed?",
+                                QMessageBox.Yes |
+                                QMessageBox.No, QMessageBox.No)
+        
+        if choice == QMessageBox.Yes:
+            RE(bps.movr(diff_z, dist))
         else:
             pass
 
