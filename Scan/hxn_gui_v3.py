@@ -1063,6 +1063,7 @@ class Ui(QtWidgets.QMainWindow):
     def connect_energy_change(self):
         #print("energy_change")
         self.pb_move_energy.clicked.connect(lambda:self.change_energy(self.dsb_target_e.value()))
+        self.pb_energy_change_w_sid.clicked.connect(lambda:self.move_energy_with_sid_gui(self.sb_energy_sid.value()))
         self.dsb_target_e.valueChanged.connect(lambda:self.update_energy_calc(self.dsb_target_e.value()))
         self.sb_harmonic.valueChanged.connect(lambda:self.update_energy_calc(self.dsb_target_e.value()))
 
@@ -1263,7 +1264,19 @@ class Ui(QtWidgets.QMainWindow):
 
         else:
             return
+    
+    @show_error_message_box
+    @with_motion_feedback(title="Energy Change", success_msg="Energy change complete.")
+    def move_energy_with_sid_gui(self, sid):
 
+        QMessageBox.question(self, "Warning", f"Move energy to values from scan id {sid}?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if QMessageBox.Yes:
+            RE(move_energy_with_sid(sid))
+
+        else:
+            return
+
+        
     @show_error_message_box
     @with_motion_feedback(title="ZP to cam 11", success_msg="ZP microscope is ready for cam11 view.")
     def zp_to_cam11_view_(self):
