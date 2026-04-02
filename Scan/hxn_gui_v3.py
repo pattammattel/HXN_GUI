@@ -30,6 +30,7 @@ from PyQt5.QtCore import QObject, QTimer, QThread, pyqtSignal, pyqtSlot, QRunnab
 
 #import custom functions
 from HXNSampleExchange import *
+from hxn_data_transfer import *
 HXNSampleExchanger = SampleExchangeProtocol()
 from utilities import *
 from element_lines import *
@@ -319,6 +320,7 @@ class Ui(QtWidgets.QMainWindow):
         self.sb_live_elem_num.valueChanged.connect(self.populate_elems_from_combobox)
         self.roi_elements = [cb.currentText() for cb in self.xrf_combo_boxes]
         self.pb_get_proposal_info.clicked.connect(lambda:self.fill_user_info())
+        self.pb_move_data_to_globus.clicked.connect(lambda:self.copy_data_to_globus(self.le_proposal_num.text().strip()))
 
 
     @show_error_message_box
@@ -369,7 +371,22 @@ class Ui(QtWidgets.QMainWindow):
             self.le_sample_name.setText(title)
         
         self.statusbar.showMessage(f"User information loaded from proposal {self.proposal_num}")
+    
+    @show_error_message_box
+    def copy_data_to_globus(self, proposal_num):
 
+        local_path, proposal_path = get_proposal_paths(proposal_num)
+
+        QMessageBox.question(self, 'Copy Data',
+            f"Copy data from {local_path} to {proposal_path}? This may take a while. Proceed?",
+            QMessageBox.Yes |
+            QMessageBox.No, QMessageBox.No)
+        
+        if QMessageBox.Yes:
+
+            copy_data_from_proposal(proposal_num)
+        else:
+            pass
 
 
     @show_error_message_box
@@ -1162,7 +1179,7 @@ class Ui(QtWidgets.QMainWindow):
 
 
     @show_error_message_box
-    @with_motion_feedback(title="Energy Move", success_msg="Energy change complete.")
+    @with_motion_feedback(title="Energy Change \n Auto-Alignment in progress....", success_msg="Energy change complete.")
     def change_energy_(self, target_energy):
         target_energy = self.dsb_target_e.value()
 

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1728</width>
-    <height>1741</height>
+    <width>1334</width>
+    <height>1738</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -510,7 +510,7 @@ QRadioButton::indicator:unchecked {
          <enum>QTabWidget::North</enum>
         </property>
         <property name="currentIndex">
-         <number>6</number>
+         <number>1</number>
         </property>
         <property name="documentMode">
          <bool>true</bool>
@@ -1255,6 +1255,15 @@ Create PDF log
                </property>
               </widget>
              </item>
+             <item row="5" column="0">
+              <widget class="QPushButton" name="pb_move_data_to_globus">
+               <property name="text">
+                <string>
+Move Data to Globus 
+</string>
+               </property>
+              </widget>
+             </item>
             </layout>
            </widget>
           </item>
@@ -1842,7 +1851,7 @@ Create PDF log
                  <rect>
                   <x>0</x>
                   <y>0</y>
-                  <width>968</width>
+                  <width>574</width>
                   <height>326</height>
                  </rect>
                 </property>
@@ -11526,8 +11535,8 @@ Move
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1728</width>
-     <height>33</height>
+     <width>1334</width>
+     <height>30</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp_2">
