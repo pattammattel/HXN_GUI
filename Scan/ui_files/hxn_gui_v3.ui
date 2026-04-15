@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1334</width>
-    <height>1738</height>
+    <height>1741</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -1852,7 +1852,7 @@ Move Data to Globus
                   <x>0</x>
                   <y>0</y>
                   <width>574</width>
-                  <height>326</height>
+                  <height>327</height>
                  </rect>
                 </property>
                 <attribute name="label">
