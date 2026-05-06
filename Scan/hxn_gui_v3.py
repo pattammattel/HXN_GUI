@@ -8,6 +8,7 @@ _ethanu_ente!_$thakkol_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
 import os
 import sys
 import webbrowser
+os.environ['PYQTGRAPH_QT_LIB'] = 'PySide6'
 import pyqtgraph as pg
 import json
 import re
@@ -24,9 +25,28 @@ from epics import caget, caput, Motor
 from collections import deque
 
 
-from PyQt5 import QtWidgets, uic, QtCore, QtGui, QtTest
-from PyQt5.QtWidgets import QMessageBox, QFileDialog, QApplication, QLCDNumber, QLabel, QErrorMessage, QPushButton, QCheckBox, QProgressDialog
-from PyQt5.QtCore import QObject, QTimer, QThread, pyqtSignal, pyqtSlot, QRunnable, QThreadPool, QDate, QTime, Qt
+from PySide6 import QtWidgets, QtUiTools, QtCore, QtGui, QtTest
+from PySide6.QtWidgets import QMessageBox, QFileDialog, QApplication, QLCDNumber, QLabel, QErrorMessage, QPushButton, QCheckBox, QProgressDialog
+from PySide6.QtCore import QObject, QTimer, QThread, Signal, Slot, QRunnable, QThreadPool, QDate, QTime, Qt, QFile
+from PySide6.QtUiTools import QUiLoader
+
+# Helper function to load UI files in PySide6
+def loadUi(ui_file, parent=None):
+    loader = QUiLoader()
+    file = QFile(ui_file)
+    file.open(QFile.ReadOnly)
+    widget = loader.load(file, parent)
+    file.close()
+    
+    # Copy all attributes from loaded widget to parent
+    if parent is not None:
+        for attr in dir(widget):
+            if not attr.startswith('_'):
+                try:
+                    setattr(parent, attr, getattr(widget, attr))
+                except AttributeError:
+                    pass
+    return widget
 
 #import custom functions
 from HXNSampleExchange import *
@@ -47,7 +67,7 @@ class Ui(QtWidgets.QMainWindow):
         super(Ui, self).__init__()
 
         print("Loading UI... Please wait")
-        uic.loadUi(os.path.join(ui_path,'ui_files/hxn_gui_v3.ui'), self)
+        loadUi(os.path.join(ui_path,'ui_files/hxn_gui_v3.ui'), self)
         print("UI File loaded")
         # with open(style_path, "r") as f:
         #     self.setStyleSheet(f.read())
@@ -168,7 +188,7 @@ class Ui(QtWidgets.QMainWindow):
         self.thread.finished.connect(self.onTaskFinished)
         self.thread.start()
 
-    @pyqtSlot()
+    @Slot()
     def onTaskFinished(self):
         self.pop_up.setText("Done")
         QtTest.QTest.qWait(1000)
@@ -377,12 +397,12 @@ class Ui(QtWidgets.QMainWindow):
 
         local_path, proposal_path = get_proposal_paths(proposal_num)
 
-        QMessageBox.question(self, 'Copy Data',
+        choice = QMessageBox.question(self, 'Copy Data',
             f"Copy data from {local_path} to {proposal_path}? This may take a while. Proceed?",
-            QMessageBox.Yes |
-            QMessageBox.No, QMessageBox.No)
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, 
+            QMessageBox.StandardButton.No)
         
-        if QMessageBox.Yes:
+        if choice == QMessageBox.StandardButton.Yes:
 
             copy_data_from_proposal(proposal_num)
         else:
@@ -502,9 +522,9 @@ class Ui(QtWidgets.QMainWindow):
 
         choice = QMessageBox.question(self, 'Info',
             f"Update the list of elements? The program require reload to update the changes. Proceed?",
-            QMessageBox.Yes |
-            QMessageBox.No, QMessageBox.No)
-        if choice == QMessageBox.Yes and RE.state == "idle":
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, 
+            QMessageBox.StandardButton.No)
+        if choice == QMessageBox.StandardButton.Yes and RE.state == "idle":
             self.export_xrf_elem_list(auto = True)
             self.reload_gui()
         else:
@@ -765,10 +785,11 @@ class Ui(QtWidgets.QMainWindow):
 
         if caget("XF:03IDB-PPS{PSh}Sts:Cls-Sts") == 1:
             choice = QMessageBox.question(self, 'Warning',
-                f"Photon shutter is closed, Do you wan to open it before starting?", QMessageBox.Yes |
-                QMessageBox.No, QMessageBox.No)
+                f"Photon shutter is closed, Do you wan to open it before starting?", 
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, 
+                QMessageBox.StandardButton.No)
 
-            if choice == QMessageBox.Yes:
+            if choice == QMessageBox.StandardButton.Yes:
                 caput("XF:03IDB-PPS{PSh}Cmd:Opn-Cmd",1)
                 QtTest.QTest.qWait(2000)
 
@@ -777,11 +798,11 @@ class Ui(QtWidgets.QMainWindow):
         if caget("XF:03IDC-ES{Det:Vort-Ax:X}Mtr.VAL") > 25:
             if not getattr(self, "ignore_vortical_warning", False):
                 msg_box = QMessageBox(self)
-                msg_box.setIcon(QMessageBox.Warning)
+                msg_box.setIcon(QMessageBox.Icon.Warning)
                 msg_box.setWindowTitle("Warning")
                 msg_box.setText("Vortical detector is out, ignore and continue?")
-                yes_button = msg_box.addButton(QMessageBox.Yes)
-                no_button = msg_box.addButton(QMessageBox.No)
+                yes_button = msg_box.addButton(QMessageBox.StandardButton.Yes)
+                no_button = msg_box.addButton(QMessageBox.StandardButton.No)
                 msg_box.setDefaultButton(no_button)
 
                 # Add the checkbox
@@ -801,10 +822,11 @@ class Ui(QtWidgets.QMainWindow):
 
             if self.tot_t_1d>1.0:
                 choice = QMessageBox.question(self, 'Warning',
-                                f"Total scan time is {self.tot_t_1d :.2f}. Continue?", QMessageBox.Yes |
-                                QMessageBox.No, QMessageBox.No)
+                                f"Total scan time is {self.tot_t_1d :.2f}. Continue?", 
+                                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, 
+                                QMessageBox.StandardButton.No)
 
-                if choice == QMessageBox.Yes:
+                if choice == QMessageBox.StandardButton.Yes:
                     #self.progress_bar_update(self.mot1_steps,int(self.dwell_t*10000))
                     # RE(fly1d(eval(self.det),
                     #          eval(self.motor1),
@@ -847,10 +869,10 @@ class Ui(QtWidgets.QMainWindow):
             elif self.tot_t_2d>5.0:
                     choice = QMessageBox.question(self, 'Warning',
                                 f"Total scan time is more than {self.tot_t_2d :.2f}. Continue?",
-                                QMessageBox.Yes |
-                                QMessageBox.No, QMessageBox.No)
+                                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, 
+                                QMessageBox.StandardButton.No)
 
-                    if choice == QMessageBox.Yes:
+                    if choice == QMessageBox.StandardButton.Yes:
 
                         #self.progress_bar_update(self.mot1_steps*self.mot2_steps,int(self.dwell_t*10000))
                         RE(fly2dpd(eval(self.det),
@@ -2598,7 +2620,7 @@ class Ui(QtWidgets.QMainWindow):
 
 #from FXI--modified
 class liveStatus(QThread):
-    current_sts = pyqtSignal(int)
+    current_sts = Signal(int)
     def __init__(self, PV):
         super().__init__()
         self.PV = PV
@@ -2615,7 +2637,7 @@ class liveStatus(QThread):
 
 class liveUpdate(QThread):
 
-    current_positions = pyqtSignal(list)
+    current_positions = Signal(list)
 
     def __init__(self, pv_dict, update_interval_ms = 500):
         super().__init__()
@@ -2648,7 +2670,7 @@ class liveUpdate(QThread):
 
 class liveThresholdUpdate(QThread):
 
-    current_sts = pyqtSignal(bool)
+    current_sts = Signal(bool)
     def __init__(self, PV, threshold):
         super().__init__()
         self.PV = PV
@@ -2668,8 +2690,8 @@ class liveThresholdUpdate(QThread):
 
 class updateScanProgress(QThread):
 
-    tot_scan_points = pyqtSignal(int)
-    completed_points = pyqtSignal(int)
+    tot_scan_points = Signal(int)
+    completed_points = Signal(int)
 
     def __init__(self, tot_pv, update_pv, update_interval_ms):
         super().__init__()
@@ -2696,11 +2718,11 @@ class updateScanProgress(QThread):
 #in use
 class PumpingThread(QThread):
 
-    pressure_change = pyqtSignal(int)
+    pressure_change = Signal(int)
 
-    start_slow_pump = pyqtSignal()
-    start_fast_pump = pyqtSignal()
-    finished = pyqtSignal()
+    start_slow_pump = Signal()
+    start_fast_pump = Signal()
+    finished = Signal()
 
 
     def __init__(self, pressure_pv, fast_pump_start_p, target_p):
@@ -2736,9 +2758,9 @@ class PumpingThread(QThread):
 
 class VentingThread(QThread):
 
-    pressure_change = pyqtSignal(int)
-    open_vent = pyqtSignal()
-    finished = pyqtSignal()
+    pressure_change = Signal(int)
+    open_vent = Signal()
+    finished = Signal()
 
     def __init__(self, pressure_pv, target_p):
 
@@ -2763,9 +2785,9 @@ class VentingThread(QThread):
 
 class HeBackFillThread(QThread):
 
-    pressure_change = pyqtSignal(int)
-    start_he_backfill = pyqtSignal()
-    finished = pyqtSignal()
+    pressure_change = Signal(int)
+    start_he_backfill = Signal()
+    finished = Signal()
 
     def __init__(self, pressure_pv, target_p):
 
@@ -2787,7 +2809,7 @@ class HeBackFillThread(QThread):
 
 class LivePressureValueThread(QThread):
 
-    current_time_pressure = pyqtSignal(tuple)
+    current_time_pressure = Signal(tuple)
 
     def __init__(self, pressure_pv, wait_time):
 
@@ -2806,7 +2828,7 @@ class LivePressureValueThread(QThread):
 
 
 class WorkerThread(QThread):
-    finished = pyqtSignal()
+    finished = Signal()
 
     def __init__(self, task, *args, **kwargs):
         super().__init__()
@@ -2859,7 +2881,7 @@ class MainWindow(QMainWindow):
         self.thread.finished.connect(self.onTaskFinished)
         self.thread.start()
 
-    @pyqtSlot()
+    @Slot()
     def onTaskFinished(self):
         self.pop_up.close()
         self.thread.quit()

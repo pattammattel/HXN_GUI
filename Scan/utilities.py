@@ -1,8 +1,8 @@
 import numpy as np
 from contextlib import contextmanager
 from functools import wraps
-from PyQt5.QtWidgets import QProgressDialog, QMessageBox, QApplication
-from PyQt5.QtCore import Qt, QRunnable, QThreadPool, pyqtSlot, QObject, pyqtSignal
+from PySide6.QtWidgets import QProgressDialog, QMessageBox, QApplication
+from PySide6.QtCore import Qt, QRunnable, QThreadPool, Slot, QObject, Signal
 
 def with_motion_feedback(title="Motion", success_msg="Motion complete.", error_msg="Motion failed"):
     def decorator(func):
@@ -10,7 +10,7 @@ def with_motion_feedback(title="Motion", success_msg="Motion complete.", error_m
         def wrapper(self, *args, **kwargs):
             progress = QProgressDialog("Motion in progress...", None, 0, 0, self)
             progress.setWindowTitle(title)
-            progress.setWindowModality(Qt.NonModal)
+            progress.setWindowModality(Qt.WindowModality.NonModal)
             progress.setCancelButton(None)
             progress.show()
             QApplication.processEvents()  # Let the dialog render
@@ -69,10 +69,11 @@ def show_confirm_box(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         choice = QMessageBox.question(None,'Detector Motion Warning',
-                                      "Make sure this motion is safe. \n Move?", QMessageBox.Yes |
-                                      QMessageBox.No, QMessageBox.No)
+                                      "Make sure this motion is safe. \n Move?", 
+                                      QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, 
+                                      QMessageBox.StandardButton.No)
         
-        if choice == QMessageBox.Yes:
+        if choice == QMessageBox.StandardButton.Yes:
             return func(*args, **kwargs)
         else:
             return
@@ -119,8 +120,8 @@ def parse_angle_range(str_scan_range,seperator = ":"):
 
 
 class WorkerSignals(QObject):
-    finished = pyqtSignal()
-    error = pyqtSignal(str)
+    finished = Signal()
+    error = Signal(str)
 
 class MotorWorker(QRunnable):
     def __init__(self, pvname, position, on_done=None):
@@ -130,7 +131,7 @@ class MotorWorker(QRunnable):
         self.on_done = on_done
         self.signals = WorkerSignals()
 
-    @pyqtSlot()
+    @Slot()
     def run(self):
         from epics import Motor
         try:

@@ -3,9 +3,9 @@
 
 import time, tqdm
 from epics import caget, caput
-from PyQt5 import QtWidgets, uic, QtCore, QtGui, QtTest
-from PyQt5.QtWidgets import QMessageBox, QProgressBar
-from PyQt5.QtCore import QTime
+from PySide6 import QtWidgets, QtUiTools, QtCore, QtGui, QtTest
+from PySide6.QtWidgets import QMessageBox, QProgressBar
+from PySide6.QtCore import QTime
 
 class SampleExchangeProtocol():
 

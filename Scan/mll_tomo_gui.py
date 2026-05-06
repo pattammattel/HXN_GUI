@@ -1,10 +1,30 @@
 import sys
 import json
 import os
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QFileDialog, QLabel, QVBoxLayout,QMessageBox
-from PyQt5 import QtWidgets, uic,QtTest
+from PySide6.QtWidgets import QApplication, QWidget, QPushButton, QFileDialog, QLabel, QVBoxLayout,QMessageBox
+from PySide6 import QtWidgets, QtUiTools, QtTest
+from PySide6.QtCore import QFile
+from PySide6.QtUiTools import QUiLoader
 from functools import wraps
 from utilities import *
+
+# Helper function to load UI files in PySide6
+def loadUi(ui_file, parent=None):
+    loader = QUiLoader()
+    file = QFile(ui_file)
+    file.open(QFile.ReadOnly)
+    widget = loader.load(file, parent)
+    file.close()
+    
+    # Copy all attributes from loaded widget to parent
+    if parent is not None:
+        for attr in dir(widget):
+            if not attr.startswith('_'):
+                try:
+                    setattr(parent, attr, getattr(widget, attr))
+                except AttributeError:
+                    pass
+    return widget
 
 ui_path = os.path.dirname(os.path.abspath(__file__))
 param_file_to_run = "/nsls2/data/hxn/legacy/user_macros/HXN_GUI/Scan/temp_files/mll_tomo_params.json"
@@ -14,7 +34,7 @@ param_file_to_run = "/nsls2/data/hxn/legacy/user_macros/HXN_GUI/Scan/temp_files/
 class MLLTomoGUI(QtWidgets.QMainWindow):
     def __init__(self):
         super(MLLTomoGUI, self).__init__()
-        uic.loadUi(os.path.join(ui_path,"ui_files/mll_tomo_ui_.ui"), self)
+        loadUi(os.path.join(ui_path,"ui_files/mll_tomo_ui_.ui"), self)
         self.active_folder = "/nsls2/data/hxn/legacy/user_macros"
 
         #connections
