@@ -61,36 +61,68 @@ def loadUi(ui_file, parent=None):
     if not file.open(QFile.OpenModeFlag.ReadOnly):
         raise IOError(f"Cannot open UI file: {ui_file}")
     
-    # Load the UI without passing parent to loader.load()
+    # Load the UI - this creates a new widget
     widget = loader.load(file, None)
     file.close()
     
-    # If parent is provided, transfer UI elements to parent
-    if parent is not None and widget is not None:
-        # Copy all child widgets to parent as attributes first
-        for child in widget.findChildren(QObject):
-            name = child.objectName()
-            if name:
-                setattr(parent, name, child)
+    if widget is None:
+        raise RuntimeError(f"Failed to load UI file: {ui_file}")
+    
+    # If parent is provided, we need to transfer the UI to the parent
+    if parent is not None:
+        # IMPORTANT: Keep a reference to prevent garbage collection BEFORE any transfers
+        parent._loaded_ui_widget = widget
         
-        # For QMainWindow, handle central widget, menu bar, status bar, etc.
+        # For QMainWindow to QMainWindow transfer
         if isinstance(parent, QtWidgets.QMainWindow) and isinstance(widget, QtWidgets.QMainWindow):
+            # First, collect all named children BEFORE any transfers
+            all_children = {}
+            for child in widget.findChildren(QObject):
+                name = child.objectName()
+                if name:
+                    all_children[name] = child
+            
             # Transfer central widget
-            if widget.centralWidget() is not None:
-                parent.setCentralWidget(widget.centralWidget())
-            # Transfer menu bar
-            if widget.menuBar() is not None:
-                parent.setMenuBar(widget.menuBar())
-            # Transfer status bar
-            if widget.statusBar() is not None:
-                parent.setStatusBar(widget.statusBar())
+            central = widget.centralWidget()
+            if central is not None:
+                # Remove from old parent and set to new parent
+                widget.takeCentralWidget()  # This properly removes it without deleting
+                parent.setCentralWidget(central)
+            
+            # Transfer menu bar (if not default)
+            menubar = widget.menuBar()
+            if menubar and menubar.actions():  # Only if it has actions
+                parent.setMenuBar(menubar)
+            
+            # Transfer status bar (if not default)
+            statusbar = widget.statusBar()
+            if statusbar:
+                parent.setStatusBar(statusbar)
+            
+            # Transfer toolbars
+            for toolbar in widget.findChildren(QtWidgets.QToolBar):
+                widget.removeToolBar(toolbar)
+                parent.addToolBar(toolbar)
+            
+            # Transfer dock widgets
+            for dock in widget.findChildren(QtWidgets.QDockWidget):
+                widget.removeDockWidget(dock)
+                parent.addDockWidget(QtCore.Qt.DockWidgetArea.LeftDockWidgetArea, dock)
+            
+            # Now set all collected children as attributes on parent
+            for name, child in all_children.items():
+                setattr(parent, name, child)
+            
             # Copy window properties
             parent.setWindowTitle(widget.windowTitle())
-            parent.setGeometry(widget.geometry())
-        elif isinstance(parent, QtWidgets.QWidget):
-            # For regular widgets, copy the layout
-            if widget.layout() is not None:
-                parent.setLayout(widget.layout())
+            if widget.geometry().isValid():
+                parent.setGeometry(widget.geometry())
+        else:
+            # For other widget types, just copy attributes
+            for child in widget.findChildren(QObject):
+                name = child.objectName()
+                if name:
+                    setattr(parent, name, child)
     
     return widget
 
