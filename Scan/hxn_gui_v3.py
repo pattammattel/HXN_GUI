@@ -2898,12 +2898,20 @@ class MainWindow(QMainWindow):
 '''
 
 if __name__ == "__main__":
-    app = QtWidgets.QApplication(sys.argv)
-
+    # Check if QApplication instance already exists (e.g., in IPython/Jupyter)
+    app = QtWidgets.QApplication.instance()
+    if app is None:
+        app = QtWidgets.QApplication(sys.argv)
 
     window = Ui()
     window.show()
-    sys.exit(app.exec_())
+    
+    # Only call sys.exit if we're not in an interactive environment
+    if app is not None:
+        try:
+            sys.exit(app.exec())
+        except SystemExit:
+            pass  # Allow the program to exit gracefully in interactive environments
     #app.deleteLater()
 
 
