@@ -2,28 +2,69 @@ import sys
 import json
 import os
 from PySide6.QtWidgets import QApplication, QWidget, QPushButton, QFileDialog, QLabel, QVBoxLayout,QMessageBox
-from PySide6 import QtWidgets, QtUiTools, QtTest
-from PySide6.QtCore import QFile
+from PySide6 import QtWidgets, QtUiTools, QtTest, QtCore
+from PySide6.QtCore import QFile, QObject
 from PySide6.QtUiTools import QUiLoader
 from functools import wraps
 from utilities import *
 
+# Custom UiLoader that registers pyqtgraph widgets
+class CustomUiLoader(QUiLoader):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        # Register pyqtgraph custom widgets
+        try:
+            from pyqtgraph import GraphicsLayoutWidget
+            self.registerCustomWidget(GraphicsLayoutWidget)
+        except ImportError:
+            pass
+
+    def createWidget(self, className, parent=None, name=''):
+        """Override to handle custom widgets"""
+        if className == 'GraphicsLayoutWidget':
+            try:
+                from pyqtgraph import GraphicsLayoutWidget
+                widget = GraphicsLayoutWidget(parent)
+                if name:
+                    widget.setObjectName(name)
+                return widget
+            except ImportError:
+                pass
+        return super().createWidget(className, parent, name)
+
 # Helper function to load UI files in PySide6
 def loadUi(ui_file, parent=None):
-    loader = QUiLoader()
+    loader = CustomUiLoader(parent)
     file = QFile(ui_file)
-    file.open(QFile.ReadOnly)
+    if not file.open(QFile.OpenModeFlag.ReadOnly):
+        raise IOError(f"Cannot open UI file: {ui_file}")
+    
     widget = loader.load(file, parent)
     file.close()
     
-    # Copy all attributes from loaded widget to parent
+    # If parent is provided, transfer UI elements to parent
     if parent is not None:
-        for attr in dir(widget):
-            if not attr.startswith('_'):
-                try:
-                    setattr(parent, attr, getattr(widget, attr))
-                except AttributeError:
-                    pass
+        # For QMainWindow, set the central widget
+        if isinstance(parent, QtWidgets.QMainWindow):
+            if widget.layout() is not None:
+                # Create a container widget for the layout
+                container = QtWidgets.QWidget()
+                container.setLayout(widget.layout())
+                parent.setCentralWidget(container)
+            else:
+                parent.setCentralWidget(widget)
+        
+        # Copy all child widgets to parent as attributes
+        for child in widget.findChildren(QObject):
+            name = child.objectName()
+            if name:
+                setattr(parent, name, child)
+        
+        # Copy widget properties
+        parent.setWindowTitle(widget.windowTitle())
+        if widget.geometry() != QtCore.QRect():
+            parent.setGeometry(widget.geometry())
+    
     return widget
 
 ui_path = os.path.dirname(os.path.abspath(__file__))
