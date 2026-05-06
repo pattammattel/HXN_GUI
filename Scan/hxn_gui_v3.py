@@ -56,36 +56,41 @@ class CustomUiLoader(QUiLoader):
 
 # Helper function to load UI files in PySide6
 def loadUi(ui_file, parent=None):
-    loader = CustomUiLoader(parent)
+    loader = CustomUiLoader()
     file = QFile(ui_file)
     if not file.open(QFile.OpenModeFlag.ReadOnly):
         raise IOError(f"Cannot open UI file: {ui_file}")
     
-    widget = loader.load(file, parent)
+    # Load the UI without passing parent to loader.load()
+    widget = loader.load(file, None)
     file.close()
     
     # If parent is provided, transfer UI elements to parent
-    if parent is not None:
-        # For QMainWindow, set the central widget
-        if isinstance(parent, QtWidgets.QMainWindow):
-            if widget.layout() is not None:
-                # Create a container widget for the layout
-                container = QtWidgets.QWidget()
-                container.setLayout(widget.layout())
-                parent.setCentralWidget(container)
-            else:
-                parent.setCentralWidget(widget)
-        
-        # Copy all child widgets to parent as attributes
+    if parent is not None and widget is not None:
+        # Copy all child widgets to parent as attributes first
         for child in widget.findChildren(QObject):
             name = child.objectName()
             if name:
                 setattr(parent, name, child)
         
-        # Copy widget properties
-        parent.setWindowTitle(widget.windowTitle())
-        if widget.geometry() != QtCore.QRect():
+        # For QMainWindow, handle central widget, menu bar, status bar, etc.
+        if isinstance(parent, QtWidgets.QMainWindow) and isinstance(widget, QtWidgets.QMainWindow):
+            # Transfer central widget
+            if widget.centralWidget() is not None:
+                parent.setCentralWidget(widget.centralWidget())
+            # Transfer menu bar
+            if widget.menuBar() is not None:
+                parent.setMenuBar(widget.menuBar())
+            # Transfer status bar
+            if widget.statusBar() is not None:
+                parent.setStatusBar(widget.statusBar())
+            # Copy window properties
+            parent.setWindowTitle(widget.windowTitle())
             parent.setGeometry(widget.geometry())
+        elif isinstance(parent, QtWidgets.QWidget):
+            # For regular widgets, copy the layout
+            if widget.layout() is not None:
+                parent.setLayout(widget.layout())
     
     return widget
 
